@@ -5,6 +5,43 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+## [0.9.0] - 2026-10-10
+
+### Ditambahkan
+- Klien API (US-API-02, BR-18): tabel `klien_api` (03-SKEMA §3.14), model `KlienApi` (Authenticatable + `HasApiTokens`,
+  UUIDv7, soft delete, log aktivitas `klien-api`, alias morph `klien_api`), factory, dan `KlienApiPolicy` (kelola →
+  `klien-api.kelola`/super-admin; admin-regulasi lihat saja). FK `log_buka_tautan.klien_api_id` → `klien_api` (SET NULL)
+  lewat migrasi baru.
+- Filament `KlienApiResource` (grup Sistem): CRUD nama, kategori, kontak, aktif, catatan; kolom terakhir dipakai dan
+  jumlah token aktif; relation manager Token dengan aksi **Buat token** (nama, "Boleh membaca dokumen internal",
+  masa berlaku 90/180/365 hari; token polos ditampilkan sekali di modal bertombol salin dan peringatan) dan **Cabut
+  token**. Action `BuatTokenKlienApi` dan `CabutTokenKlienApi` (tercatat di log aktivitas tanpa token polos).
+- Token Sanctum read-only: ability `dokumen:baca` (wajib) dan `dokumen:baca-internal` (opsional); alias middleware
+  `abilities`/`ability`. Middleware `PastikanKlienApiAktif`: pemilik token harus klien API aktif (selain itu 401
+  JSON:API "Klien API tidak aktif"); `terakhir_dipakai_pada` diperbarui maksimal sekali per menit.
+- API baca JSON:API v1 (US-API-01, BR-01, BR-02) memakai `JsonApiResource` bawaan Laravel 13 (`included` dibuat unik
+  per type+id): `GET /api/v1/dokumen` (filter `filter[kategori|status|jenis|tahun|badan]`, koma = ATAU, alias
+  `?kategori=…&status=…`, `q` lewat layanan `PencarianDokumen`, `sort` tahun/-tahun/tanggal_penetapan/-dipublikasikan_pada,
+  `page[number]`, `page[size]` maks. 100, `include=kategori,relasi,tautan`, `meta.faset`, tautan paginasi),
+  `GET /api/v1/dokumen/{id}`, `GET /api/v1/jenis-dokumen`, `GET /api/v1/kategori-sistem` (aktif, terurut,
+  `meta.jumlah_dokumen`). Hanya dokumen terbit; internal hanya untuk token `dokumen:baca-internal`. Respons
+  `application/vnd.api+json`; galat 401/403/404/405/422/429 berformat JSON:API (`GalatJsonApi`).
+- Buka tautan dari API: dokumen publik → `/d/{id}/buka`; dokumen internal → URL bertanda tangan 10 menit
+  `GET /d/{id}/buka-api` (`tautan.buka-api`, `signed`, `throttle:buka`) yang mencatat `log_buka_tautan` saluran `api`
+  dengan `klien_api_id`. URL mentah tautan tidak pernah ada di JSON. Kontrak `PenyimpananBerkas::urlBukaApi()`.
+- Rate limit `api` 60/menit per token (per IP bila tanpa token) dengan 429 JSON:API, `Retry-After`,
+  `X-RateLimit-Limit/Remaining`. ETag lemah + `Last-Modified` pada detail dokumen; `If-None-Match` → 304.
+- `docs/api.md`: autentikasi, cara meminta token, abilities, endpoint + contoh curl/respons, kode galat, rate limit,
+  kebijakan versi, contoh "Dasar Hukum" sistem Aset dengan cache 1 jam.
+- Uji `tests/Feature/Api/` (KlienApiTest, DokumenApiTest, RateLimitApiTest).
+
+### Diubah
+- `KriteriaPencarian`: urutan `penetapan_asc` dan batas per halaman dapat diatur (API 100, portal tetap 50).
+- `Dokumen`: relasi alias `kategori()` dan `tautan()` (chaperone pemilik) untuk `include` JSON:API.
+- Tamu pada rute `api/*` tidak lagi dialihkan ke halaman masuk (selalu 401 JSON); rute web tanpa `login` dialihkan ke
+  halaman masuk panel akun.
+- `APP_VERSION=0.9.0`.
+
 ## [0.8.0] - 2026-10-10
 
 ### Ditambahkan
