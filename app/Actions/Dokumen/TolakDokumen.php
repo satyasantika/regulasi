@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Actions\Dokumen;
+
+use App\Enums\StatusPublikasi;
+use App\Models\Dokumen;
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
+
+/**
+ * Menolak dokumen yang menunggu verifikasi (US-VER-02, BR-04): catatan wajib (≥ 10 karakter), disimpan
+ * di catatan_verifikasi agar terlihat oleh kontributor.
+ */
+class TolakDokumen extends TransisiPublikasi
+{
+    public const int MINIMUM_CATATAN = 10;
+
+    public function handle(Dokumen $dokumen, User $oleh, string $catatan): Dokumen
+    {
+        Gate::forUser($oleh)->authorize('verifikasi', $dokumen);
+
+        $catatan = $this->wajibCatatan($catatan, self::MINIMUM_CATATAN, 'penolakan');
+
+        return $this->jalankan(
+            $dokumen,
+            $oleh,
+            dari: [StatusPublikasi::MenungguVerifikasi],
+            ke: StatusPublikasi::Ditolak,
+            catatan: $catatan,
+            ubah: function (Dokumen $baris) use ($catatan): void {
+                $baris->catatan_verifikasi = $catatan;
+            },
+        );
+    }
+}

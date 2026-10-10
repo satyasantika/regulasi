@@ -48,6 +48,33 @@ class DokumenPolicy
         return $dokumen->milik($user) && in_array($dokumen->status_publikasi, self::STATUS_DRAF, true);
     }
 
+    /**
+     * Mengajukan verifikasi (US-VER-01): pemilik dokumen.ajukan yang boleh mengubah dokumen, dan dokumen
+     * masih draf/ditolak.
+     */
+    public function ajukan(User $user, Dokumen $dokumen): bool
+    {
+        return $user->can('dokumen.ajukan')
+            && in_array($dokumen->status_publikasi, self::STATUS_DRAF, true)
+            && $this->update($user, $dokumen);
+    }
+
+    /**
+     * Menerbitkan/menolak (BR-04). Kesesuaian status diperiksa Action (StatusPublikasi::bolehTransisiKe).
+     */
+    public function verifikasi(User $user, Dokumen $dokumen): bool
+    {
+        return $user->can('dokumen.verifikasi');
+    }
+
+    /**
+     * Mengarsipkan/memulihkan (BR-04, BR-15).
+     */
+    public function arsipkan(User $user, Dokumen $dokumen): bool
+    {
+        return $user->can('dokumen.arsipkan');
+    }
+
     public function delete(User $user, Dokumen $dokumen): bool
     {
         return $user->can('dokumen.hapus')

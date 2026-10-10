@@ -49,14 +49,15 @@ enum StatusPublikasi: string implements HasColor, HasLabel
     }
 
     /**
-     * Transisi yang sah menurut diagram PRD §6.1.
+     * Transisi yang sah menurut diagram PRD §6.1. Dokumen ditolak boleh langsung diajukan ulang
+     * (F5.1 AjukanVerifikasi: draf/ditolak → menunggu_verifikasi) selain dikembalikan ke draf.
      */
     public function bolehTransisiKe(self $ke): bool
     {
         return in_array($ke, match ($this) {
             self::Draf => [self::MenungguVerifikasi, self::Terbit],
             self::MenungguVerifikasi => [self::Terbit, self::Ditolak],
-            self::Ditolak => [self::Draf],
+            self::Ditolak => [self::Draf, self::MenungguVerifikasi],
             self::Terbit => [self::Diarsipkan],
             self::Diarsipkan => [self::Terbit],
         }, true);
