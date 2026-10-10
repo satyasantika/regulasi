@@ -37,6 +37,10 @@ return [
     // Registrasi panel akun hanya untuk alamat surel domain ini.
     'domain_registrasi' => 'unsil.ac.id',
 
+    // Panjang token minimum cadangan FULLTEXT; samakan dengan innodb_ft_min_token_size MariaDB (bawaan 3; produksi
+    // docker/mariadb/regulasi.cnf = 2 agar PP/UU/SE tercari).
+    'ft_min_token' => (int) env('REGULASI_FT_MIN_TOKEN', 3),
+
     // isi_teks di indeks pencarian dipotong ke N kata pertama (02-ARSITEKTUR §5.1).
     'potong_isi_teks_kata' => 60000,
 

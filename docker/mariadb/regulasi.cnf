@@ -1,0 +1,11 @@
+# MariaDB produksi Regulasi FKIP Unsil (pengganti mysql:8.4 paket; ADR 0001).
+# Token FULLTEXT 2 huruf (PP, UU, SE) dan tanpa stopword agar cadangan pencarian (ft_dokumen, ft_ekstraksi_isi)
+# menemukan singkatan peraturan. Setelan ini harus aktif SEBELUM indeks FULLTEXT dibangun; bila diubah pada basis
+# data yang sudah ada, bangun ulang indeks: OPTIMIZE TABLE dokumen, ekstraksi_teks; (atau drop/create indeks).
+[mysqld]
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+default-time-zone = '+07:00'
+innodb_ft_min_token_size = 2
+innodb_ft_enable_stopword = 0
+max_allowed_packet = 64M
