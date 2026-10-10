@@ -49,7 +49,7 @@
                        class="flex min-h-11 items-center rounded-md px-3 font-medium text-slate-700 hover:bg-slate-100 hover:text-indigo-800 focus-visible:outline-2 focus-visible:outline-indigo-700 aria-[current=page]:text-indigo-800 aria-[current=page]:underline aria-[current=page]:underline-offset-4">Beranda</a>
                 </li>
                 <li>
-                    <a href="{{ url('dokumen') }}" @if (request()->routeIs('dokumen.index', 'dokumen.jenis', 'dokumen.show')) aria-current="page" @endif
+                    <a href="{{ route('dokumen.index') }}" @if (request()->routeIs('dokumen.index', 'dokumen.jenis', 'dokumen.show')) aria-current="page" @endif
                        class="flex min-h-11 items-center rounded-md px-3 font-medium text-slate-700 hover:bg-slate-100 hover:text-indigo-800 focus-visible:outline-2 focus-visible:outline-indigo-700 aria-[current=page]:text-indigo-800 aria-[current=page]:underline aria-[current=page]:underline-offset-4">Dokumen</a>
                 </li>
                 <li class="relative" x-data="{ buka: false }" @click.outside="buka = false" @keydown.escape="buka = false">
@@ -62,7 +62,7 @@
                         class="mt-1 grid gap-0.5 rounded-lg border border-slate-200 bg-white p-1.5 md:absolute md:right-0 md:mt-2 md:w-64 md:shadow-lg">
                         @foreach ($kategoriNavigasi as $kategori)
                             <li>
-                                <a href="{{ url('kategori/'.$kategori->slug) }}"
+                                <a href="{{ route('dokumen.kategori', $kategori) }}"
                                    class="flex min-h-11 items-center rounded-md px-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-800 focus-visible:outline-2 focus-visible:outline-indigo-700">{{ $kategori->nama }}</a>
                             </li>
                         @endforeach

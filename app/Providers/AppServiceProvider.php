@@ -96,6 +96,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('buka', fn (Request $request): Limit => Limit::perMinute(30)
             ->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
 
+        // Rate limit pencarian portal 60/menit per IP (02-ARSITEKTUR §3.4), diperiksa di Livewire DaftarDokumen.
+        RateLimiter::for('pencarian', fn (Request $request): Limit => Limit::perMinute(60)->by((string) $request->ip()));
+
         $this->aturProxyTepercaya();
         $this->siapkanSubpath();
     }

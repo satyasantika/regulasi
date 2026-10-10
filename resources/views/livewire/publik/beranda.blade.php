@@ -11,7 +11,7 @@
                 Peraturan, keputusan, surat edaran, SOP, dan pedoman beserta status berlakunya dalam satu tempat.
             </p>
 
-            <form method="get" action="{{ url('dokumen') }}" role="search" class="mt-7 max-w-3xl">
+            <form method="get" action="{{ route('dokumen.index') }}" role="search" class="mt-7 max-w-3xl">
                 <label for="cari-beranda" class="sr-only">Cari dokumen</label>
                 <div class="flex flex-col gap-2 rounded-2xl bg-white p-2 shadow-xl sm:flex-row">
                     <div class="relative flex-1">
@@ -57,7 +57,7 @@
                 <ul class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                     @foreach ($statistik['per_jenis'] as $jenis)
                         <li>
-                            <a href="{{ url('jenis/'.$jenis['slug']) }}"
+                            <a href="{{ route('dokumen.jenis', $jenis['slug']) }}"
                                class="flex h-full min-h-20 flex-col justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-indigo-600 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700">
                                 <span class="text-sm font-medium text-slate-700">{{ $jenis['nama'] }}</span>
                                 <span class="mt-2 text-2xl font-bold text-indigo-900">{{ number_format($jenis['jumlah'], 0, ',', '.') }}</span>
@@ -74,7 +74,7 @@
             <ul class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($statistik['per_kategori'] as $kategori)
                     <li>
-                        <a href="{{ url('kategori/'.$kategori['slug']) }}"
+                        <a href="{{ route('dokumen.kategori', $kategori['slug']) }}"
                            class="flex min-h-16 items-center gap-3 rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-teal-600 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700">
                             <span class="grid size-11 shrink-0 place-items-center rounded-lg bg-teal-50 text-teal-800">
                                 <x-publik.ikon :nama="$kategori['ikon']" class="size-6" />
@@ -94,7 +94,7 @@
             <section class="lg:col-span-2" aria-labelledby="judul-terbaru">
                 <div class="flex items-baseline justify-between gap-3">
                     <h2 id="judul-terbaru" class="text-xl font-bold text-slate-900">Dokumen terbaru</h2>
-                    <a href="{{ url('dokumen').'?urut=terbaru' }}" class="text-sm font-medium text-indigo-800 underline-offset-2 hover:underline">Lihat semua</a>
+                    <a href="{{ route('dokumen.index').'?urut=terbaru' }}" class="text-sm font-medium text-indigo-800 underline-offset-2 hover:underline">Lihat semua</a>
                 </div>
                 @if ($terbaru === [])
                     <p class="mt-3 text-slate-600">Belum ada dokumen yang diterbitkan.</p>
@@ -131,7 +131,7 @@
                     <ul class="mt-4 space-y-2">
                         @foreach ($statusBerlaku as $status)
                             <li>
-                                <a href="{{ url('dokumen').'?'.http_build_query(['status' => [$status->value]]) }}"
+                                <a href="{{ route('dokumen.index').'?'.http_build_query(['status' => [$status->value]]) }}"
                                    class="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 hover:border-indigo-600 focus-visible:outline-2 focus-visible:outline-indigo-700">
                                     <x-publik.badge-status :status="$status" />
                                     <span class="font-semibold text-slate-800">{{ $statistik['per_status'][$status->value] ?? 0 }}</span>
@@ -147,7 +147,7 @@
                         <ul class="mt-4 flex flex-wrap gap-2">
                             @foreach ($tahun as $t)
                                 <li>
-                                    <a href="{{ url('dokumen').'?'.http_build_query(['tahun' => [$t]]) }}"
+                                    <a href="{{ route('dokumen.index').'?'.http_build_query(['tahun' => [$t]]) }}"
                                        class="inline-flex min-h-11 items-center rounded-lg border border-slate-200 bg-white px-3.5 text-sm font-medium text-slate-700 hover:border-indigo-600 hover:text-indigo-800 focus-visible:outline-2 focus-visible:outline-indigo-700">{{ $t }}</a>
                                 </li>
                             @endforeach
