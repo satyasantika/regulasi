@@ -118,7 +118,8 @@ class PencarianDatabase implements PencarianDokumen
             default => $query->orderByDesc('dokumen.dipublikasikan_pada'),
         };
 
-        $query->orderByDesc('dokumen.dipublikasikan_pada')->orderBy('dokumen.id');
+        // Pemutus seri id DESC (UUIDv7 = terbaru) agar urutan bawaan terbaca dari idx_dokumen_publik_terbaru tanpa filesort.
+        $query->orderByDesc('dokumen.dipublikasikan_pada')->orderByDesc('dokumen.id');
     }
 
     /**
