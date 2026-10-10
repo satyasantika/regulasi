@@ -15,6 +15,7 @@ use App\Models\EkstraksiTeks;
 use App\Models\JenisDokumen;
 use App\Models\KategoriSistem;
 use App\Models\KlienApi;
+use App\Models\LaporanEvaluasi;
 use App\Models\Permission;
 use App\Models\RiwayatStatusDokumen;
 use App\Models\Role;
@@ -94,6 +95,7 @@ class AppServiceProvider extends ServiceProvider
             'riwayat_status_dokumen' => RiwayatStatusDokumen::class,
             'dokumen_relasi' => DokumenRelasi::class,
             'klien_api' => KlienApi::class,
+            'laporan_evaluasi' => LaporanEvaluasi::class,
         ]);
 
         // Super-admin lolos semua Gate/Policy (03-SKEMA §4.1).
