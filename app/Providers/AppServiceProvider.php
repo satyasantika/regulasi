@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Enums\Peran;
+use App\Http\Responses\MasukResponse;
 use App\Models\TokenAkses;
 use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Date;
@@ -22,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(LoginResponse::class, MasukResponse::class);
     }
 
     /**

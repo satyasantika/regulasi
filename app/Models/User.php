@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\Peran;
 use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -26,7 +29,7 @@ use Spatie\Permission\Traits\HasRoles;
  */
 #[Fillable(['name', 'email', 'password', 'nip', 'prodi_id', 'kode_eksternal', 'aktif'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable;
@@ -46,5 +49,21 @@ class User extends Authenticatable
             'aktif' => 'boolean',
             'terakhir_masuk_pada' => 'datetime',
         ];
+    }
+
+    /**
+     * Panel admin hanya untuk staf aktif; panel akun untuk semua pengguna aktif.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if (! $this->aktif) {
+            return false;
+        }
+
+        return match ($panel->getId()) {
+            'admin' => $this->hasAnyRole(Peran::nilai(Peran::staf())),
+            'akun' => true,
+            default => false,
+        };
     }
 }
