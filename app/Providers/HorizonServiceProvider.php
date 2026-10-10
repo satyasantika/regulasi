@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Horizon\Horizon;
 use Laravel\Horizon\HorizonApplicationServiceProvider;
@@ -21,13 +22,20 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
     }
 
     /**
-     * Register the Horizon gate.
-     *
-     * Sementara: di luar environment local tidak ada yang boleh membuka Horizon.
-     * Diganti peran super-admin pada F2.1.
+     * Tanpa jalan pintas environment local: Horizon hanya lewat gate viewHorizon.
+     */
+    protected function authorization(): void
+    {
+        $this->gate();
+
+        Horizon::auth(fn ($request): bool => Gate::check('viewHorizon', [$request->user()]));
+    }
+
+    /**
+     * Register the Horizon gate: hanya pemegang permission horizon.akses (super-admin lewat Gate::before).
      */
     protected function gate(): void
     {
-        Gate::define('viewHorizon', fn ($user = null): bool => false);
+        Gate::define('viewHorizon', fn (?User $user = null): bool => (bool) $user?->can('horizon.akses'));
     }
 }

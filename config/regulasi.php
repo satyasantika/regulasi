@@ -17,6 +17,12 @@ return [
     // Reverse proxy tepercaya (STANDAR-TEKNIS §2.4): produksi = IP reverse proxy, lokal = *.
     'trusted_proxies' => env('TRUSTED_PROXIES'),
 
+    // Super-admin awal untuk PenggunaAwalSeeder (03-SKEMA §4.1). Wajib diisi di produksi.
+    'seed_superadmin' => [
+        'email' => env('SEED_SUPERADMIN_EMAIL'),
+        'password' => env('SEED_SUPERADMIN_PASSWORD'),
+    ],
+
     // Registrasi panel akun hanya untuk alamat surel domain ini.
     'domain_registrasi' => 'unsil.ac.id',
 
