@@ -5,6 +5,24 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+## [0.3.0] - 2026-10-10
+
+### Ditambahkan
+- Tabel master (03-SKEMA §3.2–§3.6, UUIDv7): `jenis_dokumen`, `badan_penetap` (T.E.U., induk SET NULL),
+  `kategori_sistem` (ketiganya soft delete), `kategori_sistem_user` (PK komposit), `tag`; enum
+  `KelompokJenisDokumen` (`wajibNomor()`) dan `TingkatBadanPenetap`; model dengan slug otomatis unik,
+  scope `aktif()`/`terurut()`, jejak audit `master`.
+- Seeder master idempoten: 18 jenis dokumen, 11 badan penetap (FKIP berinduk Universitas Siliwangi),
+  11 kategori sistem berikon Heroicon, 16 tag subjek; konvensi T.E.U. ditandai perlu verifikasi.
+- Cache master Redis `App\Support\CacheRegulasi::master()` (`master:{nama}`, 24 jam, aktif & terurut)
+  yang dibersihkan otomatis oleh `MasterCacheObserver` dan setelah pengurutan ulang.
+- Resource Filament grup "Master": Jenis Dokumen (urut seret-lepas), Badan Penetap, Kategori Sistem, Tag;
+  filter aktif/terhapus, pulihkan; kode jenis/kategori terkunci setelah dibuat. Policy: lihat `master.lihat`,
+  kelola `master.kelola`, tag baru `tag.buat`, tanpa hapus permanen.
+- Penugasan kontributor ke kategori sistem: aksi "Atur penugasan" (`penugasan.kelola`, admin-regulasi tanpa
+  hak ubah data pengguna lain) dan isian di form pengguna; perubahan tercatat di log aktivitas.
+  Akun lokal `kontributor.aset@unsil.test` ditugaskan ke kategori Aset/BMN.
+
 ## [0.2.0] - 2026-10-10
 
 ### Ditambahkan
