@@ -30,7 +30,22 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'nip' => null,
+            'prodi_id' => null,
+            'kode_eksternal' => null,
+            'aktif' => true,
+            'terakhir_masuk_pada' => null,
         ];
+    }
+
+    /**
+     * Pengguna nonaktif (tidak bisa masuk panel).
+     */
+    public function nonaktif(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'aktif' => false,
+        ]);
     }
 
     /**

@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use App\Filament\Akun\Pages\Daftar;
+use App\Filament\Akun\Pages\Dasbor;
+use App\Filament\Auth\Masuk;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+
+/**
+ * Panel akun pengguna kampus di /akun: masuk, daftar (@unsil.ac.id), verifikasi surel, profil.
+ */
+class AkunPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->id('akun')
+            ->path('akun')
+            ->login(Masuk::class)
+            ->registration(Daftar::class)
+            ->passwordReset()
+            ->emailVerification()
+            ->profile()
+            // MFA opsional bagi pengguna panel akun.
+            ->multiFactorAuthentication([AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')])
+            ->brandName('Regulasi FKIP Unsil')
+            ->colors([
+                'primary' => Color::Blue,
+            ])
+            ->topNavigation()
+            ->maxContentWidth('5xl')
+            ->discoverPages(in: app_path('Filament/Akun/Pages'), for: 'App\Filament\Akun\Pages')
+            ->pages([
+                Dasbor::class,
+            ])
+            ->middleware([
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                AuthenticateSession::class,
+                ShareErrorsFromSession::class,
+                PreventRequestForgery::class,
+                SubstituteBindings::class,
+                DisableBladeIconComponents::class,
+                DispatchServingFilamentEvent::class,
+            ])
+            ->authMiddleware([
+                Authenticate::class,
+            ]);
+    }
+}
