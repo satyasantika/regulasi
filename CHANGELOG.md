@@ -5,6 +5,56 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+## [1.0.0] - 2026-10-11
+
+Rilis pertama Regulasi FKIP Unsil: repositori terpusat dokumen hukum & pendukung FKIP Universitas Siliwangi.
+
+### Ringkasan fitur (F0–F11)
+- Fondasi Laravel 13 / PHP 8.5 di Docker FKIP, MariaDB 10.11, Redis, Horizon, penjadwal, subpath `/regulasi`, UUIDv7.
+- Autentikasi & peran (super-admin, admin-regulasi, kontributor per kategori, pengguna `@unsil.ac.id`), MFA wajib
+  penerbit, jejak audit spatie/activitylog.
+- Master jenis dokumen, badan penetap (T.E.U.), kategori sistem, tag, penugasan kontributor.
+- Metadata dokumen lengkap (BR-06 unik), alur verifikasi draf → menunggu → terbit/ditolak → arsip dengan riwayat
+  status append-only, aksi massal.
+- Tautan berkas tanpa unggah (daftar putih domain, tolak pemendek/folder/http/IP), buka `/d/{id}/buka` tercatat dengan
+  `ip_hash`, pemeriksaan keteraksesan, ekstraksi teks PDF anti-SSRF lewat `PengunduhAman`.
+- Relasi status simetris (mencabut/mengubah/melaksanakan), dokumen rujukan, status manual, penerapan terjadwal.
+- Pencarian Meilisearch berfaset toleran salah ketik dengan cadangan FULLTEXT MariaDB.
+- Portal publik (beranda, daftar berfaset, detail + pratinjau Drive, SEO, sitemap), API baca JSON:API v1 bertoken
+  Sanctum untuk sistem FKIP lain, notifikasi database/surel & ringkasan mingguan, dasbor, laporan & ekspor Excel,
+  laporan evaluasi PDF.
+
+### Ditambahkan (F12 pengerasan & rilis)
+- Matriks akses PRD §3.2 teruji otomatis (`tests/Feature/Keamanan/MatriksAksesTest.php`: 60 rute × 5 peran + API &
+  aksi) serta uji IDOR, tautan berbahaya/SSRF, open redirect, dan XSS (`KeamananTest`). Tidak ada policy yang perlu
+  diperbaiki.
+- Indeks `idx_dokumen_publik_terbaru (status_publikasi, visibilitas, dipublikasikan_pada)`; tabel admin dokumen
+  memuat kolom terbatas + `withCount` lampiran; `PerfSeeder` (hanya lokal) dan `docs/KINERJA.md` (beranda hangat
+  15 ms, `/dokumen` berfilter 52–81 ms pada 5.000 dokumen).
+- Docker produksi: `docker/Dockerfile` (target `app` & `web`, PHP 8.5-FPM Alpine + `poppler-utils`, OPcache
+  produksi, user non-root), `docker/nginx/default.conf`, `docker/entrypoint.sh` (tunggu DB, migrasi & sinkron indeks
+  hanya di `app`, optimize/filament:optimize/icons:cache), `docker-compose.prod.yml` (app, web, queue/Horizon,
+  scheduler, mariadb 10.11 dengan token FULLTEXT 2, redis AOF, meilisearch v1.54, backup), `.env.production.example`,
+  `.dockerignore`, workflow `docker.yml`, `docs/DEPLOY.md`. Uji asap lokal: `/api/health` ok dan ekstraksi PDF nyata
+  oleh container `queue`.
+- Cadangan harian 02:00 WIB (`docker/backup/backup.sh`, `mariadb-dump` gzip + sha256, retensi 30 hari, log, keluar
+  non-zero bila gagal), `restore.sh` (menolak produksi tanpa `--paksa`), `pulihkan-uji.sh`, dan prosedur "Uji pulih
+  semester" (uji pulih lokal lulus).
+- `php artisan regulasi:siapkan-uat` (akun uji per peran & klien API uji, hanya non-produksi), lembar
+  `docs/uat/hasil-uat.md` dengan 30 pra-uji otomatis lulus, `docs/OPERASIONAL.md` (butir tindakan manusia & status
+  go-live).
+- Panduan pengguna HTML per peran dengan tangkapan layar Playwright (`public/panduan/`, 1,3 MB) dari data rekaan
+  `PanduanSeeder` (hanya lokal, akun demo `@contoh.test` tanpa MFA), tautan di navigasi & kaki portal, halaman masuk,
+  dan menu pengguna panel; `docker-compose.panduan.yml`, skrip `composer panduan`.
+- Konfigurasi `REGULASI_FT_MIN_TOKEN` (panjang token cadangan FULLTEXT; produksi 2).
+
+### Diubah
+- `HeaderKeamanan`: tambah Permissions-Policy, Cross-Origin-Opener-Policy, hapus X-Powered-By, HSTS di produksi.
+- Cookie sesi `Secure` secara bawaan saat `APP_ENV=production`.
+- Urutan bawaan cadangan pencarian memakai pemutus seri `id DESC`.
+- `docs/PANDUAN-ADMIN.md` & `docs/PANDUAN-KONTRIBUTOR.md` kini menunjuk panduan HTML.
+- `APP_VERSION=1.0.0`.
+
 ## [0.11.0] - 2026-10-10
 
 ### Ditambahkan

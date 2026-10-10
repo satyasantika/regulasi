@@ -119,7 +119,7 @@ Semua skenario tetap **wajib diuji dan ditandatangani perwakilan peran** (G-01);
 
 | No | Status | Bukti |
 |---|---|---|
-| KM-01 | ✓ | `tests/Feature/Keamanan/MatriksAksesTest.php` (59 sel per 5 peran + API/aksi); `KebijakanResourceTest` |
+| KM-01 | ✓ | `tests/Feature/Keamanan/MatriksAksesTest.php` (60 rute × 5 peran + API/aksi); `KebijakanResourceTest` |
 | KM-02 | ✓ | `KeamananTest` (id numerik → 404/401; UUID draf/ditolak/menunggu/arsip/terhapus → 404) |
 | KM-03 / KM-03a | ✓ | `KeamananTest` (javascript:, data:, http:, IP privat/loopback, userinfo, pemendek, folder), `PengunduhAmanTest`, `Arch/TanpaUnggahTest`; uji asap Docker: tmp ekstraksi kosong |
 | KM-04 | ✓ | `KeamananTest` (parameter `to/url/redirect/next/tujuan` diabaikan), `BukaTautanTest` (no-referrer, no-store) |
