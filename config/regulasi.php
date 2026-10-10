@@ -64,6 +64,9 @@ return [
     // Retensi log buka tautan (BR-17).
     'retensi_log_buka_bulan' => 24,
 
+    // Masa berlaku URL buka tautan bertanda tangan untuk klien API (dokumen internal, F9.2).
+    'masa_tautan_api_menit' => 10,
+
     // Sinonim pencarian Meilisearch (02-ARSITEKTUR §5.1).
     'sinonim' => [
         'uu' => ['undang-undang'],

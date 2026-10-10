@@ -113,6 +113,7 @@ class PencarianDatabase implements PencarianDokumen
         match ($urut) {
             'tahun_desc' => $query->orderByDesc('dokumen.tahun'),
             'tahun_asc' => $query->orderBy('dokumen.tahun'),
+            'penetapan_asc' => $query->orderByRaw('dokumen.tanggal_penetapan IS NULL')->orderBy('dokumen.tanggal_penetapan'),
             'dibuka' => $query->orderByDesc('dokumen.jumlah_dibuka'),
             default => $query->orderByDesc('dokumen.dipublikasikan_pada'),
         };

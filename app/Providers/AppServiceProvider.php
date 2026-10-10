@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Contracts\PenyimpananBerkas;
 use App\Enums\Peran;
+use App\Http\Responses\GalatJsonApi;
 use App\Http\Responses\MasukResponse;
 use App\Models\Aktivitas;
 use App\Models\BadanPenetap;
@@ -12,6 +13,7 @@ use App\Models\DokumenRelasi;
 use App\Models\EkstraksiTeks;
 use App\Models\JenisDokumen;
 use App\Models\KategoriSistem;
+use App\Models\KlienApi;
 use App\Models\Permission;
 use App\Models\RiwayatStatusDokumen;
 use App\Models\Role;
@@ -86,6 +88,7 @@ class AppServiceProvider extends ServiceProvider
             'ekstraksi_teks' => EkstraksiTeks::class,
             'riwayat_status_dokumen' => RiwayatStatusDokumen::class,
             'dokumen_relasi' => DokumenRelasi::class,
+            'klien_api' => KlienApi::class,
         ]);
 
         // Super-admin lolos semua Gate/Policy (03-SKEMA §4.1).
@@ -95,6 +98,12 @@ class AppServiceProvider extends ServiceProvider
         // Rate limit buka tautan 30/menit per pengguna atau IP (02-ARSITEKTUR §3.4, BR-17).
         RateLimiter::for('buka', fn (Request $request): Limit => Limit::perMinute(30)
             ->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
+
+        // Rate limit API v1: 60/menit per token (BR-18); token tak dikenal per IP. 429 berformat JSON:API dengan
+        // header X-RateLimit-Limit/Remaining dan Retry-After.
+        RateLimiter::for('api', fn (Request $request): Limit => Limit::perMinute(60)
+            ->by('token:'.(KlienApi::dariPermintaan($request)?->currentAccessToken()?->getKey() ?? $request->ip()))
+            ->response(fn (Request $request, array $header) => GalatJsonApi::buat(429, $header)));
 
         // Rate limit pencarian portal 60/menit per IP (02-ARSITEKTUR §3.4), diperiksa di Livewire DaftarDokumen.
         RateLimiter::for('pencarian', fn (Request $request): Limit => Limit::perMinute(60)->by((string) $request->ip()));

@@ -22,3 +22,9 @@ Route::get('/d/{tautanBerkas}/buka', BukaTautanController::class)
     ->whereUuid('tautanBerkas')
     ->middleware('throttle:buka')
     ->name('tautan.buka');
+
+// Buka tautan dokumen internal dari API (BR-02, BR-17): URL bertanda tangan 10 menit, saluran api.
+Route::get('/d/{tautanBerkas}/buka-api', [BukaTautanController::class, 'api'])
+    ->whereUuid('tautanBerkas')
+    ->middleware(['signed', 'throttle:buka'])
+    ->name('tautan.buka-api');

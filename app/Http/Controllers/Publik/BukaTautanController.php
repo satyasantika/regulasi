@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Publik;
 
+use App\Enums\SaluranBuka;
 use App\Enums\StatusPublikasi;
 use App\Enums\Visibilitas;
 use App\Http\Controllers\Controller;
 use App\Jobs\CatatBukaTautan;
+use App\Models\KlienApi;
 use App\Models\TautanBerkas;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -37,6 +39,33 @@ class BukaTautanController extends Controller
             $pengguna?->getKey(),
             CatatBukaTautan::hashIp($request->ip()),
             $request->userAgent(),
+        )->afterResponse();
+
+        return $this->tanpaCache(redirect()->away($tautanBerkas->url, 302));
+    }
+
+    /**
+     * GET /d/{tautanBerkas}/buka-api (middleware signed): tautan dari API v1 untuk dokumen internal. Tanda tangan
+     * menjamin URL dibuat untuk token berability dokumen:baca-internal milik klien `klien`; saat dibuka dokumen
+     * harus masih terbit dan klien masih aktif. Dicatat dengan saluran api + klien_api_id.
+     */
+    public function api(Request $request, TautanBerkas $tautanBerkas): RedirectResponse
+    {
+        $dokumen = $tautanBerkas->dokumen();
+        $klien = KlienApi::query()->whereKey((string) $request->query('klien'))->where('aktif', true)->first();
+
+        if ($dokumen === null || $dokumen->trashed() || $dokumen->status_publikasi !== StatusPublikasi::Terbit || $klien === null) {
+            throw new NotFoundHttpException;
+        }
+
+        CatatBukaTautan::dispatch(
+            $tautanBerkas->getKey(),
+            $dokumen->getKey(),
+            null,
+            CatatBukaTautan::hashIp($request->ip()),
+            $request->userAgent(),
+            SaluranBuka::Api,
+            $klien->getKey(),
         )->afterResponse();
 
         return $this->tanpaCache(redirect()->away($tautanBerkas->url, 302));

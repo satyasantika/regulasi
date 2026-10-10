@@ -4,9 +4,11 @@ namespace App\Services\Berkas;
 
 use App\Contracts\PenyimpananBerkas;
 use App\Enums\StatusCekTautan;
+use App\Models\KlienApi;
 use App\Models\TautanBerkas;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Implementasi BERKAS_MODE=tautan: server hanya menyimpan URL & metadata, tanpa berkas.
@@ -61,6 +63,15 @@ class TautanEksternal implements PenyimpananBerkas
     public function urlBuka(TautanBerkas $tautan): string
     {
         return route('tautan.buka', ['tautanBerkas' => $tautan->getKey()]);
+    }
+
+    public function urlBukaApi(TautanBerkas $tautan, KlienApi $klien): string
+    {
+        return URL::temporarySignedRoute(
+            'tautan.buka-api',
+            now()->addMinutes((int) config('regulasi.masa_tautan_api_menit', 10)),
+            ['tautanBerkas' => $tautan->getKey(), 'klien' => $klien->getKey()],
+        );
     }
 
     public function urlPratinjau(TautanBerkas $tautan): ?string
