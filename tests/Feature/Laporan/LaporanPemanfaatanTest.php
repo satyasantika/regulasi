@@ -23,6 +23,7 @@ use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Spatie\SimpleExcel\SimpleExcelReader;
@@ -31,11 +32,13 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Filament::setCurrentPanel('admin');
+    // Direktori ekspor terpisah per proses uji paralel.
+    config(['regulasi.direktori_ekspor' => 'ekspor-uji-'.(ParallelTesting::token() ?: '0')]);
     $this->seed(KategoriSistemSeeder::class);
 });
 
 afterEach(function () {
-    File::deleteDirectory(storage_path('app/tmp/'.BuatEksporLaporan::DIREKTORI));
+    File::deleteDirectory(storage_path('app/tmp/'.BuatEksporLaporan::direktori()));
 });
 
 function pemanfaatanDokumen(string $kategori = 'aset'): Dokumen
@@ -166,7 +169,7 @@ test('relasi tertunda tampil beserta tanggal efektifnya', function () {
     Queue::assertPushedOn('ekspor', BuatEksporLaporan::class, fn (BuatEksporLaporan $job): bool => $job->jenis === 'relasi-status' && $job->parameter === ['keadaan' => 'tertunda']);
 
     (new BuatEksporLaporan('relasi-status', ['keadaan' => 'tertunda'], $admin->id))->handle();
-    $baris = SimpleExcelReader::create(File::files(storage_path('app/tmp/ekspor'))[0]->getPathname())->getRows()->all();
+    $baris = SimpleExcelReader::create(File::files(storage_path('app/tmp/'.BuatEksporLaporan::direktori()))[0]->getPathname())->getRows()->all();
     expect($baris[0]['Dokumen'])->toBe($diubah->sebutan_singkat)
         ->and($baris[0]['Relasi'])->toBe('Diubah oleh')
         ->and($baris[0]['Keadaan'])->toBe('Tertunda');
@@ -179,7 +182,7 @@ test('ekspor pembukaan tautan menghasilkan berkas berheader bahasa Indonesia', f
 
     (new BuatEksporLaporan('pembukaan-tautan', [], $admin->id))->handle();
 
-    $baris = SimpleExcelReader::create(File::files(storage_path('app/tmp/ekspor'))[0]->getPathname())->getRows()->all();
+    $baris = SimpleExcelReader::create(File::files(storage_path('app/tmp/'.BuatEksporLaporan::direktori()))[0]->getPathname())->getRows()->all();
     expect(array_keys($baris[0]))->toBe(['Sebutan', 'Judul', 'Jenis dokumen', 'Dibuka via web', 'Dibuka via API', 'Total'])
         ->and($baris[0]['Dibuka via API'])->toBe(2);
 });

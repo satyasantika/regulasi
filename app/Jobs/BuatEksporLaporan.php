@@ -22,8 +22,6 @@ class BuatEksporLaporan implements ShouldQueue
 {
     use Queueable;
 
-    public const string DIREKTORI = 'ekspor';
-
     public int $timeout = 600;
 
     public int $tries = 2;
@@ -39,9 +37,14 @@ class BuatEksporLaporan implements ShouldQueue
         $this->onQueue('ekspor');
     }
 
+    public static function direktori(): string
+    {
+        return trim((string) config('regulasi.direktori_ekspor', 'ekspor'), '/') ?: 'ekspor';
+    }
+
     public static function jalur(string $berkas): string
     {
-        return storage_path('app/tmp/'.self::DIREKTORI.'/'.$berkas);
+        return storage_path('app/tmp/'.self::direktori().'/'.$berkas);
     }
 
     public function handle(): void

@@ -42,12 +42,16 @@ function laporanEvaluasi(User $pembuat, array $atribut = []): LaporanEvaluasi
 }
 
 /**
+ * Berkas PDF di storage, kecuali storage/app/tmp/ekstraksi yang dipakai sesaat oleh uji ekstraksi paralel.
+ *
  * @return list<string>
  */
 function berkasStorage(): array
 {
-    return collect(File::allFiles(storage_path('app')))
+    return collect(File::allFiles(storage_path()))
         ->map(fn (SplFileInfo $f): string => $f->getPathname())
+        ->filter(fn (string $jalur): bool => str_ends_with(strtolower($jalur), '.pdf')
+            && ! str_starts_with($jalur, storage_path('app/tmp/ekstraksi')))
         ->sort()
         ->values()
         ->all();

@@ -27,6 +27,7 @@ use Illuminate\Bus\ChainedBatch;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -36,11 +37,13 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Filament::setCurrentPanel('admin');
+    // Direktori ekspor terpisah per proses uji paralel.
+    config(['regulasi.direktori_ekspor' => 'ekspor-uji-'.(ParallelTesting::token() ?: '0')]);
     $this->seed([JenisDokumenSeeder::class, KategoriSistemSeeder::class]);
 });
 
 afterEach(function () {
-    File::deleteDirectory(storage_path('app/tmp/'.BuatEksporLaporan::DIREKTORI));
+    File::deleteDirectory(storage_path('app/tmp/'.BuatEksporLaporan::direktori()));
 });
 
 /**
@@ -126,7 +129,7 @@ test('kontributor hanya melihat statistik kategori sendiri dan tidak dapat menge
 
     Queue::fake();
     (new BuatEksporLaporan('statistik', [], $kontributor->id))->handle();
-    expect(File::isDirectory(storage_path('app/tmp/ekspor')) ? File::files(storage_path('app/tmp/ekspor')) : [])->toBe([]);
+    expect(File::isDirectory(storage_path('app/tmp/'.BuatEksporLaporan::direktori())) ? File::files(storage_path('app/tmp/'.BuatEksporLaporan::direktori())) : [])->toBe([]);
 });
 
 test('filter belum lengkap menampilkan dokumen tanpa abstrak', function () {
@@ -160,7 +163,7 @@ test('ekspor statistik masuk antrean ekspor dan menghasilkan berkas berheader ba
     Notification::fake();
     (new BuatEksporLaporan('statistik', ['dimensi' => 'jenis', 'status_publikasi' => 'terbit'], $admin->id))->handle();
 
-    $berkas = File::files(storage_path('app/tmp/ekspor'));
+    $berkas = File::files(storage_path('app/tmp/'.BuatEksporLaporan::direktori()));
     expect($berkas)->toHaveCount(1);
 
     $baris = SimpleExcelReader::create($berkas[0]->getPathname())->getRows()->all();
