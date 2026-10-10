@@ -5,6 +5,37 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+## [0.6.0] - 2026-10-10
+
+### Ditambahkan
+- Tabel `dokumen_relasi` (03-SKEMA §3.11: `uk_relasi`, `pasangan_id` UNIQUE FK diri SET NULL, CHECK
+  `dokumen_id <> dokumen_terkait_id`, indeks `efektif`+`efektif_pada`) dan migrasi baru FK
+  `riwayat_status_dokumen.dokumen_relasi_id` → `dokumen_relasi` SET NULL. Enum `JenisRelasi` (`kebalikan()`,
+  `adalahArahAktif()`, `dampakStatus()`), model `DokumenRelasi` (alias morph `dokumen_relasi`, jejak audit `relasi`),
+  `Dokumen::relasi()`, event `StatusBerlakuBerubah` (setelah commit; pendengar di F7/F10).
+- Relasi simetris (BR-07..BR-10) lewat `TambahRelasiDokumen`: mencabut/mengubah/melaksanakan beserta kebalikannya
+  dalam satu transaksi, jenis pasif dari sisi target dinormalkan, tolak relasi ke diri sendiri/ganda/siklik/sumber
+  lebih lama; kunci `lock:status-dokumen:{id}` berurutan id menaik (`KunciStatusDokumen`) + `lockForUpdate`.
+- Hitung ulang status berlaku (`HitungUlangStatusBerlaku`, BR-09: dicabut > diubah > berlaku; status manual tidak
+  ditimpa) dengan riwayat berjenis `berlaku` yang menunjuk relasi pemicu.
+- `HapusRelasiDokumen` (berpasangan, alasan wajib di log aktivitas), status manual `UbahStatusBerlaku`
+  (tidak berlaku manual / kembalikan otomatis, catatan wajib, `status-berlaku.ubah`), `TerapkanRelasiDokumen`
+  yang dipanggil setelah terbit, arsip, pulih, dan perubahan tanggal dokumen terbit; perintah
+  `regulasi:terapkan-status` (`--dry-run`) untuk relasi yang tanggal efektifnya tiba (penjadwalan di F10.2).
+- Antarmuka relasi: relation manager "Relasi" (tambah relasi dengan label "Dokumen ini mencabut …", pencarian
+  dokumen di sisi server tanpa dokumen itu sendiri, pintas "Tambah dokumen rujukan" yang langsung terbit (BR-11),
+  hapus dengan alasan, tanpa ubah), tombol "Ubah status berlaku", bagian "Status" berkalimat ringkas
+  (`RingkasanStatus`, mis. "Dicabut oleh BAN-PT 13/2025 sejak 18 Agustus 2025") dan peringatan relasi tertunda.
+  `DokumenRelasiPolicy`, `DokumenPolicy::ubahStatusBerlaku`.
+- Seeder `DokumenContohSeeder` (03-SKEMA §4.5, lewat Action, idempoten): 26 dokumen contoh (buku 3 & 4 IAPSK 3.0
+  masing-masing tiga entri), 9 dokumen rujukan, 7 relasi; fakta tak pasti dikosongkan dan ditandai "perlu verifikasi"
+  di catatan internal; URL naskah dari data atau `database/seeders/data/tautan-contoh.local.php` (di-.gitignore);
+  `REGULASI_SEED_TERBITKAN_SEMUA` untuk demo lokal. Dipanggil `DatabaseSeeder` di luar produksi.
+- `docs/RELASI.md`: panduan singkat relasi untuk admin.
+
+### Diubah
+- Kait `setelahCommit`/`setelahTerbit`/`setelahArsip` alur publikasi menerima pengguna pelaku.
+
 ## [0.5.0] - 2026-10-10
 
 ### Ditambahkan
