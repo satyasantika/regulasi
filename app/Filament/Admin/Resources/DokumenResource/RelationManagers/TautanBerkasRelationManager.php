@@ -25,6 +25,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -95,13 +96,17 @@ class TautanBerkasRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('label')
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('ekstraksi'))
             ->columns([
                 TextColumn::make('jenis')->label('Jenis')->badge(),
                 TextColumn::make('label')->label('Label')->placeholder('—')->wrap(),
                 TextColumn::make('penyedia')->label('Penyedia')->badge(),
                 TextColumn::make('status_cek')->label('Status cek')->badge(),
-                // Status ekstraksi teks diisi di F7.1 (tabel ekstraksi_teks).
-                TextColumn::make('status_ekstraksi')->label('Ekstraksi')->state(fn (): ?string => null)->placeholder('—'),
+                TextColumn::make('ekstraksi.status')
+                    ->label('Ekstraksi')
+                    ->badge()
+                    ->placeholder('Belum')
+                    ->tooltip(fn (TautanBerkas $record): ?string => $record->ekstraksi?->pesan),
                 TextColumn::make('jumlah_dibuka')->label('Dibuka')->numeric(),
             ])
             ->headerActions([

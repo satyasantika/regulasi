@@ -4,8 +4,11 @@ namespace App\Actions\Berkas;
 
 use App\Contracts\PenyimpananBerkas;
 use App\Enums\JenisTautan;
+use App\Enums\StatusEkstraksi;
+use App\Jobs\EkstrakTeksTautan;
 use App\Jobs\PeriksaTautanBerkas;
 use App\Models\Dokumen;
+use App\Models\EkstraksiTeks;
 use App\Models\TautanBerkas;
 use App\Models\User;
 use App\Rules\TautanBerkasValid;
@@ -21,6 +24,8 @@ use Illuminate\Validation\ValidationException;
  * - URL/drive_file_id yang sama pada dokumen yang sama ditolak; sama dengan dokumen lain → peringatan.
  * - Naskah utama baru menurunkan naskah utama aktif sebelumnya menjadi lampiran (dicatat activitylog).
  * - Setelah commit, PeriksaTautanBerkas diantrekan (dibuat/URL berubah).
+ * - Ekstraksi teks (F7.1): dibuat/URL berubah → ekstraksi direset dan EkstrakTeksTautan diantrekan bila jenisnya
+ *   diekstraksi; jenis halaman_sumber/lainnya → status tidak_berlaku tanpa job.
  */
 class SimpanTautanBerkas
 {
@@ -55,17 +60,44 @@ class SimpanTautanBerkas
             }
 
             $urlLama = $tautan?->url;
+            $diekstraksiLama = $tautan?->jenis->diekstraksi();
 
             $hasil = $tautan === null
                 ? $this->penyimpanan->simpan($dokumen, $isian, $oleh)
                 : $this->penyimpanan->perbarui($tautan, $isian, $oleh);
 
-            if ($tautan === null || $urlLama !== $hasil->url) {
+            $urlBerubah = $tautan === null || $urlLama !== $hasil->url;
+
+            if ($urlBerubah) {
                 PeriksaTautanBerkas::dispatch($hasil)->afterCommit();
+            }
+
+            if ($urlBerubah || $diekstraksiLama !== $hasil->jenis->diekstraksi()) {
+                $this->siapkanEkstraksi($hasil);
             }
 
             return ['tautan' => $hasil, 'peringatan' => $peringatan];
         });
+    }
+
+    /**
+     * Teks lama tidak berlaku lagi untuk URL/jenis baru (03-SKEMA §3.10): reset lalu antrekan ekstraksi.
+     */
+    private function siapkanEkstraksi(TautanBerkas $tautan): void
+    {
+        $ekstraksi = EkstraksiTeks::query()->firstOrNew(['tautan_berkas_id' => $tautan->getKey()]);
+
+        if (! $tautan->jenis->diekstraksi()) {
+            $ekstraksi->setelUlang(StatusEkstraksi::TidakBerlaku);
+            $ekstraksi->save();
+
+            return;
+        }
+
+        $ekstraksi->setelUlang();
+        $ekstraksi->save();
+
+        EkstrakTeksTautan::dispatch($tautan->getKey())->afterCommit();
     }
 
     /**

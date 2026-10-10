@@ -3,7 +3,9 @@
 use App\Enums\Peran;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Berkas\PemecahDns;
 use Database\Seeders\PeranDanIzinSeeder;
+use Tests\PemecahDnsPalsu;
 use Tests\TestCase;
 
 /*
@@ -37,4 +39,14 @@ function penggunaDenganPeran(Peran $peran, array $atribut = [], bool $mfa = true
     }
 
     return $pengguna;
+}
+
+/**
+ * Pasang resolusi DNS tiruan untuk PengunduhAman (tanpa jaringan). Bawaan: semua host → IP publik.
+ *
+ * @param  array<string, list<string>>  $peta
+ */
+function dnsPalsu(array $peta = ['*' => ['142.250.4.100']]): void
+{
+    app()->instance(PemecahDns::class, new PemecahDnsPalsu($peta));
 }

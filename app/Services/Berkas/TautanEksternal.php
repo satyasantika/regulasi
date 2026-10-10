@@ -13,7 +13,10 @@ use Illuminate\Database\Eloquent\Model;
  */
 class TautanEksternal implements PenyimpananBerkas
 {
-    public function __construct(private readonly PenguraiTautan $pengurai) {}
+    public function __construct(
+        private readonly PenguraiTautan $pengurai,
+        private readonly PengunduhAman $pengunduh,
+    ) {}
 
     public function simpan(Model $pemilik, array $data, User $oleh): TautanBerkas
     {
@@ -63,5 +66,13 @@ class TautanEksternal implements PenyimpananBerkas
     public function urlPratinjau(TautanBerkas $tautan): ?string
     {
         return $tautan->penyedia->dapatDipratinjau() ? $this->pengurai->urlPratinjau($tautan->drive_file_id) : null;
+    }
+
+    /**
+     * Unduh sementara lewat PengunduhAman; Drive/Docs memakai URL unduh langsung (uc?export=download / export PDF).
+     */
+    public function ambilSementara(TautanBerkas $tautan): BerkasSementara
+    {
+        return $this->pengunduh->unduh($this->pengurai->urlUnduh($tautan->url));
     }
 }
