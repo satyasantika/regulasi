@@ -18,6 +18,7 @@ class ViewUser extends ViewRecord
     {
         return [
             EditAction::make(),
+            UserResource::aksiAturPenugasan(),
         ];
     }
 
@@ -28,6 +29,7 @@ class ViewUser extends ViewRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $data['peran'] = $this->record->getRoleNames()->all();
+        $data['kategori_sistem'] = $this->record->kategoriSistem()->pluck('kategori_sistem.id')->all();
 
         return $data;
     }

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\Peran;
+use App\Models\KategoriSistem;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use RuntimeException;
@@ -29,12 +30,13 @@ class PenggunaAwalSeeder extends Seeder
 
         if (app()->isLocal()) {
             $this->buat('admin@unsil.test', 'Admin Regulasi', 'password', Peran::AdminRegulasi);
-            $this->buat('kontributor.aset@unsil.test', 'Kontributor Aset', 'password', Peran::Kontributor);
+            $kontributor = $this->buat('kontributor.aset@unsil.test', 'Kontributor Aset', 'password', Peran::Kontributor);
+            $this->tugaskan($kontributor, 'aset');
             $this->buat('pengguna@unsil.test', 'Pengguna Kampus', 'password', Peran::Pengguna);
         }
     }
 
-    private function buat(string $email, string $nama, string $password, Peran $peran): void
+    private function buat(string $email, string $nama, string $password, Peran $peran): User
     {
         $pengguna = User::firstOrCreate(
             ['email' => $email],
@@ -43,5 +45,19 @@ class PenggunaAwalSeeder extends Seeder
 
         $pengguna->forceFill(['email_verified_at' => $pengguna->email_verified_at ?? now()])->save();
         $pengguna->syncRoles([$peran->value]);
+
+        return $pengguna;
+    }
+
+    /**
+     * Penugasan kategori contoh (03-SKEMA §4.1); dilewati bila kategori belum di-seed.
+     */
+    private function tugaskan(User $pengguna, string $kodeKategori): void
+    {
+        $kategori = KategoriSistem::query()->where('kode', $kodeKategori)->first();
+
+        if ($kategori !== null) {
+            $pengguna->kategoriSistem()->syncWithoutDetaching([$kategori->id]);
+        }
     }
 }

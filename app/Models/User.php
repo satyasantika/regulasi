@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -67,6 +68,16 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('pengguna');
+    }
+
+    /**
+     * Kategori sistem yang ditugaskan kepada kontributor (BR-03).
+     *
+     * @return BelongsToMany<KategoriSistem, $this>
+     */
+    public function kategoriSistem(): BelongsToMany
+    {
+        return $this->belongsToMany(KategoriSistem::class, 'kategori_sistem_user')->withTimestamps(updatedAt: false);
     }
 
     /**
