@@ -17,10 +17,9 @@ class PastikanKlienApiAktif
 {
     public function handle(Request $request, Closure $next): Response
     {
-        /** @var mixed $klien Pemilik token Sanctum (bukan selalu User). */
-        $klien = $request->user();
+        $klien = KlienApi::dariPermintaan($request);
 
-        if (! $klien instanceof KlienApi || ! $klien->aktif || $klien->trashed()) {
+        if ($klien === null || ! $klien->aktif || $klien->trashed()) {
             return self::tolak();
         }
 

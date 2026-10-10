@@ -101,6 +101,7 @@ class PencarianMeilisearch implements PencarianDokumen
             'terbaru' => ['dipublikasikan_pada_ts:desc'],
             'tahun_desc' => ['tahun:desc'],
             'tahun_asc' => ['tahun:asc'],
+            'penetapan_asc' => ['tanggal_penetapan_ts:asc'],
             'dibuka' => ['jumlah_dibuka:desc'],
             default => $kriteria->adaKataKunci() ? [] : ['dipublikasikan_pada_ts:desc'],
         };

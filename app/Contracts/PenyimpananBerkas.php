@@ -4,6 +4,7 @@ namespace App\Contracts;
 
 use App\Enums\JenisTautan;
 use App\Exceptions\Berkas\PengunduhanDitolak;
+use App\Models\KlienApi;
 use App\Models\TautanBerkas;
 use App\Models\User;
 use App\Services\Berkas\BerkasSementara;
@@ -31,6 +32,11 @@ interface PenyimpananBerkas
      * URL internal berotorisasi (/d/{id}/buka); URL mentah tidak pernah dicetak untuk pihak tak berhak.
      */
     public function urlBuka(TautanBerkas $tautan): string;
+
+    /**
+     * URL bertanda tangan sementara (/d/{id}/buka-api) untuk klien API berhak atas dokumen internal (BR-02, BR-17).
+     */
+    public function urlBukaApi(TautanBerkas $tautan, KlienApi $klien): string;
 
     public function urlPratinjau(TautanBerkas $tautan): ?string;
 

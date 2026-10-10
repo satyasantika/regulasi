@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\Request;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -81,5 +82,24 @@ class KlienApi extends Model implements AuthenticatableContract
     public function kategoriSistem(): BelongsTo
     {
         return $this->belongsTo(KategoriSistem::class, 'kategori_sistem_id')->withTrashed();
+    }
+
+    /**
+     * Klien API pemilik token pada permintaan ini (null bila bukan klien API).
+     */
+    public static function dariPermintaan(Request $request): ?self
+    {
+        /** @var mixed $pemilik */
+        $pemilik = $request->user();
+
+        return $pemilik instanceof self ? $pemilik : null;
+    }
+
+    /**
+     * BR-02: dokumen internal hanya untuk token berability dokumen:baca-internal.
+     */
+    public static function bolehBacaInternal(Request $request): bool
+    {
+        return self::dariPermintaan($request)?->tokenCan(self::ABILITY_BACA_INTERNAL) ?? false;
     }
 }

@@ -9,9 +9,12 @@ namespace App\Services\Pencarian;
  */
 final readonly class KriteriaPencarian
 {
-    public const array URUTAN = ['relevan', 'terbaru', 'tahun_desc', 'tahun_asc', 'dibuka'];
+    public const array URUTAN = ['relevan', 'terbaru', 'tahun_desc', 'tahun_asc', 'penetapan_asc', 'dibuka'];
 
     public const int PER_HALAMAN_MAKS = 50;
+
+    /** Batas page[size] API v1 (F9.2). */
+    public const int PER_HALAMAN_MAKS_API = 100;
 
     public string $q;
 
@@ -28,6 +31,7 @@ final readonly class KriteriaPencarian
      * @param  list<string>  $kategori
      * @param  list<string>  $badan
      * @param  list<string>  $kelompok
+     * @param  int  $perHalamanMaks  batas per halaman (portal 50, API 100)
      */
     public function __construct(
         ?string $q = null,
@@ -41,11 +45,12 @@ final readonly class KriteriaPencarian
         int $halaman = 1,
         int $perHalaman = 20,
         public bool $sertakanInternal = false,
+        int $perHalamanMaks = self::PER_HALAMAN_MAKS,
     ) {
         $this->q = trim(mb_substr((string) $q, 0, 200));
         $this->urut = in_array($urut, self::URUTAN, true) ? $urut : 'relevan';
         $this->halaman = max(1, $halaman);
-        $this->perHalaman = max(1, min(self::PER_HALAMAN_MAKS, $perHalaman));
+        $this->perHalaman = max(1, min($perHalamanMaks, $perHalaman));
     }
 
     /**
@@ -53,7 +58,7 @@ final readonly class KriteriaPencarian
      *
      * @param  array<string, mixed>  $data
      */
-    public static function dari(array $data, bool $sertakanInternal = false): self
+    public static function dari(array $data, bool $sertakanInternal = false, int $perHalamanMaks = self::PER_HALAMAN_MAKS): self
     {
         return new self(
             q: is_scalar($data['q'] ?? null) ? (string) $data['q'] : null,
@@ -67,6 +72,7 @@ final readonly class KriteriaPencarian
             halaman: (int) ($data['halaman'] ?? 1),
             perHalaman: (int) ($data['per_halaman'] ?? 20),
             sertakanInternal: $sertakanInternal,
+            perHalamanMaks: $perHalamanMaks,
         );
     }
 

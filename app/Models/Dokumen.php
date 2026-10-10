@@ -73,6 +73,8 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property-read TautanBerkas|null $naskahUtama
  * @property-read Collection<int, RiwayatStatusDokumen> $riwayatStatus
  * @property-read Collection<int, DokumenRelasi> $relasi
+ * @property-read Collection<int, KategoriSistem> $kategori
+ * @property-read Collection<int, TautanBerkas> $tautan
  */
 class Dokumen extends Model
 {
@@ -293,6 +295,27 @@ class Dokumen extends Model
             ->orderByRaw('CASE WHEN jenis = ? THEN 0 ELSE 1 END', [JenisTautan::NaskahUtama->value])
             ->orderBy('urutan')
             ->orderBy('created_at');
+    }
+
+    /**
+     * Alias relasi untuk JSON:API v1 (`include=kategori`, F9.2).
+     *
+     * @return BelongsToMany<KategoriSistem, $this>
+     */
+    public function kategori(): BelongsToMany
+    {
+        return $this->kategoriSistem();
+    }
+
+    /**
+     * Alias relasi untuk JSON:API v1 (`include=tautan`, F9.2); dokumen pemilik langsung terpasang (chaperone)
+     * agar tautan buka dapat dibentuk tanpa kueri tambahan.
+     *
+     * @return MorphMany<TautanBerkas, $this>
+     */
+    public function tautan(): MorphMany
+    {
+        return $this->tautanBerkas()->chaperone('pemilik');
     }
 
     /** @return MorphOne<TautanBerkas, $this> */
