@@ -131,6 +131,22 @@ test('berkas:bersihkan-tmp menghapus berkas tmp lebih dari 24 jam dan menyisakan
     }
 });
 
+test('berkas:bersihkan-tmp melewati berkas yang sudah dihapus proses lain di tengah pemindaian', function () {
+    $folder = storage_path('app/tmp/uji-jadwal-'.bin2hex(random_bytes(4)));
+    File::ensureDirectoryExists($folder);
+    $hilang = new SplFileInfo("{$folder}/sudah-dihapus.xlsx");
+
+    try {
+        File::partialMock()->shouldReceive('allFiles')->andReturn([$hilang]);
+
+        $this->artisan('berkas:bersihkan-tmp')
+            ->expectsOutput('0 berkas sementara dihapus.')
+            ->assertSuccessful();
+    } finally {
+        File::deleteDirectory($folder);
+    }
+});
+
 test('ringkasan mingguan memuat angka yang benar dan hanya dikirim lewat surel ke admin aktif', function () {
     Notification::fake();
     $admin = penggunaDenganPeran(Peran::AdminRegulasi);

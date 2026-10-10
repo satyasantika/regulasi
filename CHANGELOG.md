@@ -5,6 +5,10 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+### Keamanan
+- Uji regresi CSRF rute keluar panel (KM-06): POST tanpa token ditolak 419 untuk pengguna masuk; 302 untuk tamu
+  terbukti bukan celah (autentikasi berjalan sebelum pemeriksaan CSRF, tanpa sesi yang diakhiri).
+
 ## [1.0.0] - 2026-10-11
 
 Rilis pertama Regulasi FKIP Unsil: repositori terpusat dokumen hukum & pendukung FKIP Universitas Siliwangi.

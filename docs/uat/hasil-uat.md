@@ -124,7 +124,7 @@ Semua skenario tetap **wajib diuji dan ditandatangani perwakilan peran** (G-01);
 | KM-03 / KM-03a | ✓ | `KeamananTest` (javascript:, data:, http:, IP privat/loopback, userinfo, pemendek, folder), `PengunduhAmanTest`, `Arch/TanpaUnggahTest`; uji asap Docker: tmp ekstraksi kosong |
 | KM-04 | ✓ | `KeamananTest` (parameter `to/url/redirect/next/tujuan` diabaikan), `BukaTautanTest` (no-referrer, no-store) |
 | KM-05 | ✓ | `PanelAksesTest` (masuk 5/menit), P-15 (buka 30/menit), X-06 (API 60/menit), `DaftarDokumenTest` (pencarian 60/menit) |
-| KM-06 | Belum diuji manusia | CSRF bawaan Laravel aktif (tidak ada pengecualian rute web); perlu uji POST tanpa token di browser |
+| KM-06 | Lulus (CLI + test) | POST `/admin/logout` & `/akun/logout` tanpa token dengan sesi masuk → 419, sesi tetap utuh; `Sec-Fetch-Site: cross-site` → 419. Tamu mendapat 302 ke halaman masuk karena `Authenticate` Filament berjalan sebelum `PreventRequestForgery` (prioritas middleware) — tanpa efek. Regresi: `tests/Feature/Keamanan/CsrfLogoutTest.php` |
 | KM-07 | ✓ | `KeamananTest` (XSS judul/abstrak/keterangan relasi/tag; tidak ada `{!!` di `resources/views`) |
 | KM-08 | ✓ (CLI) / belum diuji manusia di browser | `curl -I` & `KeamananTest`: CSP `frame-src https://drive.google.com https://docs.google.com`, `frame-ancestors 'self'`, X-Frame-Options, Permissions-Policy, COOP, HSTS (produksi); panel & portal dirender Playwright dengan CSP aktif (panduan F12.6) |
 | KM-09 | ✓ | A-01; `UserResourceTest` |
