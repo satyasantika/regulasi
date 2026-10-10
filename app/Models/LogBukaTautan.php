@@ -67,4 +67,10 @@ class LogBukaTautan extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    /** @return BelongsTo<KlienApi, $this> */
+    public function klienApi(): BelongsTo
+    {
+        return $this->belongsTo(KlienApi::class, 'klien_api_id')->withTrashed();
+    }
 }
