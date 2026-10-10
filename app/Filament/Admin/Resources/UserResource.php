@@ -2,20 +2,25 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Actions\Pengguna\AturPenugasanKategori;
 use App\Enums\Peran;
 use App\Filament\Admin\Resources\UserResource\Pages\CreateUser;
 use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
 use App\Filament\Admin\Resources\UserResource\Pages\ListUsers;
 use App\Filament\Admin\Resources\UserResource\Pages\ViewUser;
+use App\Models\KategoriSistem;
 use App\Models\Role;
 use App\Models\User;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
@@ -88,7 +93,11 @@ class UserResource extends Resource
                     ->options(fn (): array => Role::query()->orderBy('name')->pluck('name', 'name')
                         ->map(fn (string $nama): string => Peran::tryFrom($nama)?->getLabel() ?? $nama)
                         ->all())
+                    ->live()
                     ->required(),
+                static::isianKategoriSistem()
+                    ->visible(fn (Get $get): bool => in_array(Peran::Kontributor->value, (array) $get('peran'), true))
+                    ->disabled(fn (): bool => ! (auth()->user()?->can('penugasan.kelola') ?? false)),
                 Toggle::make('aktif')
                     ->label('Aktif')
                     ->default(true)
@@ -100,7 +109,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('roles'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['roles', 'kategoriSistem']))
             ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')->label('Nama')->searchable()->sortable(),
@@ -110,6 +119,12 @@ class UserResource extends Resource
                     ->label('Peran')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => Peran::tryFrom($state)?->getLabel() ?? $state),
+                TextColumn::make('kategoriSistem.nama')
+                    ->label('Kategori ditugaskan')
+                    ->badge()
+                    ->color('gray')
+                    ->placeholder('—')
+                    ->toggleable(),
                 IconColumn::make('aktif')->label('Aktif')->boolean(),
                 TextColumn::make('terakhir_masuk_pada')->label('Terakhir masuk')
                     ->dateTime('d F Y H:i')->placeholder('Belum pernah')->sortable(),
@@ -126,8 +141,49 @@ class UserResource extends Resource
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                static::aksiAturPenugasan(),
             ])
             ->toolbarActions([]);
+    }
+
+    /**
+     * Pilihan kategori sistem aktif (US-MAS-03). Nilai: daftar id kategori.
+     */
+    public static function isianKategoriSistem(): Select
+    {
+        return Select::make('kategori_sistem')
+            ->label('Kategori sistem yang ditugaskan')
+            ->multiple()
+            ->options(fn (): array => KategoriSistem::query()->aktif()->terurut()->pluck('nama', 'id')->all())
+            ->helperText('Kontributor hanya dapat mengisi dokumen pada kategori yang ditugaskan.');
+    }
+
+    /**
+     * Aksi tabel terpisah agar admin-regulasi (penugasan.kelola) dapat menugaskan kontributor
+     * tanpa memperoleh hak ubah data pengguna (UserPolicy::update tetap ketat).
+     */
+    public static function aksiAturPenugasan(): Action
+    {
+        return Action::make('aturPenugasan')
+            ->label('Atur penugasan')
+            ->icon(Heroicon::OutlinedSquares2x2)
+            ->color('gray')
+            ->authorize('aturPenugasan')
+            ->visible(fn (User $record): bool => $record->hasRole(Peran::Kontributor->value))
+            ->modalHeading(fn (User $record): string => "Atur penugasan: {$record->name}")
+            ->fillForm(fn (User $record): array => ['kategori_sistem' => $record->kategoriSistem->modelKeys()])
+            ->schema([static::isianKategoriSistem()])
+            ->action(function (User $record, array $data): void {
+                /** @var User $oleh */
+                $oleh = auth()->user();
+
+                /** @var list<string> $kategori */
+                $kategori = array_values($data['kategori_sistem'] ?? []);
+
+                app(AturPenugasanKategori::class)->handle($record, $kategori, $oleh);
+
+                Notification::make()->title('Penugasan kategori disimpan')->success()->send();
+            });
     }
 
     public static function getPages(): array

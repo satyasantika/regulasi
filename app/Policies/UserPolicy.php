@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\Peran;
 use App\Models\User;
 
 /**
@@ -27,6 +28,15 @@ class UserPolicy
     public function update(User $user, User $model): bool
     {
         return $user->can('pengguna.kelola');
+    }
+
+    /**
+     * Penugasan kontributor ke kategori sistem (US-MAS-03): pemilik penugasan.kelola, hanya untuk pengguna berperan kontributor.
+     * Sengaja terpisah dari update agar admin-regulasi dapat menugaskan tanpa mengubah data lain pengguna.
+     */
+    public function aturPenugasan(User $user, User $model): bool
+    {
+        return $user->can('penugasan.kelola') && $model->hasRole(Peran::Kontributor->value);
     }
 
     /**

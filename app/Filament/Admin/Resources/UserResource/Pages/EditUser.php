@@ -2,8 +2,10 @@
 
 namespace App\Filament\Admin\Resources\UserResource\Pages;
 
+use App\Actions\Pengguna\AturPenugasanKategori;
 use App\Actions\Pengguna\KirimTautanAturSandi;
 use App\Actions\Pengguna\UbahPengguna;
+use App\Enums\Peran;
 use App\Filament\Admin\Resources\UserResource;
 use App\Models\User;
 use Filament\Actions\Action;
@@ -11,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 
 /**
  * @property User $record
@@ -43,6 +46,7 @@ class EditUser extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $data['peran'] = $this->record->getRoleNames()->all();
+        $data['kategori_sistem'] = $this->record->kategoriSistem()->pluck('kategori_sistem.id')->all();
 
         return $data;
     }
@@ -56,7 +60,18 @@ class EditUser extends EditRecord
         /** @var User $oleh */
         $oleh = auth()->user();
 
+        /** @var list<string>|null $kategori */
+        $kategori = array_key_exists('kategori_sistem', $data) ? array_values((array) $data['kategori_sistem']) : null;
+
         /** @var array{name?: string, email?: string, nip?: string|null, kode_eksternal?: string|null, aktif?: bool, peran?: list<string>} $data */
-        return app(UbahPengguna::class)->handle($record, $data, $oleh);
+        $data = Arr::except($data, ['kategori_sistem']);
+
+        $pengguna = app(UbahPengguna::class)->handle($record, $data, $oleh);
+
+        if ($kategori !== null && $pengguna->hasRole(Peran::Kontributor->value) && $oleh->can('aturPenugasan', $pengguna)) {
+            app(AturPenugasanKategori::class)->handle($pengguna, $kategori, $oleh);
+        }
+
+        return $pengguna;
     }
 }
