@@ -19,5 +19,11 @@ class DatabaseSeeder extends Seeder
             TagSeeder::class,
             PenggunaAwalSeeder::class,
         ]);
+
+        // Dokumen contoh hanya di luar produksi; di produksi jalankan eksplisit:
+        // php artisan db:seed --class=DokumenContohSeeder
+        if (! app()->isProduction()) {
+            $this->call(DokumenContohSeeder::class);
+        }
     }
 }
