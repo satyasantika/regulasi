@@ -85,7 +85,7 @@ test('kontributor mendapat 403 di halaman log aktivitas', function () {
 });
 
 test('admin-regulasi dapat melihat daftar dan rincian log aktivitas', function () {
-    $admin = User::factory()->create()->assignRole(Peran::AdminRegulasi->value);
+    $admin = penggunaDenganPeran(Peran::AdminRegulasi);
     $user = User::factory()->create(['name' => 'Nama Lama']);
     $user->update(['name' => 'Nama Baru']);
     $log = Aktivitas::query()->where('event', 'updated')->firstOrFail();
@@ -103,7 +103,7 @@ test('admin-regulasi dapat melihat daftar dan rincian log aktivitas', function (
 });
 
 test('menu log aktivitas tampil untuk super-admin dan admin-regulasi', function (Peran $peran) {
-    $this->actingAs(User::factory()->create()->assignRole($peran->value))
+    $this->actingAs(penggunaDenganPeran($peran))
         ->get('/admin')
         ->assertOk()
         ->assertSee('Log Aktivitas');

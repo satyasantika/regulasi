@@ -3,6 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Auth\Masuk;
+use App\Http\Middleware\WajibMfa;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -33,6 +35,12 @@ class AdminPanelProvider extends PanelProvider
             ->login(Masuk::class)
             ->passwordReset()
             ->profile()
+            // MFA wajib bagi super-admin & admin-regulasi (WajibMfa), opsional bagi kontributor.
+            ->multiFactorAuthentication(
+                [AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')],
+                isRequired: true,
+            )
+            ->multiFactorAuthenticationRequiredMiddlewareName(WajibMfa::class)
             ->brandName('Regulasi FKIP Unsil')
             ->colors([
                 'primary' => Color::Blue,

@@ -2,10 +2,12 @@
 
 namespace App\Enums;
 
+use Filament\Support\Contracts\HasLabel;
+
 /**
  * Peran pengguna (PRD §3.1). Tamu dan klien API bukan peran.
  */
-enum Peran: string
+enum Peran: string implements HasLabel
 {
     case SuperAdmin = 'super-admin';
     case AdminRegulasi = 'admin-regulasi';

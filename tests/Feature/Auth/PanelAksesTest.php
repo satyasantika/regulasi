@@ -18,36 +18,31 @@ beforeEach(function () {
     $this->seed(PeranDanIzinSeeder::class);
 });
 
-function penggunaPeran(Peran $peran, array $atribut = []): User
-{
-    return User::factory()->create($atribut)->assignRole($peran->value);
-}
-
 test('halaman masuk kedua panel tampil berbahasa indonesia', function (string $path) {
     $this->get($path)->assertOk()->assertSee('Masuk ke akun Anda');
 })->with(['/admin/login', '/akun/login']);
 
 test('kontributor bisa membuka panel admin', function () {
-    $this->actingAs(penggunaPeran(Peran::Kontributor))->get('/admin')->assertOk();
+    $this->actingAs(penggunaDenganPeran(Peran::Kontributor))->get('/admin')->assertOk();
 });
 
 test('pengguna mendapat 403 di admin tetapi bisa membuka akun', function () {
-    $pengguna = penggunaPeran(Peran::Pengguna);
+    $pengguna = penggunaDenganPeran(Peran::Pengguna);
 
     $this->actingAs($pengguna)->get('/admin')->assertForbidden();
     $this->actingAs($pengguna)->get('/akun')->assertOk()->assertSee('Ke beranda portal')->assertDontSee('Ke panel admin');
 });
 
 test('dasbor akun staf menampilkan tautan ke panel admin', function () {
-    $this->actingAs(penggunaPeran(Peran::Kontributor))->get('/akun')->assertOk()->assertSee('Ke panel admin');
+    $this->actingAs(penggunaDenganPeran(Peran::Kontributor))->get('/akun')->assertOk()->assertSee('Ke panel admin');
 });
 
 test('pengguna nonaktif ditolak di kedua panel', function (string $path) {
-    $this->actingAs(penggunaPeran(Peran::Kontributor, ['aktif' => false]))->get($path)->assertForbidden();
+    $this->actingAs(penggunaDenganPeran(Peran::Kontributor, ['aktif' => false]))->get($path)->assertForbidden();
 })->with(['/admin', '/akun']);
 
 test('pengguna nonaktif tidak bisa masuk lewat formulir', function () {
-    penggunaPeran(Peran::Kontributor, ['email' => 'nonaktif@unsil.ac.id', 'password' => 'rahasia-panjang', 'aktif' => false]);
+    penggunaDenganPeran(Peran::Kontributor, ['email' => 'nonaktif@unsil.ac.id', 'password' => 'rahasia-panjang', 'aktif' => false]);
     Filament::setCurrentPanel('admin');
 
     Livewire::test(Masuk::class)
@@ -99,7 +94,7 @@ test('registrasi dengan surel unsil.ac.id berhasil, berperan pengguna, dan dimin
 });
 
 test('masuk di panel akun diarahkan ke beranda portal dan mencatat waktu masuk', function () {
-    $pengguna = penggunaPeran(Peran::Pengguna, ['email' => 'baca@unsil.ac.id', 'password' => 'rahasia-panjang']);
+    $pengguna = penggunaDenganPeran(Peran::Pengguna, ['email' => 'baca@unsil.ac.id', 'password' => 'rahasia-panjang']);
     Filament::setCurrentPanel('akun');
 
     Livewire::test(Masuk::class)
@@ -113,7 +108,7 @@ test('masuk di panel akun diarahkan ke beranda portal dan mencatat waktu masuk',
 });
 
 test('masuk di panel admin diarahkan ke dasbor admin', function () {
-    penggunaPeran(Peran::Kontributor, ['email' => 'staf@unsil.ac.id', 'password' => 'rahasia-panjang']);
+    penggunaDenganPeran(Peran::Kontributor, ['email' => 'staf@unsil.ac.id', 'password' => 'rahasia-panjang']);
     Filament::setCurrentPanel('admin');
 
     Livewire::test(Masuk::class)
@@ -123,7 +118,7 @@ test('masuk di panel admin diarahkan ke dasbor admin', function () {
 });
 
 test('percobaan masuk ke-6 dalam semenit dibatasi', function () {
-    penggunaPeran(Peran::Kontributor, ['email' => 'uji@unsil.ac.id', 'password' => 'benar-benar-rahasia']);
+    penggunaDenganPeran(Peran::Kontributor, ['email' => 'uji@unsil.ac.id', 'password' => 'benar-benar-rahasia']);
     Filament::setCurrentPanel('admin');
 
     for ($i = 1; $i <= 5; $i++) {
@@ -144,7 +139,7 @@ test('percobaan masuk ke-6 dalam semenit dibatasi', function () {
 });
 
 test('pembatasan masuk terpisah per surel', function () {
-    penggunaPeran(Peran::Kontributor, ['email' => 'b@unsil.ac.id', 'password' => 'rahasia-b-12345']);
+    penggunaDenganPeran(Peran::Kontributor, ['email' => 'b@unsil.ac.id', 'password' => 'rahasia-b-12345']);
     Filament::setCurrentPanel('admin');
 
     for ($i = 1; $i <= 5; $i++) {

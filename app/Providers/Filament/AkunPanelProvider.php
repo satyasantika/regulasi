@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Akun\Pages\Daftar;
 use App\Filament\Akun\Pages\Dasbor;
 use App\Filament\Auth\Masuk;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -34,6 +35,8 @@ class AkunPanelProvider extends PanelProvider
             ->passwordReset()
             ->emailVerification()
             ->profile()
+            // MFA opsional bagi pengguna panel akun.
+            ->multiFactorAuthentication([AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')])
             ->brandName('Regulasi FKIP Unsil')
             ->colors([
                 'primary' => Color::Blue,

@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\Peran;
 use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -30,8 +32,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property CarbonImmutable|null $terakhir_masuk_pada
  */
 #[Fillable(['name', 'email', 'password', 'nip', 'prodi_id', 'kode_eksternal', 'aktif'])]
-#[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+#[Hidden(['password', 'remember_token', 'app_authentication_secret', 'app_authentication_recovery_codes'])]
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, HasUuids, LogsActivity, Notifiable;
@@ -50,6 +52,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'password' => 'hashed',
             'aktif' => 'boolean',
             'terakhir_masuk_pada' => 'datetime',
+            'app_authentication_secret' => 'encrypted',
+            'app_authentication_recovery_codes' => 'encrypted:array',
         ];
     }
 
@@ -79,5 +83,49 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'akun' => true,
             default => false,
         };
+    }
+
+    /**
+     * Peran penerbit (super-admin, admin-regulasi) wajib memakai MFA.
+     */
+    public function wajibMfa(): bool
+    {
+        return $this->hasAnyRole(Peran::nilai(Peran::wajibMfa()));
+    }
+
+    public function getAppAuthenticationSecret(): ?string
+    {
+        return $this->app_authentication_secret;
+    }
+
+    public function saveAppAuthenticationSecret(?string $secret): void
+    {
+        $this->app_authentication_secret = $secret;
+        $this->save();
+    }
+
+    public function getAppAuthenticationHolderName(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * @return array<string>|null
+     */
+    public function getAppAuthenticationRecoveryCodes(): ?array
+    {
+        /** @var array<string>|null $kode */
+        $kode = $this->getAttribute('app_authentication_recovery_codes');
+
+        return $kode;
+    }
+
+    /**
+     * @param  array<string>|null  $codes
+     */
+    public function saveAppAuthenticationRecoveryCodes(?array $codes): void
+    {
+        $this->setAttribute('app_authentication_recovery_codes', $codes);
+        $this->save();
     }
 }
