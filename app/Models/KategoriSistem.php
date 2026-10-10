@@ -81,4 +81,14 @@ class KategoriSistem extends Model
     {
         $query->orderBy('urutan')->orderBy('nama');
     }
+
+    /**
+     * Dokumen dalam kategori ini (dipakai sitemap F8.4).
+     *
+     * @return BelongsToMany<Dokumen, $this>
+     */
+    public function dokumen(): BelongsToMany
+    {
+        return $this->belongsToMany(Dokumen::class, 'dokumen_kategori_sistem');
+    }
 }

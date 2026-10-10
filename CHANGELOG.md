@@ -5,6 +5,56 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+## [0.8.0] - 2026-10-10
+
+### Ditambahkan
+- Tata letak portal publik `x-layouts.publik` (Blade + Livewire 4 + Tailwind CSS 4 via `@tailwindcss/vite`, US-PUB-03):
+  `<html lang="id">`, tautan lewati-ke-konten, header dengan navigasi Beranda/Dokumen/Kategori (dropdown dari master
+  ter-cache) dan tombol Masuk/nama pengguna → `/akun`, menu hamburger Alpine di < 768 px, slot breadcrumb, kaki berisi
+  alamat FKIP (`config('regulasi.alamat')`, `REGULASI_ALAMAT`) dan versi. Komponen `x-publik.breadcrumb`,
+  `x-publik.badge-status`, `x-publik.ikon` (Heroicon kategori), `x-publik.kartu-dokumen`, `x-publik.paginasi`.
+- Beranda Livewire `Publik\Beranda` (`/`, `beranda`, US-PUB-01): hero dengan kotak pencarian (GET ke daftar dokumen),
+  ringkasan angka, kartu per jenis (→ `/jenis/{slug}`), kartu kategori sistem berikon (→ `/kategori/{slug}`), 10 dokumen
+  terbaru, tautan per status berlaku dan per tahun. `CacheRegulasi::statistikBeranda()`, `terbaru()`, `tahunTersedia()`
+  (kunci `beranda:statistik`, `beranda:terbaru`, `faset:tahun`, 60 menit; hanya terbit & publik); pengguna login melihat
+  dokumen internal pada daftar terbaru lewat query terpisah yang tidak di-cache (BR-02, BR-20).
+- Daftar dokumen berfaset Livewire `Publik\DaftarDokumen` untuk `/dokumen`, `/jenis/{jenisDokumen:slug}` (jenis
+  terkunci), dan `/kategori/{kategoriSistem:slug}` (kategori terkunci) (US-CARI-01..03): `q` (debounce 400 ms), `jenis[]`,
+  `tahun[]`, `status[]`, `kategori[]`, `badan[]`, `urut` tersinkron ke URL; memakai `PencarianDokumen` F7.3 dengan
+  `sertakanInternal` = login; faset berjumlah per dimensi dalam `fieldset/legend`, panel "Filter (n)" lipat di ponsel,
+  chip filter aktif, "Hapus semua filter", jumlah hasil `aria-live`, catatan "Pencarian sederhana" saat mesin database,
+  breadcrumb dan `<title>` per rute. Rate limit `pencarian` 60/menit per IP (mesin tidak dipanggil bila terlampaui).
+- Halaman detail `/dokumen/{dokumen}/{slug?}` (`dokumen.show`, `Publik\DetailDokumenController`, US-PUB-02, BR-19): 404
+  bila tidak terbit/terhapus, dokumen internal untuk tamu → masuk akun, slug kosong/lama → 301 (BR-16); breadcrumb
+  Beranda › Jenis › sebutan; badge status + kalimat `RingkasanStatus` dan relasi tertunda; tabel metadata (T.E.U., tanggal
+  `j F Y`, sumber + halaman sumber resmi, kategori, subjek → pencarian, bahasa); abstrak ter-escape per paragraf; relasi
+  dikelompokkan (Mencabut … Dilaksanakan oleh) dengan badge dan tanda "Tertunda" (dokumen terkait yang belum terbit
+  tidak ditampilkan, internal tanpa tautan bagi tamu); daftar tautan `x-tautan-berkas` (penyedia, jumlah halaman
+  terekstraksi); kotak "Metadata saja" untuk `tanpa_berkas`; jumlah dibuka. Policy `DokumenPolicy::lihatDiPortal`.
+- Pratinjau sematan `x-pratinjau-tautan` tanpa PDF.js/berkas lokal: Google Drive/Docs → iframe `/preview`
+  (`loading="lazy"`, `referrerpolicy="no-referrer"`) yang baru dimuat setelah "Tampilkan pratinjau", dengan tombol
+  "Buka berkas" sebagai cadangan; sumber resmi pemerintah → "Buka di situs sumber". URL pratinjau hanya bagi yang berhak.
+- Middleware `HeaderKeamanan` (dasar F12.1): CSP dengan `frame-src https://drive.google.com https://docs.google.com`,
+  `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`.
+- SEO (F8.4): komponen `x-meta` (title, description, canonical slug terkini, Open Graph dasar); `noindex` untuk dokumen
+  internal serta panel `/admin` dan `/akun` (render hook); JSON-LD schema.org `Legislation` (peraturan/keputusan:
+  `legislationIdentifier`, `legislationDate`, `legislationPassedBy`, `legislationType`, `legislationLegalForce`) atau
+  `CreativeWork` (`App\Support\DataTerstruktur`); `/sitemap.xml` (`Publik\SitemapController`) berisi beranda, daftar,
+  jenis & kategori yang berdokumen, dan dokumen terbit & publik (`lastmod`), cache `sitemap` 1 jam yang ikut dibersihkan
+  `lupakanPublik()`; `public/robots.txt` dengan baris untuk robots.txt gateway.
+- Aksesibilitas: label untuk semua input, ikon `aria-hidden`, urutan heading h1→h2→h3, `focus-visible`, target sentuh
+  ≥ 44 px di ponsel, tombol buka menyebut penyedia dan membuka tab baru `rel="noopener noreferrer"`; audit axe-core
+  (WCAG 2.2 AA + best practice) tanpa pelanggaran untuk beranda, daftar, jenis, dan detail di 360 px dan 1280 px.
+- Uji `tests/Feature/Publik/` (BerandaTest, DaftarDokumenTest, DetailDokumenTest, SitemapSeoTest), termasuk uji bahwa
+  halaman detail dokumen internal tidak memuat URL Drive/URL mentah bagi tamu (tindak lanjut F4).
+
+### Diubah
+- `CacheRegulasi::master()` menyimpan larik atribut lalu meng-hydrate model: store Redis menolak unserialize objek
+  (`cache.serializable_classes = false`), sehingga cache master yang hangat sebelumnya menimbulkan galat.
+- Komponen `x-tautan-berkas` ditata ulang dengan Tailwind, menampilkan penyedia & jumlah halaman, dan menerima
+  `:pratinjau="false"`. Rute `/` kini beranda portal (`welcome.blade.php` dihapus). Font Instrument Sans menambah bobot 700.
+- `APP_VERSION=0.8.0`.
+
 ## [0.7.0] - 2026-10-10
 
 ### Ditambahkan

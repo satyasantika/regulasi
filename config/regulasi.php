@@ -14,6 +14,9 @@ return [
 
     'versi' => env('APP_VERSION', 'dev'),
 
+    // Alamat di kaki portal publik (perlu verifikasi oleh FKIP sebelum produksi).
+    'alamat' => env('REGULASI_ALAMAT', 'Jl. Siliwangi No. 24, Kota Tasikmalaya, Jawa Barat 46115'),
+
     // Reverse proxy tepercaya (STANDAR-TEKNIS §2.4): produksi = IP reverse proxy, lokal = *.
     'trusted_proxies' => env('TRUSTED_PROXIES'),
 

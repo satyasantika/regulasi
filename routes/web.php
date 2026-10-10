@@ -1,11 +1,21 @@
 <?php
 
 use App\Http\Controllers\Publik\BukaTautanController;
+use App\Http\Controllers\Publik\DetailDokumenController;
+use App\Http\Controllers\Publik\SitemapController;
+use App\Livewire\Publik\Beranda;
+use App\Livewire\Publik\DaftarDokumen;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Portal publik (02-ARSITEKTUR §8).
+Route::get('/', Beranda::class)->name('beranda');
+Route::get('/dokumen', DaftarDokumen::class)->name('dokumen.index');
+Route::get('/jenis/{jenisDokumen:slug}', DaftarDokumen::class)->name('dokumen.jenis');
+Route::get('/kategori/{kategoriSistem:slug}', DaftarDokumen::class)->name('dokumen.kategori');
+Route::get('/dokumen/{dokumen}/{slug?}', [DetailDokumenController::class, 'show'])
+    ->whereUuid('dokumen')
+    ->name('dokumen.show');
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 // Buka tautan berkas berotorisasi (BR-17): Policy → log → redirect ke URL tersimpan.
 Route::get('/d/{tautanBerkas}/buka', BukaTautanController::class)
