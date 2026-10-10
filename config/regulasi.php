@@ -14,6 +14,9 @@ return [
 
     'versi' => env('APP_VERSION', 'dev'),
 
+    // Reverse proxy tepercaya (STANDAR-TEKNIS §2.4): produksi = IP reverse proxy, lokal = *.
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
     // Registrasi panel akun hanya untuk alamat surel domain ini.
     'domain_registrasi' => 'unsil.ac.id',
 

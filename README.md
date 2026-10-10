@@ -88,5 +88,30 @@ git config core.hooksPath .githooks
 Gerbang kualitas: `rgp composer cek` (Pint `--test`, Larastan level 6, Pest). Laravel Boost (MCP `laravel-boost`)
 dijalankan agen AI lewat `docker exec -i regulasi-php php artisan boost:mcp` (`.mcp.json` lokal).
 
-Aplikasi: http://localhost:8034 · Mailpit: http://localhost:18018 · Meilisearch hanya dari jaringan internal
+Aplikasi: http://localhost:8034/regulasi/ (juga http://localhost:8034 untuk pemeriksaan langsung) ·
+Mailpit: http://localhost:18018 · Meilisearch hanya dari jaringan internal
 (`rgp curl -s http://regulasi-meilisearch:7700/health`).
+
+### Subpath `/regulasi`
+
+Produksi: `https://supportfkip.unsil.ac.id/regulasi`. Reverse proxy memotong awalan sebelum meneruskan ke Nginx aplikasi,
+sedangkan aplikasi membangkitkan semua URL dengan awalan itu (`URL::forceRootUrl`, `ASSET_URL`, `SESSION_PATH=/regulasi`,
+`SESSION_COOKIE=regulasi_session`, `trustProxies`). Nginx lokal (`/home/satya/code/docker/nginx/regulasi.conf`) meniru
+pemotongan awalan itu, sehingga lokal dan produksi berperilaku sama. Aset dibangun dengan `ASSET_URL` terisi
+(`npm run build` membaca `.env`, base `/regulasi/build/`). Dilarang `href="/..."`, `src="/..."`, `action="/..."`,
+`fetch('/...')` di Blade/JS (diuji `tests/Arch/SubpathTest.php`). Livewire, Filament, dan Horizon yang dipasang
+kemudian wajib mengikuti awalan yang sama.
+
+Blok reverse proxy produksi (di server depan):
+
+```nginx
+location = /regulasi { return 301 /regulasi/; }
+location /regulasi/ {
+    proxy_pass http://127.0.0.1:<port>/;          # garis miring akhir = awalan dipotong
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Prefix /regulasi;
+    client_max_body_size 20m;
+}
+```
