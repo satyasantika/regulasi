@@ -10,9 +10,11 @@ use App\Exceptions\Berkas\PengunduhanDitolak;
 use App\Jobs\Concerns\DibatasiPerHost;
 use App\Models\EkstraksiTeks;
 use App\Models\TautanBerkas;
+use App\Notifications\EkstraksiGagal;
 use App\Services\Berkas\BerkasSementara;
 use App\Services\Berkas\PengekstrakTeksPdf;
 use App\Services\Berkas\PenguraiTautan;
+use App\Support\PenerimaNotifikasi;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -99,7 +101,8 @@ class EkstrakTeksTautan implements ShouldBeUnique, ShouldQueue
     }
 
     /**
-     * Percobaan habis karena galat tak terduga: status gagal, pesan dipotong 500, percobaan bertambah.
+     * Percobaan habis karena galat tak terduga: status gagal, pesan dipotong 500, percobaan bertambah, lalu
+     * notifikasi database EkstraksiGagal ke admin-regulasi (02-ARSITEKTUR §10).
      */
     public function failed(?Throwable $galat): void
     {
@@ -109,11 +112,20 @@ class EkstrakTeksTautan implements ShouldBeUnique, ShouldQueue
             return;
         }
 
+        $pesan = mb_substr($galat?->getMessage() ?? 'Ekstraksi gagal.', 0, 500);
+
         $ekstraksi->forceFill([
             'status' => StatusEkstraksi::Gagal,
-            'pesan' => mb_substr($galat?->getMessage() ?? 'Ekstraksi gagal.', 0, 500),
+            'pesan' => $pesan,
             'percobaan' => min(255, $ekstraksi->percobaan + 1),
         ])->save();
+
+        $tautan = TautanBerkas::query()->find($this->tautanId);
+        $dokumen = $tautan?->dokumen();
+
+        if ($tautan !== null && $dokumen !== null && ! $dokumen->trashed()) {
+            PenerimaNotifikasi::kirim(PenerimaNotifikasi::admin(), new EkstraksiGagal($tautan, $dokumen, $pesan));
+        }
     }
 
     private function simpanHasil(TautanBerkas $tautan, EkstraksiTeks $ekstraksi, BerkasSementara $berkas, ?int $halaman, string $teks): void

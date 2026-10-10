@@ -83,7 +83,7 @@ abstract class TransisiPublikasi
     }
 
     /**
-     * Efek samping setelah transaksi berhasil di-commit (cache, indeks, notifikasi kelak).
+     * Efek samping setelah transaksi berhasil di-commit (cache, indeks, notifikasi).
      */
     protected function setelahCommit(Dokumen $dokumen, StatusPublikasi $asal, User $oleh): void {}
 

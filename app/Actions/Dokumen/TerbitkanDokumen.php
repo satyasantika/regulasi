@@ -6,7 +6,9 @@ use App\Actions\Relasi\TerapkanRelasiDokumen;
 use App\Enums\StatusPublikasi;
 use App\Models\Dokumen;
 use App\Models\User;
+use App\Notifications\DokumenDiterbitkan;
 use App\Support\CacheRegulasi;
+use App\Support\PenerimaNotifikasi;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -40,6 +42,13 @@ class TerbitkanDokumen extends TransisiPublikasi
         CacheRegulasi::lupakanPublik();
 
         $this->setelahTerbit($dokumen, $oleh);
+
+        // Pembuat draf diberi tahu, kecuali ia sendiri penerbitnya (US-NOT-02).
+        PenerimaNotifikasi::kirim(
+            PenerimaNotifikasi::pengguna($dokumen->dibuat_oleh),
+            new DokumenDiterbitkan($dokumen, $oleh),
+            kecualiId: $oleh->getKey(),
+        );
     }
 
     /**

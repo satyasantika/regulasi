@@ -5,6 +5,42 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+## [0.10.0] - 2026-10-10
+
+### Ditambahkan
+- Notifikasi database & surel (US-NOT-01/02, 02-ARSITEKTUR §10): tabel `notifications` (UUID, `uuidMorphs`), lonceng
+  notifikasi database di panel admin (`databaseNotifications()`, polling 30 dtk). Kelas dasar `NotifikasiRegulasi`
+  (`ShouldQueue`, antrean `notifikasi`, `afterCommit`, format database `Filament\Notifications\Notification`
+  dengan tombol ke halaman admin dokumen, surel berbahasa Indonesia); isi dihitung saat dibuat sehingga tetap terkirim
+  walau model pemicu sudah hilang. Penerima nonaktif (`users.aktif = false`) tidak menerima apa pun (`via()` kosong).
+- `DokumenDiajukan` → pengguna ber-permission `dokumen.verifikasi` (super-admin hanya cadangan bila tidak ada admin
+  aktif); `DokumenDiterbitkan` → pembuat draf dengan tautan halaman publik; `DokumenDitolak` → pembuat draf memuat
+  catatan. Dikirim dari `setelahCommit` Action `AjukanVerifikasi`/`TerbitkanDokumen`/`TolakDokumen` (transaksi gagal →
+  tidak ada notifikasi); pelaku aksi tidak memberi tahu dirinya sendiri.
+- Notifikasi perubahan status per kategori (US-REL-04): pendengar `KirimNotifikasiStatusBerlaku` atas
+  `StatusBerlakuBerubah` → `StatusDokumenBerubah` ke kontributor yang ditugaskan pada kategori dokumen + admin-regulasi,
+  mis. "Permendikbud 3/2021 kini Dicabut oleh Permendiktisaintek 42/2025. Status: Berlaku → Dicabut."
+- `TautanTidakDapatDiakses` (database + surel) dari `PeriksaTautanBerkas` → penambah tautan, dan admin-regulasi bila
+  dokumen terbit (URL mentah tidak dicantumkan); `IsiBerkasBerubah` (database) lewat pendengar
+  `KirimNotifikasiIsiBerkasBerubah`; `EkstraksiGagal` (database) dari `EkstrakTeksTautan::failed()`.
+- Penjadwal `routes/console.php` (02-ARSITEKTUR §9, Asia/Jakarta, semua `withoutOverlapping()->onOneServer()`):
+  `regulasi:terapkan-status` 00:15, `berkas:bersihkan-tmp` 00:45, `regulasi:ekstraksi-ulang --gagal` tiap jam,
+  `model:prune --model=LogBukaTautan` 01:00 (retensi 24 bulan), `activitylog:clean --force` 01:30 (365 hari),
+  `berkas:periksa-tautan` Senin 06:30, `regulasi:ringkasan-mingguan` Senin 07:30, `horizon:snapshot` tiap 5 menit.
+- Perintah `berkas:periksa-tautan {--dokumen=*}` (`PeriksaTautanCommand`): antrekan `PeriksaTautanBerkas` untuk semua
+  tautan dokumen terbit, dijeda per host (job ke-n ditunda ⌊n / batas `unduh-host` per menit⌋ menit), ringkasan jumlah
+  per status cek.
+- Ringkasan mingguan (US-NOT-03): `App\Support\RingkasanMingguan` (dokumen baru terbit 7 hari, antrean verifikasi
+  jumlah & tertua, dokumen terbit tanpa abstrak/naskah utama/teks, tautan tidak dapat diakses, ekstraksi gagal/tidak
+  dapat diunduh, isi berkas berubah, relasi tertunda yang efektif 30 hari ke depan), notifikasi surel
+  `RingkasanMingguan`, dan perintah `regulasi:ringkasan-mingguan`.
+- README: tabel jadwal, `schedule:list`, restart `regulasi-scheduler`, Mailpit.
+- Uji `tests/Feature/Notifikasi/NotifikasiDokumenTest.php` dan `tests/Feature/Penjadwal/JadwalTest.php`.
+
+### Diubah
+- `PeriksaTautanBerkas` dan `EkstrakTeksTautan` tidak lagi hanya mencatat log/event: kini mengirim notifikasi nyata.
+- `APP_VERSION=0.10.0`.
+
 ## [0.9.0] - 2026-10-10
 
 ### Ditambahkan

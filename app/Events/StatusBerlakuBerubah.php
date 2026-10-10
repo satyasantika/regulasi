@@ -11,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Status berlaku dokumen berubah (BR-08, BR-09, BR-12). Dikirim setelah transaksi di-commit; pendengar indeks
- * pencarian (F7) dan notifikasi StatusDokumenBerubah (F10) ditambahkan kemudian.
+ * pencarian (PerbaruiIndeksDokumen, F7) dan notifikasi StatusDokumenBerubah (KirimNotifikasiStatusBerlaku, F10).
  */
 class StatusBerlakuBerubah implements ShouldDispatchAfterCommit
 {
