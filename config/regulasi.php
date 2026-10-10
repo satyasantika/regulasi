@@ -34,6 +34,11 @@ return [
     'seed_tautan_lokal' => database_path('seeders/data/tautan-contoh.local.php'),
     'seed_terbitkan_semua' => (bool) env('REGULASI_SEED_TERBITKAN_SEMUA', false),
 
+    // Akun uji UAT (regulasi:siapkan-uat, hanya non-produksi): kata sandi bersama; kosong = acak & ditampilkan sekali.
+    'uat' => [
+        'password' => env('UAT_PASSWORD'),
+    ],
+
     // Registrasi panel akun hanya untuk alamat surel domain ini.
     'domain_registrasi' => 'unsil.ac.id',
 

@@ -31,7 +31,10 @@ Semua dokumen perancangan ada di [`docs/vibecoding/`](docs/vibecoding/):
 Referensi dasar hukum (Perpres 33/2012, Permenkumham 8/2019) dijelaskan di `docs/referensi/README.md`.
 
 Operasional: [`docs/DEPLOY.md`](docs/DEPLOY.md) (Docker produksi, pembaruan, rollback, reindeks),
-[`docs/KINERJA.md`](docs/KINERJA.md) (pengukuran kinerja), [`docs/api.md`](docs/api.md) (API baca v1).
+[`docs/KINERJA.md`](docs/KINERJA.md) (pengukuran kinerja), [`docs/api.md`](docs/api.md) (API baca v1),
+[`docs/OPERASIONAL.md`](docs/OPERASIONAL.md) (butir yang perlu tindakan/verifikasi manusia),
+[`docs/uat/hasil-uat.md`](docs/uat/hasil-uat.md) (lembar UAT; data uji: `php artisan regulasi:siapkan-uat`),
+panduan [`docs/PANDUAN-ADMIN.md`](docs/PANDUAN-ADMIN.md) dan [`docs/PANDUAN-KONTRIBUTOR.md`](docs/PANDUAN-KONTRIBUTOR.md).
 
 ## Memulai
 
