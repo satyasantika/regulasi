@@ -5,6 +5,31 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+## [0.5.0] - 2026-10-10
+
+### Ditambahkan
+- Tabel `riwayat_status_dokumen` (03-SKEMA §3.12, append-only tanpa `updated_at`; `dokumen_relasi_id` tanpa FK
+  sampai F6.1), enum `JenisRiwayatStatus` (publikasi, berlaku), model `RiwayatStatusDokumen` (ubah/hapus ditolak),
+  `Dokumen::riwayatStatus()` terbaru lebih dulu.
+- Alur publikasi lewat Action bertransaksi (`Cache::lock('lock:publikasi:{id}')` + `DB::transaction` +
+  `lockForUpdate()`, satu baris riwayat per transisi, efek samping di `afterCommit`): `AjukanVerifikasi`
+  (draf/ditolak → menunggu verifikasi), `TerbitkanDokumen` (menunggu verifikasi/draf → terbit; mengisi
+  `diverifikasi_oleh`/`diverifikasi_pada`, `dipublikasikan_pada` hanya pertama kali; titik kait `setelahTerbit`),
+  `TolakDokumen` (catatan wajib ≥ 10 karakter ke `catatan_verifikasi`), `ArsipkanDokumen` (catatan wajib; titik kait
+  `setelahArsip`), `PulihkanDokumen` (diarsipkan → terbit). `PeriksaKelengkapan` memeriksa syarat terbit BR-05.
+  `DokumenPolicy::ajukan`, `verifikasi`, `arsipkan`; `CacheRegulasi::lupakanPublik()` dipanggil saat terbit,
+  arsip, dan pulih (BR-20).
+- Tombol alur publikasi di halaman lihat & ubah dokumen (Ajukan verifikasi, Terbitkan, Tolak, Arsipkan, Pulihkan)
+  menurut Policy + status; kekurangan kelengkapan tampil sebagai notifikasi. Panel "Kelengkapan" (checklist BR-05 +
+  abstrak, tanggal berlaku, tag, teks terekstraksi), relation manager riwayat status (baca saja), dan banner catatan
+  penolakan di halaman ubah.
+- Halaman "Antrean Verifikasi" (`/admin/antrean-verifikasi`, `dokumen.verifikasi`, badge jumlah menunggu): urut paling
+  lama menunggu, kolom pembuat, kategori, lama menunggu, kelengkapan x/y; aksi baris Terbitkan & Tolak dan Terbitkan
+  massal yang melewati dokumen tidak lengkap dan melaporkannya.
+
+### Diubah
+- `StatusPublikasi::bolehTransisiKe()`: dokumen ditolak boleh langsung diajukan ulang ke menunggu verifikasi.
+
 ## [0.4.0] - 2026-10-10
 
 ### Ditambahkan
