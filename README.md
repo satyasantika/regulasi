@@ -50,6 +50,22 @@ rgp php artisan migrate
 npm install && npm run build  # Node di host (container tidak memiliki Node); npm run dev untuk pengembangan
 ```
 
+### Basis data uji
+
+Uji (Pest) berjalan di MariaDB host, bukan SQLite, karena memakai indeks FULLTEXT dan CHECK. Buat sekali:
+
+```sql
+CREATE DATABASE db_regulasi_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- hook pre-commit memakai `php artisan test --parallel`: Laravel membuat db_regulasi_testing_test_N,
+-- sehingga pengguna `app` wajib berhak CREATE DATABASE (GRANT pada `db\_regulasi\_testing%` atau global).
+```
+
+`phpunit.xml`: `DB_CONNECTION=mariadb`, `DB_DATABASE=db_regulasi_testing`, `CACHE_STORE=array`,
+`QUEUE_CONNECTION=sync`, `SCOUT_DRIVER=collection`, `MAIL_MAILER=array` — uji tidak menyentuh Redis bersama.
+
+Lokal & waktu: `APP_LOCALE=id`, `APP_TIMEZONE=Asia/Jakarta`. Redis: DB 44 (default/lock), 45 (cache, kunci
+berawalan `regulasi:`), 46 (antrean).
+
 Aktifkan hook git (sekali per klon) — `commit-msg` menolak pesan di luar Conventional Commits, `pre-commit`
 menjalankan Pint dan Pest di container `regulasi-php`:
 
