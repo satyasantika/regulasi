@@ -2,7 +2,7 @@
 
 Folder ini menampung salinan PDF peraturan untuk keperluan pengembangan lokal. Berkas `*.pdf` di sini masuk
 `.gitignore` dan **tidak boleh di-commit**: sistem tidak menerima unggahan berkas, seeder hanya memakai tautan
-(lihat `docs/vibecoding/03-SKEMA-DATABASE.md` §4.5).
+(skema basis data §4.5).
 
 Salin PDF peraturan dari repositori supportfkip ke folder ini dengan pola nama:
 

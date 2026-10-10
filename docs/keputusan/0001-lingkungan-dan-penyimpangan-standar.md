@@ -4,7 +4,7 @@
 - Tanggal: 2026-10-10
 
 Mesin pengembang sudah memiliki infrastruktur Docker bersama untuk seluruh sistem FKIP (pola yang sama dengan
-sistem `keuangan`, ADR 0003 di repo itu). Keputusan ini menggantikan bagian paket vibecoding bila bertentangan:
+sistem `keuangan`, ADR 0003 di repo itu). Keputusan ini menggantikan bagian standar teknis bila bertentangan:
 
 | Topik | Paket | Keputusan |
 |---|---|---|
@@ -19,7 +19,7 @@ sistem `keuangan`, ADR 0003 di repo itu). Keputusan ini menggantikan bagian pake
 | Hook `pre-commit` | `docker compose exec` dari repo | `docker exec regulasi-php` (compose tidak di repo) |
 | Git | Remote + PR | Belum ada remote: branch per fase, `merge --no-ff` ke `main`, tag lokal. Remote ditambahkan manusia kelak |
 | Tipe kolom UUID | `CHAR(36)` | MariaDB 10.11 memetakan `uuid()`/`foreignUuid()`/`uuidMorphs()` ke tipe bawaan `UUID`; antarmuka PHP identik. Uji `UuidTest` menerima `uuid` atau `char(36)` |
-| Berkas PDF referensi | — | PDF di `docs/referensi/` tidak di-commit (CLAUDE.md: jangan commit PDF) |
+| Berkas PDF referensi | — | PDF di `docs/referensi/` tidak di-commit |
 | Klien Meilisearch (F7.2) | `meilisearch/meilisearch-php` + `http-interop/http-factory-guzzle` | `http-interop/http-factory-guzzle` **tidak dipasang**: bentrok dengan `guzzlehttp/psr7` 3.x; PSR-17 sudah disediakan `guzzlehttp/psr7` (ditemukan `php-http/discovery`) |
 | Uji pencarian FULLTEXT (F7.3) | `RefreshDatabase` | InnoDB FULLTEXT hanya melihat baris ter-commit: `PencarianDatabaseTest` memakai `DatabaseTruncation` (+ truncate sesudah uji) |
 | ID job ekstraksi (F7.1) | `EkstrakTeksTautan(int $tautanId)` | `string $tautanId` karena PK UUIDv7 |

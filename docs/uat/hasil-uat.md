@@ -1,6 +1,6 @@
 # Lembar hasil UAT — Regulasi FKIP Unsil
 
-Skenario: `docs/vibecoding/05-UJI-PENERIMAAN.md` §2. Jalankan di staging (compose produksi, `APP_ENV=staging`)
+Skenario: dokumen uji penerimaan §2. Jalankan di staging (compose produksi, `APP_ENV=staging`)
 dengan data `php artisan regulasi:siapkan-uat --segar` (akun uji per peran §1.2 + klien API "UAT Sistem Aset" dan
 "UAT Internal"; kata sandi dari `--sandi`/`UAT_PASSWORD`, token API tampil sekali). Penguji mengisi kolom
 **Penguji/Tanggal/Hasil manusia**; temuan dicatat di "Daftar temuan".
@@ -100,7 +100,7 @@ Semua skenario tetap **wajib diuji dan ditandatangani perwakilan peran** (G-01);
 | S-04 | Log aktivitas | Pest ✓ `LogAktivitasTest` | | | | |
 | S-05 | Horizon | Otomatis-CLI ✓ — super-admin 200, admin-regulasi 403 | | | | |
 | S-06 | Soft delete & pulihkan | Pest ✓ `DokumenResourceTest`, `MatriksAksesTest` (hanya super-admin; UUID tetap) | | | | |
-| S-07 | Integritas berkas | Diganti `berkas:periksa-tautan` (perintah `regulasi:periksa-berkas` tidak pernah ditetapkan di 04-PROMPT); **belum diuji** dengan tautan nyata | | | | |
+| S-07 | Integritas berkas | Diganti `berkas:periksa-tautan` (perintah `regulasi:periksa-berkas` tidak pernah ditetapkan di rencana kerja); **belum diuji** dengan tautan nyata | | | | |
 
 ### 2.6 Klien API
 

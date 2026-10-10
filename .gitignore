@@ -34,11 +34,12 @@ Thumbs.db
 *.zip
 /docker/data/
 
-# PDF referensi peraturan tidak di-commit (CLAUDE.md: jangan commit PDF apa pun)
+# PDF referensi peraturan tidak di-commit
 /docs/referensi/*.pdf
 
-# CLAUDE.md wajib terlacak (abaikan ignore global)
-!CLAUDE.md
+# Bahan perancangan & konteks agen hanya lokal (tidak di-commit)
+/vibecoding/
+/CLAUDE.md
 
 # Tambahan dari kerangka Laravel 13
 .phpactor.json
