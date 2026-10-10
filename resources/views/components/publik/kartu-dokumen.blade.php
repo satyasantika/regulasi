@@ -3,7 +3,7 @@
 <article class="rounded-xl border border-slate-200 bg-white p-4 transition hover:border-indigo-400 hover:shadow-sm sm:p-5">
     <div class="flex flex-wrap items-center gap-2">
         <h3 class="text-base font-bold text-slate-900">
-            <a href="{{ url('dokumen/'.$dokumen->id.'/'.$dokumen->slug) }}" class="rounded-sm underline-offset-2 hover:text-indigo-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700">
+            <a href="{{ route('dokumen.show', ['dokumen' => $dokumen->id, 'slug' => $dokumen->slug]) }}" class="rounded-sm underline-offset-2 hover:text-indigo-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700">
                 {{ $dokumen->sebutan_singkat }}
             </a>
         </h3>

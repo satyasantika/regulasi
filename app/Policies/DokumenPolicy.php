@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\StatusPublikasi;
+use App\Enums\Visibilitas;
 use App\Models\Dokumen;
 use App\Models\User;
 
@@ -28,6 +29,19 @@ class DokumenPolicy
         }
 
         return $user->can('dokumen.lihat-kategori') && $this->dalamKategori($user, $dokumen);
+    }
+
+    /**
+     * Lihat di portal publik (BR-01, BR-02): hanya terbit & tidak terhapus; internal hanya untuk pengguna login.
+     * Dipanggil juga untuk tamu (User null).
+     */
+    public function lihatDiPortal(?User $user, Dokumen $dokumen): bool
+    {
+        if ($dokumen->trashed() || $dokumen->status_publikasi !== StatusPublikasi::Terbit) {
+            return false;
+        }
+
+        return $dokumen->visibilitas === Visibilitas::Publik || $user !== null;
     }
 
     public function create(User $user): bool

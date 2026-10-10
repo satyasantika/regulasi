@@ -102,7 +102,7 @@
                     <ul class="mt-4 divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
                         @foreach ($terbaru as $dokumen)
                             <li>
-                                <a href="{{ url('dokumen/'.$dokumen['id'].'/'.$dokumen['slug']) }}" class="block p-4 hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-700">
+                                <a href="{{ route('dokumen.show', ['dokumen' => $dokumen['id'], 'slug' => $dokumen['slug']]) }}" class="block p-4 hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-700">
                                     <div class="flex flex-wrap items-center gap-2">
                                         <span class="font-semibold text-slate-900">{{ $dokumen['sebutan_singkat'] }}</span>
                                         <x-publik.badge-status :status="\App\Enums\StatusBerlaku::from($dokumen['status_berlaku'])" />
