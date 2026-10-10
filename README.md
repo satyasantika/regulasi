@@ -61,6 +61,20 @@ cd /home/satya/code && docker compose restart regulasi-horizon
 
 Dasbor Horizon: http://localhost:8034/horizon (environment `local`). Kesehatan: `GET /api/health`.
 
+### Pencarian (Scout + Meilisearch)
+
+Indeks `regulasi_dokumen` hanya berisi dokumen terbit (`SCOUT_PREFIX=regulasi_`, job indeks di antrean `indeks`).
+Setelah memasang atau mengubah `config/scout.php`/sinonim (`config/regulasi.php` → `sinonim`), terapkan pengaturan
+indeks lalu impor ulang:
+
+```bash
+rgp php artisan scout:sync-index-settings
+rgp php artisan scout:import "App\Models\Dokumen"
+```
+
+Ekstraksi teks PDF dari tautan berjalan di antrean `ekstraksi` (`regulasi:ekstraksi-ulang --gagal|--tanpa-teks|--tautan=ID`);
+sisa berkas sementara disapu `berkas:bersihkan-tmp`.
+
 ### Basis data uji
 
 Uji (Pest) berjalan di MariaDB host, bukan SQLite, karena memakai indeks FULLTEXT dan CHECK. Buat sekali:
@@ -72,7 +86,9 @@ CREATE DATABASE db_regulasi_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicod
 ```
 
 `phpunit.xml`: `DB_CONNECTION=mariadb`, `DB_DATABASE=db_regulasi_testing`, `CACHE_STORE=array`,
-`QUEUE_CONNECTION=sync`, `SCOUT_DRIVER=collection`, `MAIL_MAILER=array` — uji tidak menyentuh Redis bersama.
+`QUEUE_CONNECTION=sync`, `SCOUT_DRIVER=collection`, `SCOUT_QUEUE_CONNECTION=sync`, `MAIL_MAILER=array` — uji tidak
+menyentuh Redis bersama maupun jaringan (`Http::preventStrayRequests()` + DNS tiruan untuk `PengunduhAman`).
+`tests/Integrasi` (grup `meilisearch`) memakai Meilisearch nyata dengan indeks sementara dan di-skip bila tidak terjangkau.
 
 Lokal & waktu: `APP_LOCALE=id`, `APP_TIMEZONE=Asia/Jakarta`. Redis: DB 44 (default/lock), 45 (cache, kunci
 berawalan `regulasi:`), 46 (antrean).

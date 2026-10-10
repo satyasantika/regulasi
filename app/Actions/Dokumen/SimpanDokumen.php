@@ -101,6 +101,11 @@ class SimpanDokumen
                     ->log('Kategori/tag dokumen diubah');
             }
 
+            // Metadata/kategori/tag dokumen terbit berubah → indeks diperbarui setelah commit (F7.2).
+            if ($dokumen->status_publikasi === StatusPublikasi::Terbit) {
+                DB::afterCommit(fn () => $dokumen->sinkronkanIndeks());
+            }
+
             return $dokumen->refresh()->load(['jenisDokumen', 'badanPenetap', 'kategoriSistem', 'tag']);
         });
     }

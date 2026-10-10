@@ -18,7 +18,7 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
-    ->in('Feature');
+    ->in('Feature', 'Integrasi');
 
 /**
  * Pengguna aktif dengan peran tertentu (seeder peran dijalankan bila belum).

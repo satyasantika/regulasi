@@ -74,6 +74,11 @@ class SimpanTautanBerkas
 
             if ($urlBerubah || $diekstraksiLama !== $hasil->jenis->diekstraksi()) {
                 $this->siapkanEkstraksi($hasil);
+
+                // Teks lama tautan ini sudah direset: indeks dokumen terbit diperbarui (F7.2).
+                if ($tautan !== null && $dokumen->shouldBeSearchable()) {
+                    DB::afterCommit(fn () => $dokumen->sinkronkanIndeks());
+                }
             }
 
             return ['tautan' => $hasil, 'peringatan' => $peringatan];
