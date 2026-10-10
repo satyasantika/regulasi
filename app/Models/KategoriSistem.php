@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Concerns\MemilikiSlug;
+use App\Observers\MasterCacheObserver;
 use Database\Factories\KategoriSistemFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -27,6 +29,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property int $urutan
  * @property bool $aktif
  */
+#[ObservedBy(MasterCacheObserver::class)]
 class KategoriSistem extends Model
 {
     /** @use HasFactory<KategoriSistemFactory> */

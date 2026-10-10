@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Concerns\MemilikiSlug;
 use App\Enums\KelompokJenisDokumen;
+use App\Observers\MasterCacheObserver;
 use Database\Factories\JenisDokumenFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -28,6 +30,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property string|null $deskripsi
  * @property bool $aktif
  */
+#[ObservedBy(MasterCacheObserver::class)]
 class JenisDokumen extends Model
 {
     /** @use HasFactory<JenisDokumenFactory> */

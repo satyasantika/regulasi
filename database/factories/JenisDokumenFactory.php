@@ -16,15 +16,15 @@ class JenisDokumenFactory extends Factory
 
     public function definition(): array
     {
-        $kelompok = fake()->randomElement(KelompokJenisDokumen::cases());
-
         return [
             'kode' => 'J'.Str::upper(Str::random(8)),
             'nama' => 'Jenis '.fake()->unique()->words(3, true),
             'singkatan' => null,
-            'kelompok' => $kelompok,
+            'kelompok' => fake()->randomElement(KelompokJenisDokumen::cases()),
             'urutan' => fake()->numberBetween(1, 900),
-            'wajib_nomor' => $kelompok->wajibNomor(),
+            'wajib_nomor' => fn (array $atribut): bool => ($atribut['kelompok'] instanceof KelompokJenisDokumen
+                ? $atribut['kelompok']
+                : KelompokJenisDokumen::from($atribut['kelompok']))->wajibNomor(),
             'aktif' => true,
         ];
     }
