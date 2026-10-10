@@ -34,7 +34,7 @@ test('image produksi memuat poppler-utils, ekstensi wajib, user non-root, dan op
 test('compose produksi memuat app, web, queue (horizon), scheduler, mariadb, redis AOF, dan meilisearch dipin', function () use ($akar) {
     $compose = (string) file_get_contents($akar.'/docker-compose.prod.yml');
 
-    foreach (['app:', 'web:', 'queue:', 'scheduler:', 'mariadb:', 'redis:', 'meilisearch:'] as $layanan) {
+    foreach (['app:', 'web:', 'queue:', 'scheduler:', 'mariadb:', 'redis:', 'meilisearch:', 'backup:'] as $layanan) {
         expect($compose)->toContain("\n  {$layanan}");
     }
 
@@ -101,4 +101,28 @@ test('contoh .env.production memakai subpath, cookie aman, debug mati, dan tanpa
         ->toContain('REGULASI_FT_MIN_TOKEN=2')
         ->not->toMatch('/^TRUSTED_PROXIES=\*/m')
         ->not->toMatch('/^(APP_KEY|DB_PASSWORD|DB_ROOT_PASSWORD|REDIS_PASSWORD|MAIL_PASSWORD|MEILISEARCH_KEY|SEED_SUPERADMIN_PASSWORD)=\S/m');
+});
+
+test('cadangan harian 02:00 WIB dengan retensi 30 hari, log, dan pemulihan menolak produksi', function () use ($akar) {
+    $dockerfile = (string) file_get_contents($akar.'/docker/backup/Dockerfile');
+    $backup = (string) file_get_contents($akar.'/docker/backup/backup.sh');
+    $restore = (string) file_get_contents($akar.'/docker/backup/restore.sh');
+    $compose = (string) file_get_contents($akar.'/docker-compose.prod.yml');
+    $gitignore = (string) file_get_contents($akar.'/.gitignore');
+
+    expect($dockerfile)->toContain('0 2 * * *')->toContain('Asia/Jakarta')->toContain('mariadb-client')
+        ->and($backup)->toContain('--single-transaction')->toContain('--routines')->toContain('gzip')
+        ->toContain('RETENSI_HARI="${RETENSI_HARI:-30}"')->toContain('sha256sum')->toContain('cadangan.log')
+        ->toContain('exit 1')
+        ->and($restore)->toContain('"${APP_ENV:-}" = "production"')->toContain('--paksa')->toContain('sha256sum -c')
+        ->and($compose)->toContain("\n  backup:")->toContain('./backup:/backup')
+        ->and($gitignore)->toContain('/backup/');
+
+    foreach (['backup.sh', 'restore.sh', 'pulihkan-uji.sh'] as $skrip) {
+        expect(is_executable($akar.'/docker/backup/'.$skrip))->toBeTrue($skrip);
+    }
+
+    expect((string) file_get_contents($akar.'/docker/backup/pulihkan-uji.sh'))
+        ->toContain('regulasi:reindeks --hapus')
+        ->toContain('berkas:periksa-tautan');
 });

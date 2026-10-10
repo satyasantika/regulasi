@@ -87,6 +87,7 @@ drop/create indeks `ft_dokumen` & `ft_ekstraksi_isi` lewat migrasi baru.
 
 ```bash
 cd regulasi
+docker compose --env-file .env.production -f docker-compose.prod.yml exec backup /usr/local/bin/backup.sh   # cadangan pra-pembaruan
 git fetch --tags && git checkout vX.Y.Z
 export APP_VERSION=X.Y.Z
 docker compose --env-file .env.production -f docker-compose.prod.yml build
@@ -107,7 +108,62 @@ docker compose --env-file .env.production -f docker-compose.prod.yml exec queue 
 ```
 
 Rollback hanya mengembalikan kode. Bila versi baru membawa migrasi yang tidak kompatibel ke belakang, pulihkan dump
-basis data sebelum pembaruan — migrasi yang sudah dirilis tidak pernah diubah.
+cadangan pra-pembaruan (lihat "Cadangan dan pemulihan") — migrasi yang sudah dirilis tidak pernah diubah.
+
+## Cadangan dan pemulihan
+
+Yang dicadangkan **hanya basis data MariaDB**. Berkas naskah tidak ada di server (tautan ke Shared Drive
+"Regulasi FKIP" dan sumber resmi pemerintah); berkas sementara `storage/app/tmp` tidak perlu dicadangkan; indeks
+Meilisearch **tidak dicadangkan** karena dibangun ulang dari basis data (`regulasi:reindeks`).
+
+- Service `backup` (`docker/backup/`, Alpine + `mariadb-client`) menjalankan `backup.sh` setiap hari **02:00 WIB**:
+  `mariadb-dump --single-transaction --routines --triggers --events` → gzip →
+  `./backup/mariadb/<YYYY-MM-DD>/regulasi-<YYYY-MM-DD-HHMMSS>.sql.gz` + `.sha256`, log `./backup/mariadb/cadangan.log`,
+  hapus folder bertanggal lebih tua dari `RETENSI_HARI` (bawaan 30), keluar non-zero bila gagal.
+- Cadangan manual: `docker compose --env-file .env.production -f docker-compose.prod.yml exec backup /usr/local/bin/backup.sh`.
+- Salin `./backup/mariadb` ke luar server (mis. rsync harian ke penyimpanan TI fakultas); folder ini di-`.gitignore`.
+- Alternatif tanpa service `backup` — cron host (`crontab -e` akun deploy):
+
+  ```cron
+  # Cadangan harian MariaDB Regulasi 02:00 WIB
+  0 2 * * * cd /srv/docker-apps/regulasi && docker compose --env-file .env.production -f docker-compose.prod.yml run --rm -T backup /usr/local/bin/backup.sh >> /var/log/regulasi-cadangan.log 2>&1
+  ```
+
+- Pulihkan ke lingkungan **uji** (menolak `APP_ENV=production` tanpa `--paksa`):
+
+  ```bash
+  docker/backup/pulihkan-uji.sh 2026-10-10 regulasi_pulih   # restore.sh → DB uji, lalu regulasi:reindeks --hapus & berkas:periksa-tautan
+  ```
+
+  Langsung di container: `… exec -e DB_DATABASE=regulasi_pulih backup /usr/local/bin/restore.sh <YYYY-MM-DD|berkas.sql.gz>`
+  (memverifikasi `.sha256` dan `gzip -t`, membuat DB bila belum ada, mencetak jumlah dokumen).
+- Pemulihan produksi (darurat): hentikan `app queue scheduler`, `restore.sh <tanggal> --paksa` dengan
+  `DB_DATABASE` produksi, jalankan lagi layanan, lalu `regulasi:reindeks --hapus`.
+
+### Uji pulih semester
+
+Dilakukan TI fakultas setiap awal semester (Februari & Agustus) dan setelah perubahan besar infrastruktur.
+
+1. Pilih cadangan terbaru (`ls ./backup/mariadb`), catat nama berkas & ukurannya.
+2. Catat angka pembanding di produksi: `… exec app php artisan tinker --execute='echo App\Models\Dokumen::withTrashed()->count();'`
+   (juga jumlah terbit, tautan, relasi, pengguna) dan hash berkas: `sha256sum` dump = isi `.sha256`.
+3. Jalankan `docker/backup/pulihkan-uji.sh <tanggal> regulasi_pulih`.
+4. Kriteria lulus:
+   - checksum `.sha256` cocok dan `gzip -t` lolos;
+   - jumlah dokumen, dokumen terbit, tautan berkas, relasi, riwayat status, dan pengguna **sama** dengan angka
+     produksi pada waktu cadangan (selisih hanya data yang dibuat setelah jam cadangan);
+   - hash isi hasil ekstraksi (`ekstraksi_teks.hash_sha256`) identik;
+   - `regulasi:reindeks --hapus` selesai dan pencarian "permendikbudrstek 53" (salah ketik) menemukan dokumen di indeks
+     `pulih_dokumen`;
+   - `berkas:periksa-tautan` berjalan normal (ringkasan status tampil, tanpa galat).
+5. Bersihkan: `DROP DATABASE regulasi_pulih;` dan hapus indeks Meilisearch `pulih_dokumen`.
+
+Formulir catatan hasil (salin ke arsip TI fakultas):
+
+| Tanggal uji | Berkas cadangan | Ukuran | sha256 cocok | Dokumen (prod/pulih) | Terbit (prod/pulih) | Tautan (prod/pulih) | Pencarian | Periksa tautan | Lama pulih | Penguji | Paraf |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 10 Okt 2026 (uji lokal pengembang, DB dev) | regulasi-2026-10-10-233411.sql.gz | 28 KB | ✓ | 35/35 | 35/35 | 0/0 | ✓ (Meilisearch, teratas Permendikbudristek 53/2023) | ✓ | < 1 menit | agen pengembang | — |
+|  |  |  |  |  |  |  |  |  |  |  |  |
 
 ## Horizon, penjadwal & log
 

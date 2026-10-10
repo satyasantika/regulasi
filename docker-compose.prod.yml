@@ -118,6 +118,28 @@ services:
       - meilisearch:/meili_data
     networks: [regulasi]
 
+  # Cadangan harian MariaDB 02:00 WIB ke ./backup/mariadb/<tanggal>/ (retensi RETENSI_HARI, bawaan 30 hari).
+  backup:
+    build:
+      context: .
+      dockerfile: docker/backup/Dockerfile
+    image: regulasi-backup:${APP_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      DB_HOST: mariadb
+      DB_DATABASE: ${DB_DATABASE:-regulasi}
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_ROOT_PASSWORD}
+      BACKUP_DIR: /backup/mariadb
+      RETENSI_HARI: ${RETENSI_HARI:-30}
+      TZ: Asia/Jakarta
+    volumes:
+      - ./backup:/backup
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks: [regulasi]
+
 volumes:
   mariadb:
   redis:
