@@ -33,5 +33,7 @@ class PulihkanDokumen extends TransisiPublikasi
 
         // Dokumen kembali terbit: relasinya sebagai sumber berlaku lagi (BR-08).
         app(TerapkanRelasiDokumen::class)->handle($dokumen, $oleh);
+
+        $dokumen->sinkronkanIndeks();
     }
 }

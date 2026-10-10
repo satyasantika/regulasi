@@ -197,22 +197,36 @@ return [
     */
 
     'defaults' => [
-        // Ekstraksi teks PDF (unduh sementara + pdftotext) bisa lama: antrean & supervisor tersendiri.
+        // Ekstraksi teks PDF (unduh sementara + pdftotext) bisa lama: antrean & supervisor tersendiri, 1 proses
+        // agar sumber (Drive, situs pemerintah) tidak dibanjiri; timeout > timeout job (300 dtk).
         'supervisor-ekstraksi' => [
             'connection' => 'redis',
             'queue' => ['ekstraksi'],
             'balance' => 'simple',
-            'maxProcesses' => 2,
+            'maxProcesses' => 1,
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 512,
             'tries' => 3,
-            'timeout' => 300,
+            'timeout' => 330,
+            'nice' => 0,
+        ],
+        // Pemeriksaan keteraksesan tautan (HEAD/GET Range lewat PengunduhAman), 1 proses.
+        'supervisor-tautan' => [
+            'connection' => 'redis',
+            'queue' => ['tautan'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 2,
+            'timeout' => 60,
             'nice' => 0,
         ],
         'supervisor-umum' => [
             'connection' => 'redis',
-            'queue' => ['default', 'tautan', 'indeks', 'notifikasi', 'ekspor'],
+            'queue' => ['default', 'indeks', 'notifikasi', 'ekspor'],
             'balance' => 'auto',
             'autoScalingStrategy' => 'time',
             'maxProcesses' => 4,
@@ -228,7 +242,10 @@ return [
     'environments' => [
         'production' => [
             'supervisor-ekstraksi' => [
-                'maxProcesses' => 2,
+                'maxProcesses' => 1,
+            ],
+            'supervisor-tautan' => [
+                'maxProcesses' => 1,
             ],
             'supervisor-umum' => [
                 'maxProcesses' => 4,
@@ -239,6 +256,9 @@ return [
 
         'local' => [
             'supervisor-ekstraksi' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-tautan' => [
                 'maxProcesses' => 1,
             ],
             'supervisor-umum' => [

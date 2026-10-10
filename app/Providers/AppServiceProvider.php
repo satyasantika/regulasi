@@ -9,6 +9,7 @@ use App\Models\Aktivitas;
 use App\Models\BadanPenetap;
 use App\Models\Dokumen;
 use App\Models\DokumenRelasi;
+use App\Models\EkstraksiTeks;
 use App\Models\JenisDokumen;
 use App\Models\KategoriSistem;
 use App\Models\Permission;
@@ -20,6 +21,8 @@ use App\Models\TokenAkses;
 use App\Models\User;
 use App\Policies\ActivityPolicy;
 use App\Services\Berkas\TautanEksternal;
+use App\Services\Pencarian\PemilihMesinPencarian;
+use App\Services\Pencarian\PencarianDokumen;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
@@ -50,6 +53,9 @@ class AppServiceProvider extends ServiceProvider
             'tautan' => $app->make(TautanEksternal::class),
             default => throw new InvalidArgumentException('BERKAS_MODE ['.config('berkas.mode').'] belum didukung.'),
         });
+
+        // Mesin pencarian: Meilisearch bila sehat, selain itu cadangan FULLTEXT (02-ARSITEKTUR §5.2).
+        $this->app->bind(PencarianDokumen::class, fn ($app) => $app->make(PemilihMesinPencarian::class)->pilih());
     }
 
     /**
@@ -77,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
             'tag' => Tag::class,
             'dokumen' => Dokumen::class,
             'tautan_berkas' => TautanBerkas::class,
+            'ekstraksi_teks' => EkstraksiTeks::class,
             'riwayat_status_dokumen' => RiwayatStatusDokumen::class,
             'dokumen_relasi' => DokumenRelasi::class,
         ]);

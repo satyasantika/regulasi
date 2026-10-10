@@ -5,6 +5,48 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+## [0.7.0] - 2026-10-10
+
+### Ditambahkan
+- Ekstraksi teks PDF dari tautan tanpa menyimpan berkas (BR-14, US-EKS-01/02): tabel `ekstraksi_teks` (03-SKEMA §3.10a,
+  FULLTEXT `ft_ekstraksi_isi`), enum `StatusEkstraksi`, model `EkstraksiTeks` (alias morph `ekstraksi_teks`),
+  `TautanBerkas::ekstraksi()`. `spatie/pdf-to-text` (poppler-utils) lewat `PengekstrakTeksPdf` (pdfinfo + pdftotext UTF-8,
+  normalisasi spasi & karakter kontrol); teks minim → `tanpa_teks`.
+- `PengunduhAman` anti-SSRF (02-ARSITEKTUR §4.3): daftar putih host (+ `domain_unduhan_tambahan`), resolusi DNS sendiri
+  (`PemecahDns`) yang menolak IP privat/loopback/link-local/CGNAT/IPv4-mapped, sambungan dipaku `CURLOPT_RESOLVE`, redirect
+  manual ≤ 3 dengan validasi ulang, batas 30 MB (Content-Length + penghitung progress saat streaming ke `sink`), timeout
+  5/30 dtk, tanpa cookie, User-Agent `RegulasiFKIPUnsil/1.0`, tolak respons HTML Drive dan isi tanpa magic bytes `%PDF-`;
+  berkas sementara `storage/app/tmp/ekstraksi/{uuid}.pdf` 0600. Kontrak `PenyimpananBerkas::ambilSementara()` →
+  `BerkasSementara`.
+- Job `PeriksaTautanBerkas` (antrean `tautan`, unik per tautan; HEAD lalu GET Range 0-1023 tanpa menyimpan isi; login
+  Google/401/403 = dapat diakses; berubah menjadi tidak dapat diakses → peringatan log sampai notifikasi F10) dan
+  `EkstrakTeksTautan` (antrean `ekstraksi`, unik, timeout 300, 3 percobaan backoff 60/300/900; penolakan terkendali tanpa
+  retry; `failed()` → `gagal` + percobaan; hash berubah → `isi_berubah_pada` + event `IsiBerkasBerubah`; selesai → event
+  `TeksTautanDiekstraksi`; berkas sementara selalu dihapus di `finally`). Pembatas `unduh-host:{host}` 30/menit (job
+  dilepas ulang 60 dtk). `SimpanTautanBerkas` mengantrekan keduanya setelah commit; URL berubah mereset status cek &
+  ekstraksi; jenis `halaman_sumber`/`lainnya` → `tidak_berlaku` tanpa job.
+- Perintah `regulasi:ekstraksi-ulang {--gagal} {--tanpa-teks} {--tautan=*}` dan `berkas:bersihkan-tmp` (> 24 jam).
+  Supervisor Horizon `supervisor-tautan` (1 proses) dan `supervisor-ekstraksi` (1 proses, timeout 330).
+- Halaman admin "Tautan Bermasalah" (`/admin/tautan-bermasalah`, `dokumen.verifikasi`): tautan mati, ekstraksi bermasalah,
+  dan isi berubah; aksi periksa ulang, ekstrak ulang (per baris & massal), tandai ditinjau. Kolom "Ekstraksi" di relation
+  manager tautan berkas dan butir "Teks terekstraksi" di panel Kelengkapan membaca status naskah utama.
+- Pencarian Laravel Scout + Meilisearch (02-ARSITEKTUR §5.1): indeks `regulasi_dokumen` hanya dokumen terbit & tidak
+  dihapus, `toSearchableArray` (kategori, tag, isi teks ekstraksi berhasil naskah utama lebih dulu dipotong
+  `potong_isi_teks_kata`), pengaturan filter/sort/typo dan sinonim dua arah dari `config('regulasi.sinonim')`, job indeks di
+  antrean `indeks`. Indeks diperbarui eksplisit setelah commit: terbit/pulih/arsip, simpan dokumen terbit, tautan dihapus
+  atau URL-nya berubah, pendengar `PerbaruiIndeksDokumen` (teks diekstraksi, status berlaku berubah).
+- Layanan pencarian berfaset `PencarianDokumen` (`KriteriaPencarian` → `HasilPencarian`: paginator, faset jenis/tahun/
+  status/kategori/badan, mesin): `PencarianMeilisearch` (filter IN, visibilitas, sort, facetDistribution, faset
+  disjungtif) dan cadangan `PencarianDatabase` (MariaDB FULLTEXT BOOLEAN MODE + nomor LIKE + teks ekstraksi, faset
+  GROUP BY). `PemilihMesinPencarian` turun ke database bila Meilisearch tidak sehat (`pencarian:sehat`, 60 dtk) dengan
+  peringatan log. Perintah `regulasi:reindeks {--hapus}`.
+- Uji: `Http::preventStrayRequests()` + DNS tiruan di semua uji; suite `tests/Integrasi` (grup `meilisearch`, di-skip bila
+  Meilisearch tak terjangkau, mis. CI).
+
+### Diubah
+- Batas memori PHPUnit 512 MB (uji arsitektur mem-parse dependensi Scout).
+- CI menjalankan uji ekstraksi dengan `--fail-on-skipped` (poppler-utils terpasang); `APP_VERSION=0.7.0`.
+
 ## [0.6.0] - 2026-10-10
 
 ### Ditambahkan

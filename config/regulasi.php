@@ -34,8 +34,17 @@ return [
     // isi_teks di indeks pencarian dipotong ke N kata pertama (02-ARSITEKTUR §5.1).
     'potong_isi_teks_kata' => 60000,
 
+    // Ekstraksi teks PDF (F7.1, spatie/pdf-to-text + poppler-utils). pdfinfo dicari di folder yang sama.
+    'pdftotext_bin' => env('PDFTOTEXT_BIN', '/usr/bin/pdftotext'),
+    'pdfinfo_bin' => env('PDFINFO_BIN', '/usr/bin/pdfinfo'),
+
     // Teks hasil ekstraksi di bawah ambang (karakter per 10 halaman) → status tanpa_teks.
     'ambang_tanpa_teks' => 200,
+
+    // Batas percobaan ulang ekstraksi berstatus gagal (03-SKEMA §3.10a) dan laju unduh per host tujuan
+    // (02-ARSITEKTUR §3.4, `unduh-host:{host}`): job dilepas ulang bila batas terlampaui.
+    'maks_percobaan_ekstraksi' => 5,
+    'unduh_per_menit_per_host' => 30,
 
     // Kunci atomik alur publikasi `lock:publikasi:{id}` (02-ARSITEKTUR §3.3): masa kunci & lama menunggu (detik).
     'kunci_publikasi' => [

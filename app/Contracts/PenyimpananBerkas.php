@@ -3,14 +3,15 @@
 namespace App\Contracts;
 
 use App\Enums\JenisTautan;
+use App\Exceptions\Berkas\PengunduhanDitolak;
 use App\Models\TautanBerkas;
 use App\Models\User;
+use App\Services\Berkas\BerkasSementara;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Satu-satunya pintu akses berkas (02-ARSITEKTUR §4.1, STANDAR-TEKNIS §1a). Implementasi aktif
  * (BERKAS_MODE=tautan): TautanEksternal. Kelak mode disk/s3 cukup menambah implementasi baru.
- * `ambilSementara()` untuk ekstraksi ditambahkan di F7.1.
  */
 interface PenyimpananBerkas
 {
@@ -32,4 +33,11 @@ interface PenyimpananBerkas
     public function urlBuka(TautanBerkas $tautan): string;
 
     public function urlPratinjau(TautanBerkas $tautan): ?string;
+
+    /**
+     * Salinan sementara isi berkas untuk ekstraksi teks (F7.1). Pemanggil WAJIB memanggil hapus() di finally.
+     *
+     * @throws PengunduhanDitolak
+     */
+    public function ambilSementara(TautanBerkas $tautan): BerkasSementara;
 }

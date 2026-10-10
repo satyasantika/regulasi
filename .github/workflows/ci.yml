@@ -75,6 +75,10 @@ jobs:
       - name: Pest
         run: php artisan test --parallel
 
+      # Uji ekstraksi teks butuh pdftotext (poppler-utils): gagal bila ada yang di-skip.
+      - name: Pest ekstraksi (tanpa skip)
+        run: ./vendor/bin/pest tests/Feature/Ekstraksi --fail-on-skipped
+
   aset:
     runs-on: ubuntu-latest
     steps:

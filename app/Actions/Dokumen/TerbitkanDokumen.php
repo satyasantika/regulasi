@@ -44,10 +44,12 @@ class TerbitkanDokumen extends TransisiPublikasi
 
     /**
      * Titik kait setelah terbit (di luar transaksi): relasi yang dimiliki dokumen sebagai sumber diaktifkan bila
-     * tanggal efektifnya sudah tiba (BR-08, F6.2); indeks pencarian menyusul di F7.2.
+     * tanggal efektifnya sudah tiba (BR-08, F6.2), lalu dokumen masuk indeks pencarian (F7.2).
      */
     protected function setelahTerbit(Dokumen $dokumen, User $oleh): void
     {
         app(TerapkanRelasiDokumen::class)->handle($dokumen, $oleh);
+
+        $dokumen->sinkronkanIndeks();
     }
 }

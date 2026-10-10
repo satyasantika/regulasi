@@ -40,10 +40,12 @@ class ArsipkanDokumen extends TransisiPublikasi
 
     /**
      * Titik kait setelah diarsipkan (di luar transaksi): relasi yang dimiliki dokumen sebagai sumber menjadi tidak
-     * efektif dan status target dihitung ulang (BR-08, BR-09, F6.2); indeks pencarian menyusul di F7.2.
+     * efektif dan status target dihitung ulang (BR-08, BR-09, F6.2); dokumen keluar dari indeks pencarian (F7.2).
      */
     protected function setelahArsip(Dokumen $dokumen, User $oleh): void
     {
         app(TerapkanRelasiDokumen::class)->handle($dokumen, $oleh);
+
+        $dokumen->unsearchable();
     }
 }

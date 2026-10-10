@@ -9,6 +9,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -35,6 +36,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
  * @property-read Model|null $pemilik
+ * @property-read EkstraksiTeks|null $ekstraksi
  */
 class TautanBerkas extends Model
 {
@@ -78,6 +80,16 @@ class TautanBerkas extends Model
     public function pemilik(): MorphTo
     {
         return $this->morphTo('pemilik');
+    }
+
+    /**
+     * Hasil ekstraksi teks PDF di balik tautan ini (03-SKEMA §3.10a, 1:1).
+     *
+     * @return HasOne<EkstraksiTeks, $this>
+     */
+    public function ekstraksi(): HasOne
+    {
+        return $this->hasOne(EkstraksiTeks::class, 'tautan_berkas_id');
     }
 
     /** @return BelongsTo<User, $this> */
