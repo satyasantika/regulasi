@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Enums\StatusPublikasi;
+use App\Enums\Visibilitas;
 use App\Models\Dokumen;
 use App\Models\TautanBerkas;
 use App\Models\User;
@@ -22,6 +24,25 @@ class TautanBerkasPolicy
         $dokumen = $tautan->dokumen();
 
         return $dokumen !== null && $user->can('view', $dokumen);
+    }
+
+    /**
+     * Buka tautan (BR-01, BR-02, BR-17): dokumen induk terbit dan (publik atau pengguna login);
+     * atau pengguna staf yang berhak melihat dokumen di panel admin (mis. draf miliknya).
+     */
+    public function buka(?User $user, TautanBerkas $tautan): bool
+    {
+        $dokumen = $tautan->dokumen();
+
+        if ($dokumen === null || $dokumen->trashed()) {
+            return false;
+        }
+
+        if ($dokumen->status_publikasi === StatusPublikasi::Terbit && ($dokumen->visibilitas === Visibilitas::Publik || $user !== null)) {
+            return true;
+        }
+
+        return $user !== null && $user->can('view', $dokumen);
     }
 
     public function create(User $user, ?Dokumen $dokumen = null): bool

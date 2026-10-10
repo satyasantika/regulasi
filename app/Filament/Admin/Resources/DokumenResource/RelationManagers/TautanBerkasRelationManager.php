@@ -4,12 +4,14 @@ namespace App\Filament\Admin\Resources\DokumenResource\RelationManagers;
 
 use App\Actions\Berkas\HapusTautanBerkas;
 use App\Actions\Berkas\SimpanTautanBerkas;
+use App\Contracts\PenyimpananBerkas;
 use App\Enums\JenisTautan;
 use App\Enums\Visibilitas;
 use App\Models\Dokumen;
 use App\Models\TautanBerkas;
 use App\Models\User;
 use App\Rules\TautanBerkasValid;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -19,6 +21,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Auth\Access\Response;
@@ -112,6 +115,12 @@ class TautanBerkasRelationManager extends RelationManager
                     }),
             ])
             ->recordActions([
+                Action::make('buka')
+                    ->label('Buka')
+                    ->icon(Heroicon::OutlinedArrowTopRightOnSquare)
+                    ->authorize('buka')
+                    ->url(fn (TautanBerkas $record): string => app(PenyimpananBerkas::class)->urlBuka($record))
+                    ->openUrlInNewTab(),
                 EditAction::make()
                     ->using(function (TautanBerkas $record, array $data): TautanBerkas {
                         $hasil = app(SimpanTautanBerkas::class)->handle($this->dokumen(), $data, $this->pengguna(), $record);

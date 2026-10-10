@@ -21,11 +21,14 @@ use App\Services\Berkas\TautanEksternal;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Middleware\TrustProxies;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
@@ -77,6 +80,10 @@ class AppServiceProvider extends ServiceProvider
         // Super-admin lolos semua Gate/Policy (03-SKEMA §4.1).
         Gate::before(fn (User $user): ?bool => $user->hasRole(Peran::SuperAdmin->value) ? true : null);
         Gate::policy(Aktivitas::class, ActivityPolicy::class);
+
+        // Rate limit buka tautan 30/menit per pengguna atau IP (02-ARSITEKTUR §3.4, BR-17).
+        RateLimiter::for('buka', fn (Request $request): Limit => Limit::perMinute(30)
+            ->by($request->user()?->getAuthIdentifier() ?? $request->ip()));
 
         $this->aturProxyTepercaya();
         $this->siapkanSubpath();
