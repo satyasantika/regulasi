@@ -34,8 +34,22 @@ return [
     'seed_tautan_lokal' => database_path('seeders/data/tautan-contoh.local.php'),
     'seed_terbitkan_semua' => (bool) env('REGULASI_SEED_TERBITKAN_SEMUA', false),
 
+    // Akun uji UAT (regulasi:siapkan-uat, hanya non-produksi): kata sandi bersama; kosong = acak & ditampilkan sekali.
+    'uat' => [
+        'password' => env('UAT_PASSWORD'),
+    ],
+
+    // Akun demo panduan (PanduanSeeder, hanya APP_ENV=local) & tangkapan layar Playwright (F12.6).
+    'panduan' => [
+        'password' => env('PANDUAN_PASSWORD'),
+    ],
+
     // Registrasi panel akun hanya untuk alamat surel domain ini.
     'domain_registrasi' => 'unsil.ac.id',
+
+    // Panjang token minimum cadangan FULLTEXT; samakan dengan innodb_ft_min_token_size MariaDB (bawaan 3; produksi
+    // docker/mariadb/regulasi.cnf = 2 agar PP/UU/SE tercari).
+    'ft_min_token' => (int) env('REGULASI_FT_MIN_TOKEN', 3),
 
     // isi_teks di indeks pencarian dipotong ke N kata pertama (02-ARSITEKTUR §5.1).
     'potong_isi_teks_kata' => 60000,

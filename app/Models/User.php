@@ -36,6 +36,11 @@ use Spatie\Permission\Traits\HasRoles;
 #[Hidden(['password', 'remember_token', 'app_authentication_secret', 'app_authentication_recovery_codes'])]
 class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, MustVerifyEmail
 {
+    /**
+     * Domain surel akun demo panduan (PanduanSeeder, hanya APP_ENV=local).
+     */
+    public const string DOMAIN_PANDUAN = 'contoh.test';
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, HasRoles, HasUuids, LogsActivity, Notifiable;
 
@@ -101,6 +106,11 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
      */
     public function wajibMfa(): bool
     {
+        // Pengecualian hanya akun demo panduan (@contoh.test) di APP_ENV=local untuk tangkapan layar (PanduanSeeder).
+        if (app()->isLocal() && str_ends_with((string) $this->email, '@'.self::DOMAIN_PANDUAN)) {
+            return false;
+        }
+
         return $this->hasAnyRole(Peran::nilai(Peran::wajibMfa()));
     }
 

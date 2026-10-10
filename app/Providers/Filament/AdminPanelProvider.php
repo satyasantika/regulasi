@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Admin\Pages\Dasbor;
 use App\Filament\Auth\Masuk;
 use App\Http\Middleware\WajibMfa;
+use App\Support\Panduan;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -38,6 +39,9 @@ class AdminPanelProvider extends PanelProvider
             ->login(Masuk::class)
             ->passwordReset()
             ->profile()
+            // Panduan pengguna HTML (F12.6): tautan di halaman masuk dan menu pengguna.
+            ->renderHook(...Panduan::kaitHalamanMasuk())
+            ->userMenuItems([Panduan::itemMenuPengguna()])
             // MFA wajib bagi super-admin & admin-regulasi (WajibMfa), opsional bagi kontributor.
             ->multiFactorAuthentication(
                 [AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')],

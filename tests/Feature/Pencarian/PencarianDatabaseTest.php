@@ -150,3 +150,10 @@ test('ekspresi boolean mengabaikan token pendek dan operator', function () {
     expect(PencarianDatabase::ekspresiBoolean('PP "tata" +naskah -dinas*'))->toBe('+tata* +naskah* +dinas*')
         ->and(PencarianDatabase::ekspresiBoolean('UU'))->toBeNull();
 });
+
+test('ekspresi boolean mengikuti regulasi.ft_min_token (produksi 2: PP dan UU ikut dicari)', function () {
+    config(['regulasi.ft_min_token' => 2]);
+
+    expect(PencarianDatabase::ekspresiBoolean('PP 28 tentang UU'))->toBe('+pp* +28* +tentang* +uu*')
+        ->and(PencarianDatabase::ekspresiBoolean('a'))->toBeNull();
+});

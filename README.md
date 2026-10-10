@@ -30,6 +30,12 @@ Semua dokumen perancangan ada di [`docs/vibecoding/`](docs/vibecoding/):
 
 Referensi dasar hukum (Perpres 33/2012, Permenkumham 8/2019) dijelaskan di `docs/referensi/README.md`.
 
+Operasional: [`docs/DEPLOY.md`](docs/DEPLOY.md) (Docker produksi, pembaruan, rollback, reindeks),
+[`docs/KINERJA.md`](docs/KINERJA.md) (pengukuran kinerja), [`docs/api.md`](docs/api.md) (API baca v1),
+[`docs/OPERASIONAL.md`](docs/OPERASIONAL.md) (butir yang perlu tindakan/verifikasi manusia),
+[`docs/uat/hasil-uat.md`](docs/uat/hasil-uat.md) (lembar UAT; data uji: `php artisan regulasi:siapkan-uat`),
+panduan [`docs/PANDUAN-ADMIN.md`](docs/PANDUAN-ADMIN.md) dan [`docs/PANDUAN-KONTRIBUTOR.md`](docs/PANDUAN-KONTRIBUTOR.md).
+
 ## Memulai
 
 ### Menjalankan lokal
@@ -153,3 +159,22 @@ location /regulasi/ {
     client_max_body_size 20m;
 }
 ```
+
+### Memperbarui panduan
+
+Panduan pengguna HTML per peran ada di `public/panduan/` (tersaji di `/regulasi/panduan/`, ditautkan dari navigasi &
+kaki portal, halaman masuk panel, dan menu pengguna panel). Tangkapan layar dibuat Playwright dari data rekaan
+`PanduanSeeder` (hanya `APP_ENV=local`; akun `panduan.<peran>@contoh.test`, kata sandi `PANDUAN_PASSWORD`, tanpa MFA
+khusus akun demo lokal; tidak memuat data pribadi asli):
+
+```bash
+docker exec regulasi-php php artisan migrate:fresh --seeder=PanduanSeeder   # menghapus data lokal! pakai DB lokal/khusus
+docker exec regulasi-php php artisan regulasi:reindeks
+# di host (composer di container tidak memiliki docker):
+PANDUAN_PASSWORD=... docker compose -f docker-compose.panduan.yml --profile panduan run --rm regulasi-panduan [umum pengguna kontributor admin-regulasi super-admin]
+```
+
+Skrip `tests/panduan/tangkap.mjs` menyimpan `public/panduan/img/<peran>/NN-<langkah>.png` (1366×768, ponsel 390×844,
+PNG palet terkompresi; kata sandi/kode MFA/token disamarkan). Teks halaman disunting langsung di `public/panduan/*.html`
+(HTML mandiri, CSS di berkas, tanpa CDN/JS, semua tautan relatif). `PanduanTest` memeriksa kelengkapan halaman,
+gambar, tautan relatif, dan ukuran total ≤ 15 MB.

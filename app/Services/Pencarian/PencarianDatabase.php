@@ -15,7 +15,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * Cadangan pencarian MariaDB FULLTEXT (02-ARSITEKTUR §5.2, 03-SKEMA §5): dipakai bila Meilisearch tidak sehat.
  *
  * - Kata kunci: MATCH ft_dokumen (judul, sebutan_singkat, abstrak) IN BOOLEAN MODE dengan +kata* per token
- *   ≥ 3 huruf (innodb_ft_min_token_size), ATAU nomor LIKE "q%" (nomor seperti 181/PMK.06/2016 terpecah
+ *   ≥ regulasi.ft_min_token huruf (= innodb_ft_min_token_size; bawaan 3, produksi 2), ATAU nomor LIKE "q%" (nomor seperti 181/PMK.06/2016 terpecah
  *   tokenizer), ATAU MATCH ft_ekstraksi_isi pada teks tautan berstatus apa pun yang berisi teks.
  * - Faset dihitung dengan GROUP BY terpisah memakai semua filter kecuali dimensi faset itu sendiri.
  * - Tanpa toleransi salah ketik (alasan Meilisearch disarankan).
@@ -44,12 +44,14 @@ class PencarianDatabase implements PencarianDokumen
     }
 
     /**
-     * Ekspresi BOOLEAN MODE: setiap token huruf/angka ≥ 3 karakter menjadi +token*; null bila tak ada token.
+     * Ekspresi BOOLEAN MODE: setiap token huruf/angka ≥ regulasi.ft_min_token karakter menjadi +token*; null bila tak
+     * ada token. Token lebih pendek dari innodb_ft_min_token_size tidak pernah cocok sehingga harus dibuang.
      */
     public static function ekspresiBoolean(string $q): ?string
     {
+        $minimum = max(1, (int) config('regulasi.ft_min_token', 3));
         preg_match_all('/[\p{L}\p{N}]+/u', mb_strtolower($q), $cocok);
-        $token = array_values(array_unique(array_filter($cocok[0], fn (string $t): bool => mb_strlen($t) >= 3)));
+        $token = array_values(array_unique(array_filter($cocok[0], fn (string $t): bool => mb_strlen($t) >= $minimum)));
 
         return $token === [] ? null : implode(' ', array_map(fn (string $t): string => "+{$t}*", $token));
     }
@@ -118,7 +120,8 @@ class PencarianDatabase implements PencarianDokumen
             default => $query->orderByDesc('dokumen.dipublikasikan_pada'),
         };
 
-        $query->orderByDesc('dokumen.dipublikasikan_pada')->orderBy('dokumen.id');
+        // Pemutus seri id DESC (UUIDv7 = terbaru) agar urutan bawaan terbaca dari idx_dokumen_publik_terbaru tanpa filesort.
+        $query->orderByDesc('dokumen.dipublikasikan_pada')->orderByDesc('dokumen.id');
     }
 
     /**

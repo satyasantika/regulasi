@@ -198,7 +198,10 @@ class DokumenResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query) => $query->with(['jenisDokumen', 'kategoriSistem']))
+            ->modifyQueryUsing(fn (Builder $query) => $query
+                ->select(self::KOLOM_TABEL)
+                ->with(['jenisDokumen:id,nama', 'kategoriSistem:id,nama'])
+                ->withCount(['tautanBerkas as jumlah_lampiran' => fn (Builder $q) => $q->reorder()->where('jenis', JenisTautan::Lampiran->value)]))
             ->defaultSort('updated_at', 'desc')
             ->columns([
                 TextColumn::make('sebutan_singkat')->label('Sebutan')->searchable()->sortable(),
@@ -208,6 +211,7 @@ class DokumenResource extends Resource
                 TextColumn::make('status_berlaku')->label('Status berlaku')->badge(),
                 TextColumn::make('status_publikasi')->label('Publikasi')->badge(),
                 IconColumn::make('visibilitas')->label('Visibilitas'),
+                TextColumn::make('jumlah_lampiran')->label('Lampiran')->numeric()->sortable()->toggleable(),
                 TextColumn::make('kategoriSistem.nama')->label('Kategori')->badge()->color('gray')->toggleable(),
                 TextColumn::make('updated_at')->label('Diperbarui')->dateTime('d F Y H:i')->sortable(),
             ])
@@ -231,9 +235,28 @@ class DokumenResource extends Resource
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
-                DeleteAction::make(),
-                RestoreAction::make(),
+                // Baris tabel hanya memuat KOLOM_TABEL: hapus/pulihkan memakai model lengkap agar log aktivitas dan
+                // indeks pencarian tidak menerima atribut kosong.
+                DeleteAction::make()->using(fn (Dokumen $record): ?bool => self::muatLengkap($record)->delete()),
+                RestoreAction::make()->using(fn (Dokumen $record): bool => self::muatLengkap($record)->restore()),
             ]);
+    }
+
+    /**
+     * Kolom yang dimuat tabel admin (F12.2): tanpa teks panjang (abstrak, catatan); cukup untuk kolom, policy
+     * (status_publikasi, dibuat_oleh), dan URL rekaman.
+     *
+     * @var list<string>
+     */
+    public const array KOLOM_TABEL = [
+        'dokumen.id', 'dokumen.slug', 'dokumen.jenis_dokumen_id', 'dokumen.sebutan_singkat', 'dokumen.judul',
+        'dokumen.tahun', 'dokumen.status_berlaku', 'dokumen.status_publikasi', 'dokumen.visibilitas',
+        'dokumen.dibuat_oleh', 'dokumen.updated_at', 'dokumen.deleted_at',
+    ];
+
+    private static function muatLengkap(Dokumen $record): Dokumen
+    {
+        return Dokumen::withTrashed()->findOrFail($record->getKey());
     }
 
     /**
