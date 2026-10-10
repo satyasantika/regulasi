@@ -6,6 +6,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use RuntimeException;
 
 /**
  * Menyapu sisa berkas sementara (ekstraksi, ekspor) di storage/app/tmp yang berumur > 24 jam
@@ -23,8 +24,18 @@ class BersihkanTmpCommand extends Command
 
         if (File::isDirectory($akar)) {
             foreach (File::allFiles($akar) as $berkas) {
-                if (! str_starts_with($berkas->getFilename(), '.') && $berkas->getMTime() < $batas) {
-                    File::delete($berkas->getPathname());
+                if (str_starts_with($berkas->getFilename(), '.')) {
+                    continue;
+                }
+
+                // Berkas bisa sudah dihapus proses lain (ekspor/ekstraksi selesai) antara pemindaian dan stat.
+                try {
+                    $diubah = $berkas->getMTime();
+                } catch (RuntimeException) {
+                    continue;
+                }
+
+                if ($diubah < $batas && File::delete($berkas->getPathname())) {
                     $dihapus++;
                 }
             }
