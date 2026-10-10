@@ -61,6 +61,28 @@ cd /home/satya/code && docker compose restart regulasi-horizon
 
 Dasbor Horizon: http://localhost:8034/horizon (environment `local`). Kesehatan: `GET /api/health`.
 
+Penjadwal (`routes/console.php`, zona Asia/Jakarta, semua `withoutOverlapping()->onOneServer()`) berjalan di service
+`regulasi-scheduler`; restart service itu setelah mengubah jadwal. Cek daftar tugas:
+
+```bash
+docker exec regulasi-php php artisan schedule:list
+cd /home/satya/code && docker compose restart regulasi-scheduler
+```
+
+| Jadwal | Perintah |
+|---|---|
+| Harian 00:15 | `regulasi:terapkan-status` (relasi yang tanggal efektifnya tiba) |
+| Harian 00:45 | `berkas:bersihkan-tmp` (berkas sementara > 24 jam) |
+| Tiap jam | `regulasi:ekstraksi-ulang --gagal` |
+| Harian 01:00 | `model:prune --model=App\Models\LogBukaTautan` (retensi 24 bulan) |
+| Harian 01:30 | `activitylog:clean` (retensi 365 hari) |
+| Senin 06:30 | `berkas:periksa-tautan` (semua tautan dokumen terbit, dijeda per host) |
+| Senin 07:30 | `regulasi:ringkasan-mingguan` (surel ke admin-regulasi) |
+| Tiap 5 menit | `horizon:snapshot` |
+
+Notifikasi (lonceng panel admin + surel, antrean `notifikasi`) terkirim lewat Mailpit bersama saat pengembangan:
+http://localhost:18018.
+
 ### Pencarian (Scout + Meilisearch)
 
 Indeks `regulasi_dokumen` hanya berisi dokumen terbit (`SCOUT_PREFIX=regulasi_`, job indeks di antrean `indeks`).
