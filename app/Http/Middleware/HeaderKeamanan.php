@@ -8,17 +8,26 @@ use Illuminate\Support\Facades\Vite;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Header keamanan dasar (02-ARSITEKTUR §8; pengerasan lengkap di F12.1). CSP kompatibel Filament/Livewire/Alpine
- * (skrip inline & evaluasi Alpine); sematan hanya dari Google Drive/Docs (pratinjau naskah, F8.3).
+ * Header keamanan global (02-ARSITEKTUR §8, F12.1, KM-08). CSP kompatibel Filament/Livewire/Alpine (skrip inline &
+ * evaluasi Alpine); sematan hanya dari Google Drive/Docs (pratinjau naskah, F8.3); halaman aplikasi (termasuk
+ * /admin dan /horizon) tidak dapat disematkan situs lain (X-Frame-Options + frame-ancestors). HSTS hanya di produksi
+ * (HTTPS diakhiri reverse proxy kampus). Referrer-Policy yang sudah dipasang rute (mis. no-referrer pada
+ * /d/{id}/buka) tidak ditimpa.
  */
 class HeaderKeamanan
 {
+    /** Fitur peramban yang tidak dipakai aplikasi dimatikan. */
+    public const string PERMISSIONS_POLICY = 'camera=(), microphone=(), geolocation=(), payment=(), usb=()';
+
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        $response->headers->set('Permissions-Policy', self::PERMISSIONS_POLICY);
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
+        $response->headers->remove('X-Powered-By');
 
         if (! $response->headers->has('Referrer-Policy')) {
             $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -26,6 +35,10 @@ class HeaderKeamanan
 
         if (! $response->headers->has('Content-Security-Policy')) {
             $response->headers->set('Content-Security-Policy', self::csp());
+        }
+
+        if (app()->isProduction()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }
 
         return $response;
