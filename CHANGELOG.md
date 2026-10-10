@@ -402,4 +402,4 @@ Rilis pertama Regulasi FKIP Unsil: repositori terpusat dokumen hukum & pendukung
 - Primary key UUIDv7 untuk semua tabel aplikasi (`users`, `personal_access_tokens` via model `TokenAkses`) dan uji arsitektur.
 - Siap subpath `https://supportfkip.unsil.ac.id/regulasi` (root URL, aset, cookie `regulasi_session` ber-path `/regulasi`, proxy tepercaya).
 - CI GitHub Actions: Pint, Larastan, Pest (MariaDB 10.11, Redis 7, poppler-utils) dan build aset.
-- Inisialisasi repositori: `.gitignore`, hook git (`commit-msg`, `pre-commit`), `CLAUDE.md`, salinan paket dokumen di `docs/vibecoding/`, dan referensi dasar hukum di `docs/referensi/`.
+- Inisialisasi repositori: `.gitignore`, hook git (`commit-msg`, `pre-commit`), dan referensi dasar hukum di `docs/referensi/`.

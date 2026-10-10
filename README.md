@@ -18,16 +18,6 @@ Penyesuaian terhadap standar paket (PHP, basis data, Docker) dicatat di `docs/ke
 
 ## Dokumen
 
-Semua dokumen perancangan ada di [`docs/vibecoding/`](docs/vibecoding/):
-
-- `01-PRD.md` — kebutuhan produk dan aturan bisnis
-- `02-ARSITEKTUR.md` — arsitektur
-- `03-SKEMA-DATABASE.md` — skema basis data
-- `04-PROMPT-BERTAHAP.md` — rencana kerja bertahap per fase
-- `05-UJI-PENERIMAAN.md` — uji penerimaan
-- `STANDAR-TEKNIS.md`, `STANDAR-GIT.md` — standar bersama
-- `CLAUDE.md` — konteks untuk agen AI (juga di root repo)
-
 Referensi dasar hukum (Perpres 33/2012, Permenkumham 8/2019) dijelaskan di `docs/referensi/README.md`.
 
 Operasional: [`docs/DEPLOY.md`](docs/DEPLOY.md) (Docker produksi, pembaruan, rollback, reindeks),
@@ -129,8 +119,7 @@ chmod +x .githooks/*
 git config core.hooksPath .githooks
 ```
 
-Gerbang kualitas: `rgp composer cek` (Pint `--test`, Larastan level 6, Pest). Laravel Boost (MCP `laravel-boost`)
-dijalankan agen AI lewat `docker exec -i regulasi-php php artisan boost:mcp` (`.mcp.json` lokal).
+Gerbang kualitas: `rgp composer cek` (Pint `--test`, Larastan level 6, Pest).
 
 Aplikasi: http://localhost:8034/regulasi/ (juga http://localhost:8034 untuk pemeriksaan langsung) ·
 Mailpit: http://localhost:18018 · Meilisearch hanya dari jaringan internal
