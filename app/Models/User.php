@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -32,7 +34,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable;
+    use HasApiTokens, HasFactory, HasRoles, HasUuids, LogsActivity, Notifiable;
 
     protected $table = 'users';
 
@@ -49,6 +51,18 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'aktif' => 'boolean',
             'terakhir_masuk_pada' => 'datetime',
         ];
+    }
+
+    /**
+     * Jejak audit: hanya identitas dan status aktif. Kata sandi, remember_token, dan rahasia MFA tidak pernah dicatat.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email', 'nip', 'aktif'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->useLogName('pengguna');
     }
 
     /**

@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Enums\Peran;
 use App\Http\Responses\MasukResponse;
+use App\Models\Aktivitas;
 use App\Models\TokenAkses;
 use App\Models\User;
+use App\Policies\ActivityPolicy;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
@@ -41,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Super-admin lolos semua Gate/Policy (03-SKEMA §4.1).
         Gate::before(fn (User $user): ?bool => $user->hasRole(Peran::SuperAdmin->value) ? true : null);
+        Gate::policy(Aktivitas::class, ActivityPolicy::class);
 
         $this->aturProxyTepercaya();
         $this->siapkanSubpath();

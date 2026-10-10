@@ -135,8 +135,9 @@ return [
      * \Spatie\Permission\Events\PermissionDetachedEvent
      *
      * To enable, set to true, and then create listeners to watch these events.
+     * Aktif: perubahan peran pengguna dicatat ke log aktivitas (App\Listeners\CatatPerubahanPeran).
      */
-    'events_enabled' => false,
+    'events_enabled' => true,
 
     /*
      * Teams Feature.
