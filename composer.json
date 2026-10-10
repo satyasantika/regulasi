@@ -92,6 +92,10 @@
             "@lint --test",
             "@stan",
             "@test"
+        ],
+        "panduan": [
+            "Composer\\Config::disableProcessTimeout",
+            "docker compose -f docker-compose.panduan.yml --profile panduan run --rm regulasi-panduan"
         ]
     },
     "extra": {

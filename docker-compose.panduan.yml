@@ -1,0 +1,23 @@
+# Tangkapan layar panduan (F12.6). Lokal saja:
+#   docker exec regulasi-php php artisan migrate:fresh --seeder=PanduanSeeder   # basis data lokal/panduan, BUKAN produksi
+#   docker exec regulasi-php php artisan regulasi:reindeks
+#   PANDUAN_PASSWORD=... docker compose -f docker-compose.panduan.yml --profile panduan run --rm regulasi-panduan [peran ...]
+# network_mode host: URL absolut aplikasi (APP_URL lokal http://localhost:8034/regulasi) dapat dibuka dari container.
+# Alternatif jaringan docker: docker run --network code_laranet … dengan PANDUAN_BASE_URL yang sama dengan APP_URL server.
+services:
+  regulasi-panduan:
+    profiles: ["panduan"]
+    image: mcr.microsoft.com/playwright:v1.63.0-noble
+    network_mode: host
+    working_dir: /work
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - .:/work
+    environment:
+      PANDUAN_BASE_URL: ${PANDUAN_BASE_URL:-http://localhost:8034/regulasi}
+      PANDUAN_PASSWORD: ${PANDUAN_PASSWORD:?PANDUAN_PASSWORD wajib diisi}
+      PLAYWRIGHT_MODULE: /tmp/pw/node_modules/playwright/index.mjs
+      SHARP_MODULE: /tmp/pw/node_modules/sharp/lib/index.js
+      HOME: /tmp
+      npm_config_cache: /tmp/npm-cache
+    entrypoint: ["sh", "-c", "npm install --silent --no-save --no-audit --no-fund --prefix /tmp/pw playwright@1.63.0 sharp@0.34.4 && node tests/panduan/tangkap.mjs \"$@\"", "--"]

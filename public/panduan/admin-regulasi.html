@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Panduan peran admin regulasi fakultas Regulasi FKIP Unsil.">
+<title>Panduan Admin Regulasi — Regulasi FKIP Unsil</title>
+<style>
+:root{--aksen:#3730a3;--aksen-muda:#e0e7ff;--teks:#0f172a;--redup:#475569;--garis:#e2e8f0;--latar:#f8fafc}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6;color:var(--teks);background:var(--latar)}
+header{background:var(--aksen);color:#fff;padding:1rem}header a{color:#fff}header p{margin:.25rem 0 0;opacity:.9}
+.wadah{max-width:60rem;margin:0 auto;padding:1rem}
+main{background:#fff;border:1px solid var(--garis);border-radius:.75rem;padding:1rem 1.25rem}
+h1{margin:.25rem 0;font-size:1.6rem}h2{margin-top:2rem;border-bottom:2px solid var(--aksen-muda);padding-bottom:.25rem}
+ol.langkah{padding-left:1.25rem}ol.langkah>li{margin:1.25rem 0}
+figure{margin:.75rem 0;border:1px solid var(--garis);border-radius:.5rem;overflow:hidden;background:#fff}
+figure img{display:block;width:100%;height:auto}figure.ponsel{max-width:390px}
+figcaption{font-size:.9rem;color:var(--redup);padding:.4rem .6rem;border-top:1px solid var(--garis)}
+.kartu{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:1rem;padding:0;list-style:none}
+.kartu li{border:1px solid var(--garis);border-radius:.75rem;padding:1rem;background:#fff}.kartu a{font-weight:600;color:var(--aksen)}
+.catatan{background:var(--aksen-muda);border-left:4px solid var(--aksen);padding:.5rem .75rem;border-radius:.25rem}
+table{border-collapse:collapse;width:100%;font-size:.95rem}td,th{border:1px solid var(--garis);padding:.35rem .5rem;text-align:left;vertical-align:top}
+dl.tj dt{font-weight:600;margin-top:.75rem}dl.tj dd{margin:0 0 0 1rem}
+nav.atas{font-size:.9rem;margin-bottom:.5rem}nav.atas a{color:var(--aksen)}
+footer{font-size:.85rem;color:var(--redup);text-align:center;padding:1rem}
+code,kbd{font-family:ui-monospace,monospace;background:#f1f5f9;border:1px solid var(--garis);border-radius:.25rem;padding:0 .3rem;font-size:.9em}
+@media (max-width:600px){main{padding:.75rem}h1{font-size:1.3rem}}
+@media print{header{background:none;color:#000;border-bottom:2px solid #000}header a,nav.atas{display:none}main{border:0}figure{break-inside:avoid}body{background:#fff}}
+</style>
+</head>
+<body>
+<header><div class="wadah"><strong>Regulasi FKIP Unsil</strong><p>Panduan pengguna · versi 1.0.0 · 11 Oktober 2026</p></div></header>
+<div class="wadah">
+<nav class="atas"><a href="index.html">← Daftar panduan</a> · <a href="../">Buka aplikasi</a></nav>
+<main>
+<h1>Panduan Admin Regulasi</h1>
+<p><b>Tujuan peran:</b> menjaga mutu koleksi: memverifikasi dan menerbitkan dokumen, mencatat relasi status, menangani tautan bermasalah, mengelola master, dan menyusun laporan.</p>
+<h2>Cara masuk</h2>
+<p>Masuk di <code>/regulasi/admin</code>. <b>MFA wajib</b>: saat masuk pertama pindai kode QR dengan aplikasi autentikator dan simpan kode pemulihan.</p>
+<h2>Langkah</h2>
+<ol class="langkah"><li><b>Dasbor</b><br>Ringkasan koleksi, antrean verifikasi tertua, dokumen terpopuler, grafik per jenis/tahun.<figure><img src="img/admin-regulasi/01-dasbor.png" alt="Tangkapan layar: dasbor admin regulasi" loading="lazy"><figcaption>Dasbor</figcaption></figure></li><li><b>Antrean verifikasi</b><br>Menu <b>Antrean Verifikasi</b> (badge = jumlah menunggu) dengan kolom kelengkapan x/y; aksi Terbitkan/Tolak per baris dan terbitkan massal.<figure><img src="img/admin-regulasi/02-antrean-verifikasi.png" alt="Tangkapan layar: antrean verifikasi" loading="lazy"><figcaption>Antrean verifikasi</figcaption></figure></li><li><b>Periksa lalu terbitkan/tolak</b><br>Panel <b>Kelengkapan</b> menunjukkan syarat terbit (BR-05). Buka naskah, cocokkan metadata, lalu <b>Terbitkan</b> atau <b>Tolak</b> (catatan wajib). Dokumen salah input <b>diarsipkan</b>, tidak dihapus.<figure><img src="img/admin-regulasi/03-verifikasi-dokumen.png" alt="Tangkapan layar: halaman lihat dokumen menunggu verifikasi dengan tombol terbitkan dan tolak" loading="lazy"><figcaption>Verifikasi dokumen</figcaption></figure></li><li><b>Relasi status</b><br>Tab <b>Relasi</b>: <b>Tambah relasi</b> (mencabut/mengubah/melaksanakan; cukup dari satu sisi) atau <b>Tambah dokumen rujukan</b> bila peraturan target belum ada. Status target dihitung otomatis; relasi bertanggal masa depan diterapkan penjadwal harian. <b>Ubah status berlaku</b> untuk status manual "Tidak berlaku".<figure><img src="img/admin-regulasi/04-relasi-dokumen.png" alt="Tangkapan layar: tab relasi dokumen BAN-PT 13/2025 dengan dua relasi mencabut" loading="lazy"><figcaption>Relasi dokumen</figcaption></figure></li><li><b>Tautan bermasalah</b><br>Tautan tidak dapat diakses, ekstraksi gagal/tanpa teks, atau isi berubah. Perbaiki berbagi di Drive, lalu <b>Periksa ulang</b>/<b>Ekstrak ulang</b>.<figure><img src="img/admin-regulasi/05-tautan-bermasalah.png" alt="Tangkapan layar: laporan tautan bermasalah" loading="lazy"><figcaption>Tautan bermasalah</figcaption></figure></li><li><b>Laporan</b><br>Statistik koleksi, kelengkapan, pembukaan tautan, relasi status, penggunaan API; ekspor Excel dikirim lewat notifikasi.<figure><img src="img/admin-regulasi/06-laporan-statistik.png" alt="Tangkapan layar: laporan statistik koleksi" loading="lazy"><figcaption>Statistik koleksi</figcaption></figure></li><li><b>Laporan evaluasi</b><br>Buat laporan periode → <b>Hitung ringkasan</b> → isi analisis &amp; tindak lanjut → <b>Finalkan</b> (terkunci) → <b>Unduh PDF</b>.<figure><img src="img/admin-regulasi/07-laporan-evaluasi.png" alt="Tangkapan layar: laporan evaluasi semester" loading="lazy"><figcaption>Laporan evaluasi</figcaption></figure></li><li><b>Master</b><br>Jenis dokumen (urutan = urutan filter publik), Badan Penetap (T.E.U.), Kategori Sistem, Tag. Penugasan kontributor: menu Pengguna → <b>Atur penugasan</b>.<figure><img src="img/admin-regulasi/08-master-jenis-dokumen.png" alt="Tangkapan layar: master jenis dokumen" loading="lazy"><figcaption>Master jenis dokumen</figcaption></figure></li></ol>
+<h2>Perintah artisan penting</h2>
+<table><tr><th>Perintah</th><th>Fungsi</th></tr>
+<tr><td><code>regulasi:terapkan-status --dry-run</code></td><td>Lihat relasi tertunda (terjadwal harian 00:15)</td></tr>
+<tr><td><code>regulasi:ekstraksi-ulang --gagal</code></td><td>Ulangi ekstraksi teks yang gagal</td></tr>
+<tr><td><code>berkas:periksa-tautan</code></td><td>Periksa keteraksesan semua tautan terbit (Senin 06:30)</td></tr>
+<tr><td><code>regulasi:reindeks [--hapus]</code></td><td>Terapkan pengaturan indeks Meilisearch &amp; impor ulang dokumen terbit</td></tr>
+<tr><td><code>regulasi:ringkasan-mingguan</code></td><td>Kirim ringkasan mingguan ke admin regulasi (Senin 07:30)</td></tr>
+<tr><td><code>berkas:bersihkan-tmp [--jam=24]</code></td><td>Hapus berkas sementara ekstraksi/ekspor (harian 00:45)</td></tr>
+<tr><td><code>regulasi:siapkan-uat</code></td><td>Data &amp; akun UAT per peran (ditolak di produksi)</td></tr></table>
+<p>Jalankan di container aplikasi, mis. <code>docker compose --env-file .env.production -f docker-compose.prod.yml exec app php artisan …</code>. Rincian relasi: <code>docs/RELASI.md</code>; operasional: <code>docs/DEPLOY.md</code>.</p>
+<h2>Tanya-jawab</h2><dl class="tj"><dt>Mengapa status target belum berubah?</dt><dd>Sumber harus terbit dan tanggal efektifnya sudah tiba; bila belum, halaman target menampilkan "relasi tertunda".</dd><dt>Relasi keliru?</dt><dd>Hapus relasi (alasan wajib) lalu tambah yang benar; status dihitung ulang.</dd><dt>Pencarian tidak toleran salah ketik?</dt><dd>Meilisearch mati; portal memakai cadangan basis data. Hubungi TI fakultas.</dd></dl>
+<h2>Kontak</h2><p>Admin Regulasi FKIP (regulasi-fkip@unsil.ac.id) · Admin TI Fakultas untuk akun &amp; MFA</p>
+</main>
+</div>
+<footer>Regulasi FKIP Universitas Siliwangi · panduan versi 1.0.0, diperbarui 11 Oktober 2026 · Admin Regulasi FKIP (regulasi-fkip@unsil.ac.id) · Admin TI Fakultas untuk akun &amp; MFA</footer>
+</body>
+</html>

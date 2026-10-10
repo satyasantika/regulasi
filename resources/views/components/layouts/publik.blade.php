@@ -53,6 +53,10 @@
                     <a href="{{ route('dokumen.index') }}" @if (request()->routeIs('dokumen.index', 'dokumen.jenis', 'dokumen.show')) aria-current="page" @endif
                        class="flex min-h-11 items-center rounded-md px-3 font-medium text-slate-700 hover:bg-slate-100 hover:text-indigo-800 focus-visible:outline-2 focus-visible:outline-indigo-700 aria-[current=page]:text-indigo-800 aria-[current=page]:underline aria-[current=page]:underline-offset-4">Dokumen</a>
                 </li>
+                <li>
+                    <a href="{{ asset('panduan/index.html') }}"
+                       class="flex min-h-11 items-center rounded-md px-3 font-medium text-slate-700 hover:bg-slate-100 hover:text-indigo-800 focus-visible:outline-2 focus-visible:outline-indigo-700">Panduan</a>
+                </li>
                 <li class="relative" x-data="{ buka: false }" @click.outside="buka = false" @keydown.escape="buka = false">
                     <button type="button" @click="buka = ! buka" :aria-expanded="buka.toString()" aria-expanded="false" aria-controls="menu-kategori"
                             class="flex min-h-11 w-full items-center justify-between gap-1 rounded-md px-3 font-medium text-slate-700 hover:bg-slate-100 hover:text-indigo-800 focus-visible:outline-2 focus-visible:outline-indigo-700 md:w-auto">
@@ -105,6 +109,7 @@
         </div>
         <div class="sm:text-right">
             <p>Bukan portal JDIH resmi. Naskah resmi mengacu pada sumber penerbitnya.</p>
+            <p class="mt-1"><a href="{{ asset('panduan/index.html') }}" class="font-medium text-indigo-800 underline underline-offset-4 hover:text-indigo-900">Panduan Pengguna</a></p>
             <p class="mt-1">Versi {{ config('regulasi.versi') }}</p>
         </div>
     </div>

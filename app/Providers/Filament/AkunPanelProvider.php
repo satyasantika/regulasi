@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Akun\Pages\Daftar;
 use App\Filament\Akun\Pages\Dasbor;
 use App\Filament\Auth\Masuk;
+use App\Support\Panduan;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -36,6 +37,9 @@ class AkunPanelProvider extends PanelProvider
             ->renderHook(PanelsRenderHook::HEAD_START, fn (): HtmlString => new HtmlString('<meta name="robots" content="noindex, nofollow">'))
             ->login(Masuk::class)
             ->registration(Daftar::class)
+            // Panduan pengguna HTML (F12.6): tautan di halaman masuk dan menu pengguna.
+            ->renderHook(...Panduan::kaitHalamanMasuk())
+            ->userMenuItems([Panduan::itemMenuPengguna()])
             ->passwordReset()
             ->emailVerification()
             ->profile()

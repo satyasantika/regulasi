@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Panduan pengguna aplikasi Regulasi FKIP Unsil per peran.">
+<title>Panduan Pengguna — Regulasi FKIP Unsil</title>
+<style>
+:root{--aksen:#3730a3;--aksen-muda:#e0e7ff;--teks:#0f172a;--redup:#475569;--garis:#e2e8f0;--latar:#f8fafc}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6;color:var(--teks);background:var(--latar)}
+header{background:var(--aksen);color:#fff;padding:1rem}header a{color:#fff}header p{margin:.25rem 0 0;opacity:.9}
+.wadah{max-width:60rem;margin:0 auto;padding:1rem}
+main{background:#fff;border:1px solid var(--garis);border-radius:.75rem;padding:1rem 1.25rem}
+h1{margin:.25rem 0;font-size:1.6rem}h2{margin-top:2rem;border-bottom:2px solid var(--aksen-muda);padding-bottom:.25rem}
+ol.langkah{padding-left:1.25rem}ol.langkah>li{margin:1.25rem 0}
+figure{margin:.75rem 0;border:1px solid var(--garis);border-radius:.5rem;overflow:hidden;background:#fff}
+figure img{display:block;width:100%;height:auto}figure.ponsel{max-width:390px}
+figcaption{font-size:.9rem;color:var(--redup);padding:.4rem .6rem;border-top:1px solid var(--garis)}
+.kartu{display:grid;grid-template-columns:repeat(auto-fill,minmax(15rem,1fr));gap:1rem;padding:0;list-style:none}
+.kartu li{border:1px solid var(--garis);border-radius:.75rem;padding:1rem;background:#fff}.kartu a{font-weight:600;color:var(--aksen)}
+.catatan{background:var(--aksen-muda);border-left:4px solid var(--aksen);padding:.5rem .75rem;border-radius:.25rem}
+table{border-collapse:collapse;width:100%;font-size:.95rem}td,th{border:1px solid var(--garis);padding:.35rem .5rem;text-align:left;vertical-align:top}
+dl.tj dt{font-weight:600;margin-top:.75rem}dl.tj dd{margin:0 0 0 1rem}
+nav.atas{font-size:.9rem;margin-bottom:.5rem}nav.atas a{color:var(--aksen)}
+footer{font-size:.85rem;color:var(--redup);text-align:center;padding:1rem}
+code,kbd{font-family:ui-monospace,monospace;background:#f1f5f9;border:1px solid var(--garis);border-radius:.25rem;padding:0 .3rem;font-size:.9em}
+@media (max-width:600px){main{padding:.75rem}h1{font-size:1.3rem}}
+@media print{header{background:none;color:#000;border-bottom:2px solid #000}header a,nav.atas{display:none}main{border:0}figure{break-inside:avoid}body{background:#fff}}
+</style>
+</head>
+<body>
+<header><div class="wadah"><strong>Regulasi FKIP Unsil</strong><p>Panduan pengguna · versi 1.0.0 · 11 Oktober 2026</p></div></header>
+<div class="wadah">
+
+<main>
+<h1>Panduan Pengguna</h1>
+<p><b>Regulasi FKIP Unsil</b> adalah repositori terpusat dokumen hukum dan dokumen pendukung (UU, PP, Permen, Peraturan BAN-PT/LAM, keputusan rektor &amp; dekan, surat edaran, SOP, pedoman) yang dipakai sistem-sistem FKIP Universitas Siliwangi. Setiap dokumen memiliki metadata lengkap, status berlaku (berlaku, berlaku dengan perubahan, dicabut) yang diperbarui otomatis dari relasi antardokumen, dan tautan naskah di Google Drive atau situs sumber resmi.</p>
+<p class="catatan">Aplikasi tidak menyimpan berkas: naskah berupa <b>tautan</b> ke Shared Drive "Regulasi FKIP" atau sumber resmi pemerintah. Ini bukan portal JDIH resmi; naskah resmi mengacu pada sumber penerbitnya.</p>
+<p><a href="../">Buka portal →</a> · <a href="../admin/login">Masuk panel staf →</a> · <a href="../akun/login">Masuk akun pengguna →</a></p>
+<h2>Mencari dokumen (semua orang)</h2>
+<ol class="langkah"><li><b>Beranda</b><br>Ketik kata kunci di kotak pencarian (toleran salah ketik, mis. "permendikbudrstek 53"), atau pilih kartu jenis/kategori.<figure><img src="img/umum/01-beranda.png" alt="Tangkapan layar: beranda portal dengan kotak pencarian, statistik per jenis, dan dokumen terbaru" loading="lazy"><figcaption>Beranda portal</figcaption></figure></li><li><b>Daftar & filter</b><br>Di <b>Dokumen</b> pilih filter jenis, tahun, status berlaku, kategori sistem, atau T.E.U. Alamat halaman menyimpan filter sehingga dapat dibagikan.<figure><img src="img/umum/02-daftar-dokumen.png" alt="Tangkapan layar: daftar dokumen dengan filter kategori Akreditasi dan status Berlaku" loading="lazy"><figcaption>Daftar dokumen berfilter</figcaption></figure></li><li><b>Detail dokumen</b><br>Halaman detail memuat metadata (T.E.U., tanggal penetapan & berlaku), status, relasi (mencabut/dicabut oleh, mengubah/diubah oleh), tombol <b>Tampilkan pratinjau</b> dan <b>Buka berkas</b>. Dokumen rujukan bertanda "Metadata saja — naskah belum tersedia".<figure><img src="img/umum/03-detail-dokumen.png" alt="Tangkapan layar: detail Peraturan BAN-PT 13/2025 dengan metadata dan relasi mencabut" loading="lazy"><figcaption>Detail dokumen</figcaption></figure></li><li><b>Status dicabut</b><br>Dokumen yang dicabut menampilkan badge <b>Dicabut</b> dan kalimat "Dicabut oleh …" yang dapat diklik.<figure><img src="img/umum/04-detail-dicabut.png" alt="Tangkapan layar: detail Permendikbud 3/2021 berstatus dicabut" loading="lazy"><figcaption>Dokumen berstatus dicabut</figcaption></figure></li><li><b>Di ponsel</b><br>Menu dan filter dapat dibuka-tutup; tidak ada gulir horizontal.<figure class="ponsel"><img src="img/umum/06-ponsel-beranda.png" alt="Tangkapan layar: beranda di layar ponsel" loading="lazy"><figcaption>Beranda (ponsel)</figcaption></figure><figure class="ponsel"><img src="img/umum/07-ponsel-daftar.png" alt="Tangkapan layar: daftar dokumen di layar ponsel" loading="lazy"><figcaption>Daftar dokumen (ponsel)</figcaption></figure></li></ol>
+<h2>Masuk</h2>
+<p>Pengguna kampus masuk/daftar di <b>Akun</b> (tombol <b>Masuk</b> di portal) dengan surel <code>@unsil.ac.id</code>. Staf (kontributor, admin) masuk di panel <code>/regulasi/admin</code>; admin regulasi dan super admin wajib MFA (aplikasi autentikator).</p>
+<figure><img src="img/umum/05-masuk.png" alt="Tangkapan layar: halaman masuk akun dengan tautan Panduan Pengguna" loading="lazy"><figcaption>Halaman masuk</figcaption></figure>
+<h2>Pilih panduan sesuai peran Anda</h2>
+<ul class="kartu"><li><a href="pengguna.html">Pengguna Terdaftar</a><br><small><kbd>pengguna</kbd></small><p>Membaca dokumen publik dan internal setelah masuk dengan akun @unsil.ac.id; tamu tanpa akun dapat membaca dokumen publik.</p></li><li><a href="kontributor.html">Kontributor Sistem/Unit</a><br><small><kbd>kontributor</kbd></small><p>Mengisi draf dokumen (metadata + tautan berkas) untuk kategori sistem yang ditugaskan, lalu mengajukannya untuk verifikasi.</p></li><li><a href="admin-regulasi.html">Admin Regulasi Fakultas</a><br><small><kbd>admin-regulasi</kbd></small><p>Memverifikasi dan menerbitkan dokumen, mengelola relasi & status berlaku, master data, tautan bermasalah, dan laporan.</p></li><li><a href="super-admin.html">Super Admin (TI Fakultas)</a><br><small><kbd>super-admin</kbd></small><p>Mengelola pengguna & peran, klien API dan token, log aktivitas, serta Horizon (antrean).</p></li></ul>
+<h2>Kontak</h2><p>Admin Regulasi FKIP (regulasi-fkip@unsil.ac.id) · Admin TI Fakultas untuk akun &amp; MFA</p>
+</main>
+</div>
+<footer>Regulasi FKIP Universitas Siliwangi · panduan versi 1.0.0, diperbarui 11 Oktober 2026 · Admin Regulasi FKIP (regulasi-fkip@unsil.ac.id) · Admin TI Fakultas untuk akun &amp; MFA</footer>
+</body>
+</html>

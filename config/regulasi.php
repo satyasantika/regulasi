@@ -39,6 +39,11 @@ return [
         'password' => env('UAT_PASSWORD'),
     ],
 
+    // Akun demo panduan (PanduanSeeder, hanya APP_ENV=local) & tangkapan layar Playwright (F12.6).
+    'panduan' => [
+        'password' => env('PANDUAN_PASSWORD'),
+    ],
+
     // Registrasi panel akun hanya untuk alamat surel domain ini.
     'domain_registrasi' => 'unsil.ac.id',
 
