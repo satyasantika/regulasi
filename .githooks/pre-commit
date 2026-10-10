@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Disesuaikan dari STANDAR-GIT §6: compose tidak berada di repo (lihat docs/keputusan/0001),
+# sehingga memakai `docker exec` ke container PHP yang sudah berjalan.
+set -e
+root="$(git rev-parse --show-toplevel)"
+svc="${APP_PHP_SERVICE:-$(basename "$root")-php}"
+cd "$root"
+if ! docker ps --format '{{.Names}}' | grep -qx "$svc"; then
+  echo "✖ Container $svc belum berjalan. Jalankan: cd /home/satya/code && docker compose up -d $svc"
+  exit 1
+fi
+docker exec "$svc" ./vendor/bin/pint --test
+docker exec "$svc" php artisan test --parallel --stop-on-failure
