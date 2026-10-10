@@ -11,6 +11,7 @@ use App\Filament\Admin\Resources\DokumenResource\Pages\CreateDokumen;
 use App\Filament\Admin\Resources\DokumenResource\Pages\EditDokumen;
 use App\Filament\Admin\Resources\DokumenResource\Pages\ListDokumen;
 use App\Filament\Admin\Resources\DokumenResource\Pages\ViewDokumen;
+use App\Filament\Admin\Resources\DokumenResource\RelationManagers\RiwayatStatusRelationManager;
 use App\Filament\Admin\Resources\DokumenResource\RelationManagers\TautanBerkasRelationManager;
 use App\Models\BadanPenetap;
 use App\Models\Dokumen;
@@ -262,6 +263,7 @@ class DokumenResource extends Resource
     {
         return [
             TautanBerkasRelationManager::class,
+            RiwayatStatusRelationManager::class,
         ];
     }
 

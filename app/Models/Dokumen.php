@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -63,6 +64,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property-read BadanPenetap $badanPenetap
  * @property-read Collection<int, TautanBerkas> $tautanBerkas
  * @property-read TautanBerkas|null $naskahUtama
+ * @property-read Collection<int, RiwayatStatusDokumen> $riwayatStatus
  */
 class Dokumen extends Model
 {
@@ -172,6 +174,18 @@ class Dokumen extends Model
     public function naskahUtama(): MorphOne
     {
         return $this->morphOne(TautanBerkas::class, 'pemilik')->where('jenis', JenisTautan::NaskahUtama->value);
+    }
+
+    /**
+     * Riwayat status (append-only), terbaru lebih dulu.
+     *
+     * @return HasMany<RiwayatStatusDokumen, $this>
+     */
+    public function riwayatStatus(): HasMany
+    {
+        return $this->hasMany(RiwayatStatusDokumen::class, 'dokumen_id')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
     }
 
     /**

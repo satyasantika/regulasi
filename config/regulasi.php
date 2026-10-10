@@ -32,6 +32,12 @@ return [
     // Teks hasil ekstraksi di bawah ambang (karakter per 10 halaman) → status tanpa_teks.
     'ambang_tanpa_teks' => 200,
 
+    // Kunci atomik alur publikasi `lock:publikasi:{id}` (02-ARSITEKTUR §3.3): masa kunci & lama menunggu (detik).
+    'kunci_publikasi' => [
+        'detik' => 10,
+        'tunggu' => 5,
+    ],
+
     // Retensi log buka tautan (BR-17).
     'retensi_log_buka_bulan' => 24,
 

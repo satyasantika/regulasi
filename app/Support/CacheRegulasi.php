@@ -18,6 +18,18 @@ class CacheRegulasi
     public const int TTL_MASTER_DETIK = 60 * 60 * 24;
 
     /**
+     * Kunci cache publik (beranda & faset, 02-ARSITEKTUR §3.1) yang dibersihkan saat dokumen terbit/diarsipkan
+     * atau status berlaku berubah (BR-20).
+     *
+     * @var list<string>
+     */
+    public const array KUNCI_PUBLIK = [
+        'beranda:statistik',
+        'beranda:terbaru',
+        'faset:tahun',
+    ];
+
+    /**
      * Nama master yang dapat di-cache beserta modelnya.
      *
      * @var array<string, class-string<JenisDokumen|KategoriSistem|BadanPenetap>>
@@ -45,6 +57,16 @@ class CacheRegulasi
         self::modelMaster($nama);
 
         Cache::forget(self::kunciMaster($nama));
+    }
+
+    /**
+     * Bersihkan cache publik (BR-20).
+     */
+    public static function lupakanPublik(): void
+    {
+        foreach (self::KUNCI_PUBLIK as $kunci) {
+            Cache::forget($kunci);
+        }
     }
 
     /**
