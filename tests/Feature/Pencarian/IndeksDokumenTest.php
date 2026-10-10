@@ -148,3 +148,13 @@ test('pengaturan indeks memuat atribut filter dan sinonim dua arah', function ()
         ->and($pengaturan['synonyms']['undang-undang'])->toBe(['uu'])
         ->and($pengaturan['synonyms']['tata naskah dinas'])->toBe(['tnd']);
 });
+
+test('regulasi:reindeks mengimpor ulang hanya dokumen terbit', function () {
+    dokumenTerindeks(['status_publikasi' => StatusPublikasi::Terbit]);
+    dokumenTerindeks(['status_publikasi' => StatusPublikasi::Terbit]);
+    dokumenTerindeks();
+
+    $this->artisan('regulasi:reindeks', ['--hapus' => true])
+        ->expectsOutputToContain('2 dokumen terbit diindeks ulang ke regulasi_dokumen')
+        ->assertSuccessful();
+});

@@ -178,7 +178,7 @@ class Dokumen extends Model
      */
     protected function makeAllSearchableUsing(Builder $query): Builder
     {
-        return $query->with(self::RELASI_INDEKS);
+        return $query->where('status_publikasi', StatusPublikasi::Terbit->value)->with(self::RELASI_INDEKS);
     }
 
     /**

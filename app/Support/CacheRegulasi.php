@@ -8,7 +8,9 @@ use App\Models\KategoriSistem;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Pembungkus cache Redis aplikasi (02-ARSITEKTUR §3.1). Kunci ditulis tanpa prefix `regulasi:`.
@@ -16,6 +18,8 @@ use InvalidArgumentException;
 class CacheRegulasi
 {
     public const int TTL_MASTER_DETIK = 60 * 60 * 24;
+
+    public const int TTL_SEHAT_DETIK = 60;
 
     /**
      * Kunci cache publik (beranda & faset, 02-ARSITEKTUR §3.1) yang dibersihkan saat dokumen terbit/diarsipkan
@@ -67,6 +71,28 @@ class CacheRegulasi
         foreach (self::KUNCI_PUBLIK as $kunci) {
             Cache::forget($kunci);
         }
+    }
+
+    /**
+     * Kesehatan Meilisearch (GET /health → status available), di-cache 60 detik (`pencarian:sehat`).
+     */
+    public static function pencarianSehat(): bool
+    {
+        return (bool) Cache::remember('pencarian:sehat', self::TTL_SEHAT_DETIK, function (): bool {
+            $host = rtrim((string) config('scout.meilisearch.host'), '/');
+
+            if ($host === '') {
+                return false;
+            }
+
+            try {
+                $respons = Http::connectTimeout(2)->timeout(2)->acceptJson()->get($host.'/health');
+
+                return $respons->successful() && $respons->json('status') === 'available';
+            } catch (Throwable) {
+                return false;
+            }
+        });
     }
 
     /**
