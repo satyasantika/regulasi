@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\DokumenRelasi;
 use App\Models\User;
 
 /**
@@ -11,6 +12,11 @@ use App\Models\User;
 class DokumenRelasiPolicy
 {
     public function create(User $user): bool
+    {
+        return $user->can('relasi.kelola');
+    }
+
+    public function delete(User $user, DokumenRelasi $relasi): bool
     {
         return $user->can('relasi.kelola');
     }

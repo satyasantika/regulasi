@@ -75,6 +75,14 @@ class DokumenPolicy
         return $user->can('dokumen.arsipkan');
     }
 
+    /**
+     * Status berlaku manual / kembalikan otomatis (BR-12).
+     */
+    public function ubahStatusBerlaku(User $user, Dokumen $dokumen): bool
+    {
+        return $user->can('status-berlaku.ubah');
+    }
+
     public function delete(User $user, Dokumen $dokumen): bool
     {
         return $user->can('dokumen.hapus')

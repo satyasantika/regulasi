@@ -2,6 +2,8 @@
 
 namespace App\Actions\Dokumen;
 
+use App\Actions\Relasi\TerapkanRelasiDokumen;
+use App\Enums\StatusPublikasi;
 use App\Models\Dokumen;
 use App\Models\JenisDokumen;
 use App\Models\User;
@@ -73,7 +75,16 @@ class SimpanDokumen
                 $dokumen->slug = $this->buatSlug->handle($dokumen);
             }
 
+            // Tanggal efektif dokumen terbit berubah → status relasinya sebagai sumber diterapkan ulang (BR-08).
+            $tanggalBerubah = ! $baru
+                && $dokumen->status_publikasi === StatusPublikasi::Terbit
+                && $dokumen->isDirty(['tanggal_penetapan', 'tanggal_pengundangan', 'tanggal_berlaku']);
+
             $dokumen->save();
+
+            if ($tanggalBerubah) {
+                DB::afterCommit(fn () => app(TerapkanRelasiDokumen::class)->handle($dokumen, $oleh));
+            }
 
             $perubahanKategori = $dokumen->kategoriSistem()->sync($kategori);
             $perubahanTag = $tag !== null ? $dokumen->tag()->sync($tag) : ['attached' => [], 'detached' => []];

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Dokumen;
 
+use App\Actions\Relasi\TerapkanRelasiDokumen;
 use App\Enums\StatusPublikasi;
 use App\Models\Dokumen;
 use App\Models\User;
@@ -26,8 +27,11 @@ class PulihkanDokumen extends TransisiPublikasi
         );
     }
 
-    protected function setelahCommit(Dokumen $dokumen, StatusPublikasi $asal): void
+    protected function setelahCommit(Dokumen $dokumen, StatusPublikasi $asal, User $oleh): void
     {
         CacheRegulasi::lupakanPublik();
+
+        // Dokumen kembali terbit: relasinya sebagai sumber berlaku lagi (BR-08).
+        app(TerapkanRelasiDokumen::class)->handle($dokumen, $oleh);
     }
 }
