@@ -46,6 +46,9 @@ class AdminPanelProvider extends PanelProvider
             )
             ->multiFactorAuthenticationRequiredMiddlewareName(WajibMfa::class)
             ->brandName('Regulasi FKIP Unsil')
+            // Lonceng notifikasi database (F10.1), diperbarui tiap 30 detik.
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->colors([
                 'primary' => Color::Blue,
             ])

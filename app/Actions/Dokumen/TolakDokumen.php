@@ -5,6 +5,8 @@ namespace App\Actions\Dokumen;
 use App\Enums\StatusPublikasi;
 use App\Models\Dokumen;
 use App\Models\User;
+use App\Notifications\DokumenDitolak;
+use App\Support\PenerimaNotifikasi;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -30,6 +32,18 @@ class TolakDokumen extends TransisiPublikasi
             ubah: function (Dokumen $baris) use ($catatan): void {
                 $baris->catatan_verifikasi = $catatan;
             },
+        );
+    }
+
+    /**
+     * Beri tahu pembuat draf beserta catatan penolakan (US-NOT-02).
+     */
+    protected function setelahCommit(Dokumen $dokumen, StatusPublikasi $asal, User $oleh): void
+    {
+        PenerimaNotifikasi::kirim(
+            PenerimaNotifikasi::pengguna($dokumen->dibuat_oleh),
+            new DokumenDitolak($dokumen, $oleh, (string) $dokumen->catatan_verifikasi),
+            kecualiId: $oleh->getKey(),
         );
     }
 }

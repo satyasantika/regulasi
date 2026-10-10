@@ -3,18 +3,23 @@
 namespace App\Jobs;
 
 use App\Enums\StatusCekTautan;
+use App\Enums\StatusPublikasi;
 use App\Jobs\Concerns\DibatasiPerHost;
 use App\Models\TautanBerkas;
+use App\Notifications\TautanTidakDapatDiakses;
 use App\Services\Berkas\PengunduhAman;
+use App\Support\PenerimaNotifikasi;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Pemeriksaan keteraksesan tautan (antrean `tautan`, 02-ARSITEKTUR §3.2/§4.1, US-TAU-03): HEAD lalu GET Range
  * 0-1023 lewat PengunduhAman tanpa menyimpan isi; mengisi status_cek & dicek_pada. Informatif — tidak memblokir
- * simpan/terbit. Berubah menjadi tidak_dapat_diakses → peringatan log (notifikasi TautanTidakDapatDiakses di F10).
+ * simpan/terbit. Berubah menjadi tidak_dapat_diakses → peringatan log + notifikasi TautanTidakDapatDiakses ke penambah
+ * tautan dan (bila dokumen terbit) admin-regulasi (02-ARSITEKTUR §10).
  */
 class PeriksaTautanBerkas implements ShouldBeUnique, ShouldQueue
 {
@@ -63,6 +68,22 @@ class PeriksaTautanBerkas implements ShouldBeUnique, ShouldQueue
                 'pemilik_id' => $tautan->pemilik_id,
                 'ditambahkan_oleh' => $tautan->ditambahkan_oleh,
             ]);
+
+            $this->beriTahu($tautan);
         }
+    }
+
+    private function beriTahu(TautanBerkas $tautan): void
+    {
+        $dokumen = $tautan->dokumen();
+
+        if ($dokumen === null || $dokumen->trashed()) {
+            return;
+        }
+
+        $penerima = PenerimaNotifikasi::pengguna($tautan->ditambahkan_oleh)
+            ->merge($dokumen->status_publikasi === StatusPublikasi::Terbit ? PenerimaNotifikasi::admin() : new Collection);
+
+        PenerimaNotifikasi::kirim($penerima, new TautanTidakDapatDiakses($tautan, $dokumen));
     }
 }

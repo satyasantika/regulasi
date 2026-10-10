@@ -10,7 +10,7 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Hash isi PDF berbeda dari ekstraksi sebelumnya (US-EKS-02, BR-14): dokumen hukum final semestinya tidak berubah.
- * Notifikasi IsiBerkasBerubah ke admin-regulasi dibangun di F10.
+ * Pendengar KirimNotifikasiIsiBerkasBerubah mengirim notifikasi database ke admin-regulasi (F10).
  */
 class IsiBerkasBerubah implements ShouldDispatchAfterCommit
 {
