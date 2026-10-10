@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'meilisearch' => [
+        'host' => env('MEILISEARCH_HOST'),
+    ],
+
 ];

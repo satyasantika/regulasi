@@ -50,6 +50,17 @@ rgp php artisan migrate
 npm install && npm run build  # Node di host (container tidak memiliki Node); npm run dev untuk pengembangan
 ```
 
+### Antrean dan penjadwal
+
+Antrean (`default`, `tautan`, `ekstraksi`, `indeks`, `notifikasi`, `ekspor`) dijalankan Horizon di service
+`regulasi-horizon`; penjadwal di service `regulasi-scheduler`. **Restart Horizon setelah mengubah kode job:**
+
+```bash
+cd /home/satya/code && docker compose restart regulasi-horizon
+```
+
+Dasbor Horizon: http://localhost:8034/horizon (environment `local`). Kesehatan: `GET /api/health`.
+
 ### Basis data uji
 
 Uji (Pest) berjalan di MariaDB host, bukan SQLite, karena memakai indeks FULLTEXT dan CHECK. Buat sekali:
