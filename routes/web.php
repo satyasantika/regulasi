@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Laporan\UnduhEksporController;
 use App\Http\Controllers\Publik\BukaTautanController;
 use App\Http\Controllers\Publik\DetailDokumenController;
 use App\Http\Controllers\Publik\SitemapController;
@@ -28,3 +29,8 @@ Route::get('/d/{tautanBerkas}/buka-api', [BukaTautanController::class, 'api'])
     ->whereUuid('tautanBerkas')
     ->middleware(['signed', 'throttle:buka'])
     ->name('tautan.buka-api');
+
+// Unduh ekspor Excel sementara (F11.2): bertanda tangan, hanya peminta; berkas dihapus ≤ 24 jam.
+Route::get('/ekspor/{berkas}', UnduhEksporController::class)
+    ->middleware(['auth', 'signed'])
+    ->name('ekspor.unduh');

@@ -7,6 +7,7 @@ use App\Enums\StatusCekTautan;
 use App\Enums\StatusEkstraksi;
 use App\Models\Dokumen;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 /**
@@ -86,5 +87,39 @@ final class KriteriaKelengkapan
         }
 
         return $query->selectRaw(self::sqlSkor().' AS skor_kelengkapan');
+    }
+
+    /**
+     * Rata-rata skor kelengkapan dan jumlah dokumen lengkap per kategori sistem (dokumen terbit, lingkup pengguna).
+     *
+     * @return list<array{kode: string, nama: string, jumlah: int, lengkap: int, skor: int}>
+     */
+    public static function ringkasanPerKategori(LingkupLaporan $lingkup): array
+    {
+        $terbit = $lingkup->terapkan(Dokumen::query()->terbit())->toBase()
+            ->select('dokumen.id')
+            ->selectRaw(self::sqlSkor().' AS skor')
+            ->selectRaw('(CASE WHEN '.self::sqlLengkap().' THEN 1 ELSE 0 END) AS lengkap');
+
+        return DB::table('kategori_sistem')
+            ->whereNull('kategori_sistem.deleted_at')
+            ->where('kategori_sistem.aktif', true)
+            ->when($lingkup->kategoriIds !== null, fn ($q) => $q->whereIn('kategori_sistem.id', $lingkup->kategoriIds === [] ? ['00000000-0000-0000-0000-000000000000'] : (array) $lingkup->kategoriIds))
+            ->leftJoin('dokumen_kategori_sistem', 'dokumen_kategori_sistem.kategori_sistem_id', '=', 'kategori_sistem.id')
+            ->leftJoinSub($terbit, 'terbit', 'terbit.id', '=', 'dokumen_kategori_sistem.dokumen_id')
+            ->groupBy('kategori_sistem.id', 'kategori_sistem.kode', 'kategori_sistem.nama', 'kategori_sistem.urutan')
+            ->orderBy('kategori_sistem.urutan')
+            ->orderBy('kategori_sistem.nama')
+            ->selectRaw('kategori_sistem.kode AS kode, kategori_sistem.nama AS nama, COUNT(terbit.id) AS jumlah, COALESCE(SUM(terbit.lengkap), 0) AS lengkap, COALESCE(AVG(terbit.skor), 0) AS skor')
+            ->get()
+            ->map(fn (object $b): array => [
+                'kode' => (string) $b->kode,
+                'nama' => (string) $b->nama,
+                'jumlah' => (int) $b->jumlah,
+                'lengkap' => (int) $b->lengkap,
+                'skor' => (int) round((float) $b->skor),
+            ])
+            ->values()
+            ->all();
     }
 }
