@@ -44,7 +44,7 @@ Rujukan langkah teknis: `docs/DEPLOY.md`; skenario uji: `docs/uat/hasil-uat.md`;
 | No | Butir | Status |
 |---|---|---|
 | G-01 | Semua skenario §2 lulus & ditandatangani | **Belum** — pra-uji otomatis pengembang selesai (docs/uat/hasil-uat.md); UAT manusia & tanda tangan belum |
-| G-02 | Checklist keamanan §3 | Sebagian — KM-06, KM-08 (browser), KM-12, KM-13 perlu TI |
+| G-02 | Checklist keamanan §3 | Sebagian — KM-08 (browser), KM-12, KM-13 perlu TI |
 | G-03 | CI hijau pada `main`; tag `v1.0.0` | Uji lokal hijau & tag lokal dibuat; CI menunggu remote |
 | G-04 | `.env` produksi | **Belum** (TI) — contoh: `.env.production.example`, `APP_VERSION=1.0.0` |
 | G-05 | FULLTEXT token 2 & tanpa stopword | Disiapkan di compose (`docker/mariadb/regulasi.cnf`); terverifikasi di uji asap lokal |
