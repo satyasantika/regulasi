@@ -6,6 +6,7 @@ use App\Enums\StatusPublikasi;
 use App\Enums\Visibilitas;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\DokumenResource;
+use App\Http\Responses\GalatJsonApi;
 use App\Models\Dokumen;
 use App\Models\KlienApi;
 use App\Services\Pencarian\KriteriaPencarian;
@@ -13,6 +14,7 @@ use App\Services\Pencarian\PencarianDokumen;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Validator;
@@ -86,10 +88,15 @@ class DokumenController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $dokumen): DokumenResource
+    /**
+     * Detail dokumen dengan ETag lemah & Last-Modified (berdasarkan updated_at, include, dan hak internal);
+     * If-None-Match/If-Modified-Since yang cocok → 304 tanpa isi.
+     */
+    public function show(Request $request, string $dokumen): JsonResponse
     {
         $this->validasi($request, []);
         $sertakanInternal = KlienApi::bolehBacaInternal($request);
+        $include = $this->include($request);
 
         $model = Dokumen::query()
             ->whereKey($dokumen)
@@ -98,9 +105,27 @@ class DokumenController extends Controller
             ->with(['jenisDokumen', 'badanPenetap'])
             ->first() ?? throw new NotFoundHttpException('Dokumen tidak ditemukan.');
 
-        $this->muatInclude(new Collection([$model]), $this->include($request), $sertakanInternal);
+        $respons = new JsonResponse(null, 200, ['Content-Type' => GalatJsonApi::TIPE_KONTEN]);
+        $respons->setEtag(hash('sha256', implode('|', [
+            $model->id,
+            $model->updated_at?->format('Y-m-d\TH:i:s.uP'),
+            implode(',', $include),
+            $sertakanInternal ? 'internal' : 'publik',
+        ])), weak: true);
+        $respons->setLastModified($model->updated_at);
+        $respons->headers->addCacheControlDirective('private');
+        $respons->headers->addCacheControlDirective('no-cache');
 
-        return new DokumenResource($model);
+        if ($respons->isNotModified($request)) {
+            return $respons;
+        }
+
+        $this->muatInclude(new Collection([$model]), $include, $sertakanInternal);
+
+        $isi = (new DokumenResource($model))->response($request);
+        $respons->setData($isi->getData());
+
+        return $respons;
     }
 
     /**
