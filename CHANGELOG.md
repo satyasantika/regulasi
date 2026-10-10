@@ -5,6 +5,52 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+## [0.11.0] - 2026-10-10
+
+### Ditambahkan
+- Dasbor admin (US-LAP-01, F11.1): halaman `Dasbor` menggantikan dasbor bawaan Filament dengan widget
+  `StatistikDokumenOverview` (terbit, menunggu verifikasi, dicabut, tautan dibuka 30 hari, kelengkapan abstrak &
+  teks), `DokumenPerJenisChart` (bar), `DokumenPerTahunChart` (line, 10 tahun), `AntreanVerifikasiWidget`
+  (5 tertua, hanya `dokumen.verifikasi`), `DibukaTerpopulerWidget` (10 dokumen terbanyak dibuka 30 hari dari
+  `log_buka_tautan`; pratinjau sematan Drive tidak dihitung, BR-17). Kontributor: semua angka dibatasi kategori
+  yang ditugaskan (`LingkupLaporan`) dan antrean diganti `DrafSayaWidget` ("Draf & dokumen ditolak milik saya").
+  Agregat di-cache 10 menit per kunci `dasbor:{peran}:{hash kategori}` dan dibersihkan oleh
+  `CacheRegulasi::lupakanPublik()`.
+- Laporan statistik koleksi (PRD §8, F11.2): halaman `Laporan → Statistik Koleksi`, pivot dimensi (jenis, tahun,
+  status berlaku, kategori, badan penetap) × status berlaku + total, filter status publikasi (bawaan terbit) dan
+  rentang tahun.
+- Laporan kelengkapan metadata (US-LAP-02): tabel dokumen terbit dengan ✓/✗ abstrak, naskah utama, teks
+  terekstraksi, tanggal penetapan, tanggal berlaku, tag, sumber, skor kelengkapan (%); filter "hanya yang belum
+  lengkap", kategori, jenis; ringkasan rata-rata skor per kategori; aksi "Buka" ke halaman dokumen. Kriteria
+  dihitung di SQL (`KriteriaKelengkapan`, tanpa N+1).
+- Laporan pembukaan tautan (F11.3): rentang tanggal (bawaan 30 hari), saluran web/API, kategori; per dokumen
+  (web, API, total) terurut total, halaman pertama = 20 terpopuler, grafik harian `PembukaanHarianChart`.
+  `ip_hash`/`user_agent` tidak pernah ditampilkan.
+- Laporan relasi status: relasi mencabut/mengubah (dokumen, pencabut/pengubah, tanggal efektif, keadaan) dengan
+  filter efektif/tertunda.
+- Laporan penggunaan API (super-admin & admin-regulasi): per klien jumlah tautan dibuka via API pada periode,
+  terakhir dipakai, token aktif, kedaluwarsa token terdekat.
+- Laporan evaluasi periode PDF (US-LAP-03, F11.4): tabel `laporan_evaluasi` (03-SKEMA §3.15), enum
+  `StatusLaporan`, model `LaporanEvaluasi` (log aktivitas `laporan`, alias morph `laporan_evaluasi`),
+  `LaporanEvaluasiPolicy`, `LaporanEvaluasiResource` (buat/ubah draf, "Hitung ringkasan", "Finalkan", "Unduh PDF").
+  Snapshot `ringkasan` (`RingkasanEvaluasi`): koleksi, penambahan periode, perubahan status, kelengkapan, kesehatan
+  tautan, pembukaan per saluran + 10 terpopuler, penggunaan API. PDF dompdf A4 portrait (kop FKIP Unsil, Bab I–VI +
+  lampiran) dirender ulang dari snapshot dan di-stream lewat `GET /laporan-evaluasi/{id}/pdf`, tidak disimpan.
+  Laporan final dikunci di model (`LaporanFinalTidakDapatDiubah`). Dokumentasi `docs/laporan-evaluasi.md`.
+- Ekspor Excel berbasis antrean `ekspor`: job `BuatEksporLaporan` (statistik koleksi, pembukaan tautan, relasi
+  status; `spatie/simple-excel`) menulis `storage/app/tmp/ekspor/{uuid}.xlsx` lalu mengirim notifikasi database
+  `EksporLaporanSiap` berisi tautan unduh bertanda tangan 24 jam (`GET /ekspor/{berkas}`) yang hanya berlaku bagi
+  peminta yang memegang `laporan.ekspor`. Kelengkapan metadata memakai Filament `ExportAction`
+  (`KelengkapanDokumenExporter`, antrean `ekspor`, disk `tmp`) dengan tabel `exports` UUID (model `Ekspor`,
+  `EksporPolicy`). Header kolom berbahasa Indonesia; berkas dihapus ≤ 24 jam oleh `berkas:bersihkan-tmp`.
+- Disk `tmp` (`storage/app/tmp`) dan `storage/app/tmp/.gitignore`.
+- Uji `tests/Feature/Laporan/` (DasborTest, LaporanKoleksiTest, LaporanPemanfaatanTest, LaporanEvaluasiTest).
+
+### Diubah
+- `barryvdh/laravel-dompdf` dipindah dari `require-dev` ke `require`; `spatie/simple-excel` ditambahkan.
+- Tautan "Buka dasbor" pada surel ringkasan mingguan memakai rute `filament.admin.pages.dasbor`.
+- `APP_VERSION=0.11.0`.
+
 ## [0.10.0] - 2026-10-10
 
 ### Ditambahkan
