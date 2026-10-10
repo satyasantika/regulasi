@@ -11,9 +11,24 @@ use App\Models\User;
  */
 class DokumenRelasiPolicy
 {
+    public function viewAny(User $user): bool
+    {
+        return $user->can('dokumen.lihat-semua') || $user->can('dokumen.lihat-kategori');
+    }
+
+    public function view(User $user, DokumenRelasi $relasi): bool
+    {
+        return $this->viewAny($user);
+    }
+
     public function create(User $user): bool
     {
         return $user->can('relasi.kelola');
+    }
+
+    public function update(User $user, DokumenRelasi $relasi): bool
+    {
+        return false;
     }
 
     public function delete(User $user, DokumenRelasi $relasi): bool
