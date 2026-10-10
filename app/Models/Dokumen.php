@@ -65,6 +65,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property-read Collection<int, TautanBerkas> $tautanBerkas
  * @property-read TautanBerkas|null $naskahUtama
  * @property-read Collection<int, RiwayatStatusDokumen> $riwayatStatus
+ * @property-read Collection<int, DokumenRelasi> $relasi
  */
 class Dokumen extends Model
 {
@@ -186,6 +187,29 @@ class Dokumen extends Model
         return $this->hasMany(RiwayatStatusDokumen::class, 'dokumen_id')
             ->orderByDesc('created_at')
             ->orderByDesc('id');
+    }
+
+    /**
+     * Relasi milik dokumen ini (sisi `dokumen_id`), termasuk baris kebalikan (BR-07).
+     *
+     * @return HasMany<DokumenRelasi, $this>
+     */
+    public function relasi(): HasMany
+    {
+        return $this->hasMany(DokumenRelasi::class, 'dokumen_id');
+    }
+
+    /**
+     * Relasi yang dimiliki dokumen ini sebagai sumber berdampak (BR-08): sumber terbit dan tanggal efektif
+     * (bila ada) sudah tiba.
+     */
+    public function efektifSebagaiSumber(?CarbonImmutable $hariIni = null): bool
+    {
+        $hariIni ??= CarbonImmutable::today();
+        $tanggal = $this->tanggal_efektif;
+
+        return $this->status_publikasi === StatusPublikasi::Terbit
+            && ($tanggal === null || $tanggal->startOfDay()->lte($hariIni->startOfDay()));
     }
 
     /**

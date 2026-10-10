@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable $created_at
  * @property-read Dokumen $dokumen
  * @property-read User|null $pengguna
+ * @property-read DokumenRelasi|null $relasi
  */
 class RiwayatStatusDokumen extends Model
 {
@@ -59,6 +60,16 @@ class RiwayatStatusDokumen extends Model
     public function pengguna(): BelongsTo
     {
         return $this->belongsTo(User::class, 'oleh');
+    }
+
+    /**
+     * Relasi pemicu perubahan status berlaku (NULL bila relasi sudah dihapus atau perubahan manual).
+     *
+     * @return BelongsTo<DokumenRelasi, $this>
+     */
+    public function relasi(): BelongsTo
+    {
+        return $this->belongsTo(DokumenRelasi::class, 'dokumen_relasi_id');
     }
 
     public function labelDari(): ?string

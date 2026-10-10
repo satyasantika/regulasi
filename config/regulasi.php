@@ -38,6 +38,12 @@ return [
         'tunggu' => 5,
     ],
 
+    // Kunci atomik status berlaku `lock:status-dokumen:{id}` (02-ARSITEKTUR §3.3), diambil berurutan id menaik.
+    'kunci_status' => [
+        'detik' => 15,
+        'tunggu' => 5,
+    ],
+
     // Retensi log buka tautan (BR-17).
     'retensi_log_buka_bulan' => 24,
 
