@@ -94,7 +94,7 @@
             <section class="lg:col-span-2" aria-labelledby="judul-terbaru">
                 <div class="flex items-baseline justify-between gap-3">
                     <h2 id="judul-terbaru" class="text-xl font-bold text-slate-900">Dokumen terbaru</h2>
-                    <a href="{{ route('dokumen.index').'?urut=terbaru' }}" class="text-sm font-medium text-indigo-800 underline-offset-2 hover:underline">Lihat semua</a>
+                    <a href="{{ route('dokumen.index').'?urut=terbaru' }}" class="inline-flex min-h-11 items-center text-sm font-medium text-indigo-800 underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-indigo-700">Lihat semua<span class="sr-only"> dokumen terbaru</span></a>
                 </div>
                 @if ($terbaru === [])
                     <p class="mt-3 text-slate-600">Belum ada dokumen yang diterbitkan.</p>

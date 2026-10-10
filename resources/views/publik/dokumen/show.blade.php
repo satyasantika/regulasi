@@ -16,7 +16,12 @@
     ];
     $bahasa = ['id' => 'Indonesia', 'en' => 'Inggris'][$dokumen->bahasa] ?? $dokumen->bahasa;
 @endphp
-<x-layouts.publik :judul="$dokumen->sebutan_singkat" :deskripsi="\Illuminate\Support\Str::limit($dokumen->abstrak ?: $dokumen->sebutan.' tentang '.$dokumen->judul, 160)">
+<x-layouts.publik :judul="$dokumen->sebutan_singkat" :deskripsi="\Illuminate\Support\Str::limit($dokumen->abstrak ?: $dokumen->sebutan.' tentang '.$dokumen->judul, 160)"
+                  :canonical="$urlKanonik" :noindex="$dokumen->visibilitas === \App\Enums\Visibilitas::Internal" tipe="article">
+    <x-slot:meta>
+        <script type="application/ld+json">@json($dataTerstruktur, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP)</script>
+    </x-slot:meta>
+
     <x-slot:breadcrumb>
         <x-publik.breadcrumb :butir="[
             ['Beranda', route('beranda')],
@@ -138,7 +143,7 @@
                             {{ filled($dokumen->sumber) ? $dokumen->sumber : '—' }}
                             @if ($halamanSumber)
                                 <a href="{{ route('tautan.buka', $halamanSumber) }}" target="_blank" rel="noopener noreferrer"
-                                   class="mt-1 block text-indigo-800 underline underline-offset-2 hover:text-indigo-950">Halaman sumber resmi<span class="sr-only"> (tab baru)</span></a>
+                                   class="mt-1 inline-flex min-h-11 items-center text-indigo-800 underline underline-offset-2 hover:text-indigo-950 sm:min-h-0">Halaman sumber resmi<span class="sr-only"> (tab baru)</span></a>
                             @endif
                         </dd>
                     </div>
@@ -147,7 +152,7 @@
                         <dd>
                             <ul class="flex flex-wrap gap-1.5">
                                 @forelse ($dokumen->kategoriSistem as $kategori)
-                                    <li><a href="{{ route('dokumen.kategori', $kategori->slug) }}" class="inline-block rounded-md bg-teal-50 px-2 py-1 text-teal-900 hover:underline">{{ $kategori->nama }}</a></li>
+                                    <li><a href="{{ route('dokumen.kategori', $kategori->slug) }}" class="inline-flex min-h-11 items-center rounded-md bg-teal-50 px-2.5 text-teal-900 hover:underline focus-visible:outline-2 focus-visible:outline-indigo-700 sm:min-h-8">{{ $kategori->nama }}</a></li>
                                 @empty
                                     <li class="text-slate-900">—</li>
                                 @endforelse
@@ -159,7 +164,7 @@
                         <dd>
                             <ul class="flex flex-wrap gap-1.5">
                                 @forelse ($dokumen->tag as $tag)
-                                    <li><a href="{{ route('dokumen.index').'?'.http_build_query(['q' => $tag->nama]) }}" class="inline-block rounded-md bg-slate-100 px-2 py-1 text-slate-800 hover:underline">{{ $tag->nama }}</a></li>
+                                    <li><a href="{{ route('dokumen.index').'?'.http_build_query(['q' => $tag->nama]) }}" class="inline-flex min-h-11 items-center rounded-md bg-slate-100 px-2.5 text-slate-800 hover:underline focus-visible:outline-2 focus-visible:outline-indigo-700 sm:min-h-8">{{ $tag->nama }}</a></li>
                                 @empty
                                     <li class="text-slate-900">—</li>
                                 @endforelse

@@ -1,2 +1,9 @@
+# Regulasi FKIP Unsil (berjalan di subpath /regulasi). Crawler hanya membaca robots.txt di akar domain:
+# salin baris berikut ke robots.txt gateway supportfkip.unsil.ac.id.
 User-agent: *
-Disallow:
+Disallow: /regulasi/admin
+Disallow: /regulasi/akun
+Disallow: /regulasi/d/
+Disallow: /regulasi/livewire
+
+Sitemap: https://supportfkip.unsil.ac.id/regulasi/sitemap.xml

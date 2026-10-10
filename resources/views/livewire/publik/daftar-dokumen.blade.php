@@ -83,7 +83,7 @@
                         @foreach ($filterAktif as $f)
                             <li wire:key="chip-{{ $f['properti'] }}-{{ $f['nilai'] }}">
                                 <button type="button" wire:click="hapusFilter('{{ $f['properti'] }}', @js($f['nilai']))"
-                                        class="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-indigo-50 px-3 text-sm text-indigo-900 ring-1 ring-indigo-600/30 ring-inset hover:bg-indigo-100 focus-visible:outline-2 focus-visible:outline-indigo-700">
+                                        class="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-indigo-50 sm:min-h-9 px-3 text-sm text-indigo-900 ring-1 ring-indigo-600/30 ring-inset hover:bg-indigo-100 focus-visible:outline-2 focus-visible:outline-indigo-700">
                                     {{ $f['label'] }}
                                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                                     <span class="sr-only">(hapus filter)</span>

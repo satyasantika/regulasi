@@ -24,6 +24,7 @@ class Beranda extends Component
             'tahun' => array_slice(CacheRegulasi::tahunTersedia(), 0, 12),
             'statusBerlaku' => StatusBerlaku::cases(),
         ])->layout('components.layouts.publik', [
+            'canonical' => rtrim(route('beranda'), '/').'/',
             'deskripsi' => 'Cari peraturan, keputusan, surat edaran, SOP, dan pedoman yang dipakai sistem-sistem FKIP Universitas Siliwangi.',
         ]);
     }

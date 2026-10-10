@@ -10,6 +10,7 @@ use App\Models\Dokumen;
 use App\Models\DokumenRelasi;
 use App\Models\TautanBerkas;
 use App\Models\User;
+use App\Support\DataTerstruktur;
 use App\Support\RingkasanStatus;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -68,8 +69,12 @@ class DetailDokumenController extends Controller
             ->sortBy(fn (DokumenRelasi $r): string => ($r->efektif_pada?->format('Y-m-d') ?? '9999').$r->created_at?->format('YmdHis'))
             ->values();
 
+        $urlKanonik = route('dokumen.show', ['dokumen' => $model->id, 'slug' => $model->slug]);
+
         return view('publik.dokumen.show', [
             'dokumen' => $model,
+            'urlKanonik' => $urlKanonik,
+            'dataTerstruktur' => DataTerstruktur::untuk($model, $urlKanonik),
             'kalimatStatus' => RingkasanStatus::kalimat($model, $relasi),
             'tertunda' => RingkasanStatus::tertunda($model, $relasi),
             'kelompokRelasi' => $this->kelompokRelasi($relasi, $pengguna),

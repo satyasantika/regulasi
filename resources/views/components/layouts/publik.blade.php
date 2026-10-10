@@ -1,4 +1,4 @@
-@props(['judul' => null, 'deskripsi' => null])
+@props(['judul' => null, 'deskripsi' => null, 'canonical' => null, 'noindex' => false, 'tipe' => 'website'])
 @php
     $namaSitus = 'Regulasi FKIP Unsil';
     $kategoriNavigasi = \App\Support\CacheRegulasi::master('kategori-sistem');
@@ -10,8 +10,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
-    <title>{{ $judul ? $judul.' — '.$namaSitus : $namaSitus.' — Repositori Regulasi FKIP Universitas Siliwangi' }}</title>
-    <meta name="description" content="{{ $deskripsi ?? 'Repositori dokumen hukum dan dokumen pendukung FKIP Universitas Siliwangi: peraturan, keputusan, surat edaran, SOP, dan pedoman.' }}">
+    <x-meta :judul="$judul ? $judul.' — '.$namaSitus : $namaSitus.' — Repositori Regulasi FKIP Universitas Siliwangi'"
+            :deskripsi="$deskripsi ?? 'Repositori dokumen hukum dan dokumen pendukung FKIP Universitas Siliwangi: peraturan, keputusan, surat edaran, SOP, dan pedoman.'"
+            :canonical="$canonical ?? url()->current()" :noindex="$noindex" :tipe="$tipe" />
     {{ $meta ?? '' }}
     <link rel="icon" href="{{ asset('favicon.ico') }}">
     @fonts

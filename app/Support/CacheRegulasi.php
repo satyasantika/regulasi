@@ -41,6 +41,7 @@ class CacheRegulasi
         'beranda:statistik',
         'beranda:terbaru',
         'faset:tahun',
+        'sitemap',
     ];
 
     /**

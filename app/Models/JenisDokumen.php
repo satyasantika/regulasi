@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -73,5 +74,15 @@ class JenisDokumen extends Model
     protected function terurut(Builder $query): void
     {
         $query->orderBy('urutan')->orderBy('nama');
+    }
+
+    /**
+     * Dokumen berjenis ini (dipakai sitemap F8.4).
+     *
+     * @return HasMany<Dokumen, $this>
+     */
+    public function dokumen(): HasMany
+    {
+        return $this->hasMany(Dokumen::class, 'jenis_dokumen_id');
     }
 }
