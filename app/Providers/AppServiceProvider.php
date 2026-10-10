@@ -8,6 +8,7 @@ use App\Http\Responses\MasukResponse;
 use App\Models\Aktivitas;
 use App\Models\BadanPenetap;
 use App\Models\Dokumen;
+use App\Models\DokumenRelasi;
 use App\Models\JenisDokumen;
 use App\Models\KategoriSistem;
 use App\Models\Permission;
@@ -77,6 +78,7 @@ class AppServiceProvider extends ServiceProvider
             'dokumen' => Dokumen::class,
             'tautan_berkas' => TautanBerkas::class,
             'riwayat_status_dokumen' => RiwayatStatusDokumen::class,
+            'dokumen_relasi' => DokumenRelasi::class,
         ]);
 
         // Super-admin lolos semua Gate/Policy (03-SKEMA §4.1).

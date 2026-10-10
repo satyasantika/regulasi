@@ -75,7 +75,7 @@ abstract class TransisiPublikasi
                     'oleh' => $oleh->getKey(),
                 ]);
 
-                DB::afterCommit(fn () => $this->setelahCommit($baris, $asal));
+                DB::afterCommit(fn () => $this->setelahCommit($baris, $asal, $oleh));
 
                 return $baris;
             },
@@ -85,7 +85,7 @@ abstract class TransisiPublikasi
     /**
      * Efek samping setelah transaksi berhasil di-commit (cache, indeks, notifikasi kelak).
      */
-    protected function setelahCommit(Dokumen $dokumen, StatusPublikasi $asal): void {}
+    protected function setelahCommit(Dokumen $dokumen, StatusPublikasi $asal, User $oleh): void {}
 
     /**
      * Catatan wajib dengan panjang minimum (BR-04, BR-12).

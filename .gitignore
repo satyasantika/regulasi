@@ -51,3 +51,6 @@ _ide_helper.php
 
 # Cache phpstan
 /build
+
+# URL naskah lokal untuk seeder dokumen contoh (03-SKEMA §4.5)
+/database/seeders/data/*.local.php

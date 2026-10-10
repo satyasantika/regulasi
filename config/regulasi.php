@@ -23,6 +23,11 @@ return [
         'password' => env('SEED_SUPERADMIN_PASSWORD'),
     ],
 
+    // Seeder dokumen contoh (03-SKEMA §4.5): URL naskah lokal (di-.gitignore) yang mengisi tautan kosong, dan
+    // demo lokal yang menerbitkan semua dokumen contoh melewati BR-05 (hanya bila APP_ENV=local).
+    'seed_tautan_lokal' => database_path('seeders/data/tautan-contoh.local.php'),
+    'seed_terbitkan_semua' => (bool) env('REGULASI_SEED_TERBITKAN_SEMUA', false),
+
     // Registrasi panel akun hanya untuk alamat surel domain ini.
     'domain_registrasi' => 'unsil.ac.id',
 
@@ -35,6 +40,12 @@ return [
     // Kunci atomik alur publikasi `lock:publikasi:{id}` (02-ARSITEKTUR §3.3): masa kunci & lama menunggu (detik).
     'kunci_publikasi' => [
         'detik' => 10,
+        'tunggu' => 5,
+    ],
+
+    // Kunci atomik status berlaku `lock:status-dokumen:{id}` (02-ARSITEKTUR §3.3), diambil berurutan id menaik.
+    'kunci_status' => [
+        'detik' => 15,
         'tunggu' => 5,
     ],
 

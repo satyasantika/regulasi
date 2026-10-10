@@ -2,6 +2,7 @@
 
 namespace App\Actions\Dokumen;
 
+use App\Actions\Relasi\TerapkanRelasiDokumen;
 use App\Enums\StatusPublikasi;
 use App\Models\Dokumen;
 use App\Models\User;
@@ -34,15 +35,19 @@ class TerbitkanDokumen extends TransisiPublikasi
         );
     }
 
-    protected function setelahCommit(Dokumen $dokumen, StatusPublikasi $asal): void
+    protected function setelahCommit(Dokumen $dokumen, StatusPublikasi $asal, User $oleh): void
     {
         CacheRegulasi::lupakanPublik();
 
-        $this->setelahTerbit($dokumen);
+        $this->setelahTerbit($dokumen, $oleh);
     }
 
     /**
-     * Titik kait setelah terbit (di luar transaksi): diisi F6.2 (penerapan status relasi) dan F7.2 (indeks).
+     * Titik kait setelah terbit (di luar transaksi): relasi yang dimiliki dokumen sebagai sumber diaktifkan bila
+     * tanggal efektifnya sudah tiba (BR-08, F6.2); indeks pencarian menyusul di F7.2.
      */
-    protected function setelahTerbit(Dokumen $dokumen): void {}
+    protected function setelahTerbit(Dokumen $dokumen, User $oleh): void
+    {
+        app(TerapkanRelasiDokumen::class)->handle($dokumen, $oleh);
+    }
 }
