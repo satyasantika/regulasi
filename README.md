@@ -32,4 +32,23 @@ Referensi dasar hukum (Perpres 33/2012, Permenkumham 8/2019) dijelaskan di `docs
 
 ## Memulai
 
-Akan dilengkapi di F1.
+### Menjalankan lokal
+
+Infrastruktur berada di luar repo ini, di `/home/satya/code` (lihat `docs/keputusan/0001-lingkungan-dan-penyimpangan-standar.md`):
+container `regulasi-php`, `regulasi-nginx`, `regulasi-scheduler`, `regulasi-meilisearch` (berkas `docker-compose.yml`,
+image `php/regulasi.Dockerfile` dengan `poppler-utils`), MariaDB native di host (`db_regulasi`, `db_regulasi_testing`),
+Redis bersama (container `redis`, DB 44/45/46), dan Mailpit bersama (`alias-mailpit`). Tanpa Sail, tanpa PHP di host.
+
+```bash
+alias rgp='docker exec -it regulasi-php'
+cd /home/satya/code && docker compose up -d --build regulasi-php regulasi-nginx regulasi-scheduler regulasi-meilisearch
+cd regulasi
+cp .env.example .env          # isi DB_PASSWORD dan MEILISEARCH_KEY (= REGULASI_MEILISEARCH_KEY compose)
+rgp composer install
+rgp php artisan key:generate
+rgp php artisan migrate
+npm install && npm run build  # Node di host (container tidak memiliki Node); npm run dev untuk pengembangan
+```
+
+Aplikasi: http://localhost:8034 · Mailpit: http://localhost:18018 · Meilisearch hanya dari jaringan internal
+(`rgp curl -s http://regulasi-meilisearch:7700/health`).
