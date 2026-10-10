@@ -1,0 +1,92 @@
+# Gerbang kualitas setiap PR dan push ke main (STANDAR-GIT §8): pint, phpstan, pest, build aset.
+#
+# Disesuaikan docs/keputusan/0001: uji berjalan di MariaDB 10.11 dan PHP 8.5 (sama dengan server),
+# bukan SQLite, karena memakai FULLTEXT dan CHECK. poppler-utils dipasang untuk ekstraksi teks PDF.
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  uji:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: secret
+          MARIADB_DATABASE: db_regulasi_testing
+        ports: [ '3306:3306' ]
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+      redis:
+        image: redis:7-alpine
+        ports: [ '6379:6379' ]
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+
+    # Variabel proses mengalahkan nilai di .env dan phpunit.xml.
+    # root berhak CREATE DATABASE untuk db_regulasi_testing_test_N (--parallel).
+    env:
+      DB_HOST: 127.0.0.1
+      DB_DATABASE: db_regulasi_testing
+      DB_USERNAME: root
+      DB_PASSWORD: secret
+      REDIS_HOST: 127.0.0.1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Siapkan PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, intl, bcmath, gd, zip, pdo_mysql, redis, exif, pcntl
+          coverage: none
+
+      - name: Pasang poppler-utils
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - name: Cache composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Pasang dependensi PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Siapkan .env
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Pint
+        run: ./vendor/bin/pint --test
+
+      - name: PHPStan
+        run: ./vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+      - name: Pest
+        run: php artisan test --parallel
+
+  aset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Siapkan Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Bangun aset frontend
+        run: |
+          npm ci
+          npm run build
