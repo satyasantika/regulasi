@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Enums\JenisTautan;
 use App\Enums\Peran;
 use App\Enums\StatusBerlaku;
 use App\Enums\StatusPublikasi;
@@ -10,12 +11,14 @@ use App\Filament\Admin\Resources\DokumenResource\Pages\CreateDokumen;
 use App\Filament\Admin\Resources\DokumenResource\Pages\EditDokumen;
 use App\Filament\Admin\Resources\DokumenResource\Pages\ListDokumen;
 use App\Filament\Admin\Resources\DokumenResource\Pages\ViewDokumen;
+use App\Filament\Admin\Resources\DokumenResource\RelationManagers\TautanBerkasRelationManager;
 use App\Models\BadanPenetap;
 use App\Models\Dokumen;
 use App\Models\JenisDokumen;
 use App\Models\KategoriSistem;
 use App\Models\Tag;
 use App\Models\User;
+use App\Rules\TautanBerkasValid;
 use App\Support\CacheRegulasi;
 use BackedEnum;
 use Closure;
@@ -124,6 +127,14 @@ class DokumenResource extends Resource
                             ->label('Sumber')
                             ->maxLength(255)
                             ->placeholder('LN/BN/TLN, atau asal naskah')
+                            ->columnSpanFull(),
+                        TextInput::make('tautan_sumber')
+                            ->label('Tautan halaman sumber resmi (opsional)')
+                            ->maxLength(2048)
+                            ->placeholder('https://peraturan.go.id/…')
+                            ->rule(new TautanBerkasValid(JenisTautan::HalamanSumber))
+                            ->helperText('Disimpan sebagai tautan berkas berjenis "Halaman Sumber Resmi"; kelola selanjutnya di bagian Tautan berkas.')
+                            ->visibleOn('create')
                             ->columnSpanFull(),
                     ]),
                 Section::make('Klasifikasi')
@@ -245,6 +256,13 @@ class DokumenResource extends Resource
         }
 
         return $query;
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            TautanBerkasRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

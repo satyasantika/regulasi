@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\JenisTautan;
 use App\Enums\StatusBerlaku;
 use App\Enums\StatusPublikasi;
 use App\Enums\Visibilitas;
@@ -10,11 +11,14 @@ use Database\Factories\DokumenFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -57,6 +61,8 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property-read CarbonImmutable|null $tanggal_efektif
  * @property-read JenisDokumen $jenisDokumen
  * @property-read BadanPenetap $badanPenetap
+ * @property-read Collection<int, TautanBerkas> $tautanBerkas
+ * @property-read TautanBerkas|null $naskahUtama
  */
 class Dokumen extends Model
 {
@@ -147,6 +153,25 @@ class Dokumen extends Model
     public function pemverifikasi(): BelongsTo
     {
         return $this->belongsTo(User::class, 'diverifikasi_oleh');
+    }
+
+    /**
+     * Tautan berkas aktif, naskah utama lebih dulu lalu menurut urutan.
+     *
+     * @return MorphMany<TautanBerkas, $this>
+     */
+    public function tautanBerkas(): MorphMany
+    {
+        return $this->morphMany(TautanBerkas::class, 'pemilik')
+            ->orderByRaw('CASE WHEN jenis = ? THEN 0 ELSE 1 END', [JenisTautan::NaskahUtama->value])
+            ->orderBy('urutan')
+            ->orderBy('created_at');
+    }
+
+    /** @return MorphOne<TautanBerkas, $this> */
+    public function naskahUtama(): MorphOne
+    {
+        return $this->morphOne(TautanBerkas::class, 'pemilik')->where('jenis', JenisTautan::NaskahUtama->value);
     }
 
     /**

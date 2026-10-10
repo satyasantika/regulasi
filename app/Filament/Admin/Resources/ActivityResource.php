@@ -21,6 +21,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use UnitEnum;
 
@@ -141,7 +142,7 @@ class ActivityResource extends Resource
             return '—';
         }
 
-        return class_basename($record->subject_type).' · '.$record->subject_id;
+        return class_basename(Relation::getMorphedModel($record->subject_type) ?? $record->subject_type).' · '.$record->subject_id;
     }
 
     /**
