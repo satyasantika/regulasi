@@ -6,13 +6,15 @@ use App\Enums\StatusCekTautan;
 use App\Exceptions\Berkas\AksesTerbatas;
 use App\Exceptions\Berkas\BerkasTerlaluBesar;
 use App\Exceptions\Berkas\BukanPdf;
+use App\Exceptions\Berkas\PemeriksaanCukup;
+use App\Exceptions\Berkas\PengunduhanDitolak;
 use App\Exceptions\Berkas\TautanTidakDapatDiunduh;
 use App\Rules\TautanBerkasValid;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Throwable;
 
@@ -24,7 +26,8 @@ use Throwable;
  * 2. Resolusi DNS sendiri; tolak bila SALAH SATU IP privat/khusus (termasuk IPv4-mapped). Sambungan dipaku ke IP
  *    yang sudah divalidasi lewat CURLOPT_RESOLVE (cegah DNS rebinding).
  * 3. Tanpa redirect otomatis; maksimal `maks_redirect` pengalihan, setiap Location divalidasi ulang langkah 1–2.
- * 4. Batas ukuran dari Content-Length dan penghitung saat streaming.
+ * 4. Batas ukuran dari Content-Length (on_headers) dan penghitung saat streaming (progress) — unduhan dihentikan
+ *    begitu melewati batas; isi dialirkan langsung ke berkas sementara (sink), tidak ditampung di memori.
  * 5. Timeout sambung 5 dtk, total 30 dtk; User-Agent RegulasiFKIPUnsil/1.0; tanpa cookie & header otorisasi.
  * 6. Respons text/html (halaman login/konfirmasi Drive) ditolak; isi wajib diawali magic bytes %PDF-.
  * 7. Berkas sementara storage/app/tmp/ekstraksi/{uuid}.pdf izin 0600; dihapus bila unduhan gagal.
@@ -35,6 +38,7 @@ class PengunduhAman
 
     private const int TIMEOUT_SAMBUNG = 5;
 
+    /** Batas byte yang boleh diterima saat pemeriksaan keteraksesan (GET Range). */
     private const int UKURAN_POTONGAN = 65536;
 
     /** Rentang IPv4 privat/khusus (CIDR) yang tidak boleh dihubungi. */
@@ -61,34 +65,76 @@ class PengunduhAman
     public function unduh(string $url): BerkasSementara
     {
         $batasWaktu = microtime(true) + (int) config('berkas.timeout_unduh_detik', 30);
-        ['respons' => $respons, 'url' => $urlAkhir] = $this->ikuti('GET', $url, [], $batasWaktu);
+        $path = $this->buatBerkasSementara();
+        // Penolakan dari callback transfer disimpan di sini: Guzzle/Laravel dapat membungkus ulang exception-nya.
+        /** @var PengunduhanDitolak|null $penolakan */
+        $penolakan = null;
 
-        $this->periksaRespons($respons);
+        try {
+            ['respons' => $respons, 'url' => $urlAkhir] = $this->ikuti('GET', $url, [], $batasWaktu, [
+                'sink' => $path,
+                'on_headers' => function (ResponseInterface $r) use (&$penolakan): void {
+                    if ($r->getStatusCode() >= 200 && $r->getStatusCode() < 300) {
+                        try {
+                            $this->periksaKepala($r->getHeaderLine('Content-Length'), $r->getHeaderLine('Content-Type'));
+                        } catch (PengunduhanDitolak $e) {
+                            throw $penolakan = $e;
+                        }
+                    }
+                },
+                'progress' => function (int $total, int $diunduh) use (&$penolakan): void {
+                    if ($total > $this->batasByte() || $diunduh > $this->batasByte()) {
+                        throw $penolakan = $this->terlaluBesar();
+                    }
+                },
+            ]);
 
-        return $this->simpanSementara($respons, $urlAkhir);
+            $this->periksaRespons($respons);
+
+            return $this->periksaIsi($path, $urlAkhir);
+        } catch (Throwable $e) {
+            @unlink($path);
+
+            throw $penolakan ?? $e;
+        }
     }
 
     /**
-     * Keteraksesan tautan tanpa menyimpan isi: HEAD, lalu GET Range 0-1023 bila HEAD tidak berhasil.
-     * Pengalihan ke halaman masuk Google atau 401/403 berarti berkas ada dengan akses terbatas (dapat diakses).
+     * Keteraksesan tautan tanpa menyimpan isi: HEAD, lalu GET Range 0-1023 bila HEAD tidak berhasil (GET dihentikan
+     * setelah header diterima atau isi melewati 64 KB). Pengalihan ke halaman masuk Google atau 401/403 berarti
+     * berkas ada dengan akses terbatas (dapat diakses).
      */
     public function periksa(string $url): StatusCekTautan
     {
+        $statusKepala = null;
+
         try {
             $batasWaktu = microtime(true) + (int) config('berkas.timeout_cek_detik', 10);
-            $respons = $this->ikuti('HEAD', $url, [], $batasWaktu)['respons'];
+            $status = $this->ikuti('HEAD', $url, [], $batasWaktu)['respons']->status();
 
-            if (! $respons->successful()) {
-                $respons = $this->ikuti('GET', $url, ['Range' => 'bytes=0-1023'], $batasWaktu)['respons'];
-                $respons->toPsrResponse()->getBody()->close();
+            if ($status < 200 || $status >= 300) {
+                $status = $this->ikuti('GET', $url, ['Range' => 'bytes=0-1023'], $batasWaktu, [
+                    'on_headers' => function (ResponseInterface $r) use (&$statusKepala): void {
+                        if (! in_array($r->getStatusCode(), [301, 302, 303, 307, 308], true)) {
+                            $statusKepala = $r->getStatusCode();
+
+                            throw new PemeriksaanCukup;
+                        }
+                    },
+                    'progress' => function (int $total, int $diunduh): void {
+                        if ($diunduh > self::UKURAN_POTONGAN) {
+                            throw new PemeriksaanCukup;
+                        }
+                    },
+                ])['respons']->status();
             }
         } catch (AksesTerbatas) {
             return StatusCekTautan::DapatDiakses;
         } catch (Throwable) {
-            return StatusCekTautan::TidakDapatDiakses;
+            $status = $statusKepala;
         }
 
-        return $respons->successful() || in_array($respons->status(), [401, 403], true)
+        return $status !== null && (($status >= 200 && $status < 300) || in_array($status, [401, 403], true))
             ? StatusCekTautan::DapatDiakses
             : StatusCekTautan::TidakDapatDiakses;
     }
@@ -153,7 +199,6 @@ class PengunduhAman
         return [
             'allow_redirects' => false,
             'cookies' => false,
-            'stream' => true,
             'http_errors' => false,
             'curl' => [CURLOPT_RESOLVE => ["{$host}:443:{$alamat}"]],
         ];
@@ -211,9 +256,10 @@ class PengunduhAman
      * Kirim permintaan dan ikuti pengalihan secara manual (langkah 3).
      *
      * @param  array<string, string>  $header
+     * @param  array<string, mixed>  $opsi  Opsi Guzzle tambahan (sink, progress, on_headers).
      * @return array{respons: Response, url: string}
      */
-    private function ikuti(string $metode, string $url, array $header, float $batasWaktu): array
+    private function ikuti(string $metode, string $url, array $header, float $batasWaktu, array $opsi = []): array
     {
         $maks = (int) config('berkas.maks_redirect', 3);
 
@@ -222,16 +268,14 @@ class PengunduhAman
             $host = strtolower(rtrim((string) parse_url($url, PHP_URL_HOST), '.'));
 
             try {
-                $respons = $this->klien($host, $ip, $batasWaktu)->withHeaders($header)->send($metode, $url);
-            } catch (ConnectionException $e) {
-                throw new RuntimeException("Sambungan ke {$host} gagal: ".$e->getMessage(), previous: $e);
+                $respons = $this->klien($host, $ip, $batasWaktu)->withOptions($opsi)->withHeaders($header)->send($metode, $url);
+            } catch (Throwable $e) {
+                throw self::galatAsal($e, $host);
             }
 
             if (! $respons->redirect()) {
                 return ['respons' => $respons, 'url' => $url];
             }
-
-            $respons->toPsrResponse()->getBody()->close();
 
             if ($lompatan >= $maks) {
                 throw new TautanTidakDapatDiunduh("Pengalihan melebihi {$maks} kali.");
@@ -271,43 +315,41 @@ class PengunduhAman
     }
 
     /**
-     * Status, Content-Length, dan Content-Type (langkah 4 & 6) sebelum isi dibaca.
+     * Status, Content-Length, dan Content-Type respons akhir (langkah 4 & 6).
      */
     private function periksaRespons(Response $respons): void
     {
         if (in_array($respons->status(), [401, 403, 404, 410], true)) {
-            $respons->toPsrResponse()->getBody()->close();
-
             throw new TautanTidakDapatDiunduh("Sumber menolak unduhan (HTTP {$respons->status()}).");
         }
 
         if (! $respons->successful()) {
-            $respons->toPsrResponse()->getBody()->close();
-
             throw new RuntimeException("Sumber membalas HTTP {$respons->status()}.");
         }
 
-        $panjang = $respons->header('Content-Length');
+        $this->periksaKepala($respons->header('Content-Length'), $respons->header('Content-Type'));
+    }
 
+    /**
+     * @throws BerkasTerlaluBesar|TautanTidakDapatDiunduh
+     */
+    private function periksaKepala(string $panjang, string $tipe): void
+    {
         if ($panjang !== '' && is_numeric($panjang) && (int) $panjang > $this->batasByte()) {
-            $respons->toPsrResponse()->getBody()->close();
-
-            throw new BerkasTerlaluBesar('Ukuran berkas melebihi '.config('berkas.ukuran_maks_unduhan_mb').' MB.');
+            throw $this->terlaluBesar();
         }
 
-        $tipe = strtolower(trim(explode(';', $respons->header('Content-Type'))[0]));
+        $tipe = strtolower(trim(explode(';', $tipe)[0]));
 
         if ($tipe === 'text/html' || $tipe === 'application/xhtml+xml') {
-            $respons->toPsrResponse()->getBody()->close();
-
             throw new TautanTidakDapatDiunduh('Sumber membalas halaman web (Drive meminta masuk/konfirmasi), bukan berkas.');
         }
     }
 
     /**
-     * Alirkan isi ke berkas sementara 0600 dengan penghitung ukuran dan pemeriksaan magic bytes (langkah 4, 6, 7).
+     * Berkas sementara kosong storage/app/tmp/ekstraksi/{uuid}.pdf dengan izin 0600 (langkah 7).
      */
-    private function simpanSementara(Response $respons, string $urlAkhir): BerkasSementara
+    private function buatBerkasSementara(): string
     {
         $folder = storage_path('app/'.trim((string) config('berkas.folder_sementara', 'tmp/ekstraksi'), '/'));
 
@@ -322,54 +364,51 @@ class PengunduhAman
             throw new RuntimeException('Berkas sementara tidak dapat dibuat.');
         }
 
+        fclose($tulis);
         chmod($path, 0600);
 
-        $badan = $respons->toPsrResponse()->getBody();
-        $hash = hash_init('sha256');
-        $ukuran = 0;
-        $awal = '';
+        return $path;
+    }
 
-        try {
-            while (! $badan->eof()) {
-                $potongan = $badan->read(self::UKURAN_POTONGAN);
+    /**
+     * Ukuran akhir (jaring pengaman batas) dan magic bytes %PDF- (langkah 4 & 6), lalu hash isi.
+     */
+    private function periksaIsi(string $path, string $urlAkhir): BerkasSementara
+    {
+        clearstatcache(true, $path);
+        $ukuran = (int) filesize($path);
 
-                if ($potongan === '') {
-                    continue;
-                }
-
-                $ukuran += strlen($potongan);
-
-                if ($ukuran > $this->batasByte()) {
-                    throw new BerkasTerlaluBesar('Ukuran berkas melebihi '.config('berkas.ukuran_maks_unduhan_mb').' MB.');
-                }
-
-                if (strlen($awal) < 5) {
-                    $awal .= substr($potongan, 0, 5 - strlen($awal));
-
-                    if (strlen($awal) >= 5 && $awal !== '%PDF-') {
-                        throw new BukanPdf('Isi tautan bukan berkas PDF.');
-                    }
-                }
-
-                hash_update($hash, $potongan);
-                fwrite($tulis, $potongan);
-            }
-
-            if ($awal !== '%PDF-') {
-                throw new BukanPdf('Isi tautan bukan berkas PDF.');
-            }
-        } catch (Throwable $e) {
-            fclose($tulis);
-            @unlink($path);
-
-            throw $e;
-        } finally {
-            $badan->close();
+        if ($ukuran > $this->batasByte()) {
+            throw $this->terlaluBesar();
         }
 
-        fclose($tulis);
+        if ((string) file_get_contents($path, false, null, 0, 5) !== '%PDF-') {
+            throw new BukanPdf('Isi tautan bukan berkas PDF.');
+        }
 
-        return new BerkasSementara($path, $ukuran, hash_final($hash), $urlAkhir);
+        chmod($path, 0600);
+
+        return new BerkasSementara($path, $ukuran, (string) hash_file('sha256', $path), $urlAkhir);
+    }
+
+    private function terlaluBesar(): BerkasTerlaluBesar
+    {
+        return new BerkasTerlaluBesar('Ukuran berkas melebihi '.config('berkas.ukuran_maks_unduhan_mb').' MB.');
+    }
+
+    /**
+     * Galat transfer: penolakan terkendali (dari on_headers/progress) dikembalikan apa adanya; lainnya menjadi
+     * RuntimeException (diulang oleh job).
+     */
+    private static function galatAsal(Throwable $galat, string $host): Throwable
+    {
+        for ($e = $galat; $e !== null; $e = $e->getPrevious()) {
+            if ($e instanceof PengunduhanDitolak || $e instanceof PemeriksaanCukup) {
+                return $e;
+            }
+        }
+
+        return new RuntimeException("Permintaan ke {$host} gagal: ".$galat->getMessage(), previous: $galat);
     }
 
     private function batasByte(): int

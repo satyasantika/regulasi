@@ -107,7 +107,9 @@ test('ipTerlarang membedakan IP publik dan khusus', function (string $ip, bool $
 test('sambungan dipaku ke IP tervalidasi tanpa redirect otomatis dan tanpa cookie', function () {
     $opsi = pengunduh()->opsiSambungan('drive.google.com', '142.250.4.100');
 
-    expect($opsi['allow_redirects'])->toBeFalse()
+    // Tanpa opsi stream: Guzzle akan memakai StreamHandler yang menolak opsi cURL (pemakuan IP tak berlaku).
+    expect($opsi)->not->toHaveKey('stream')
+        ->and($opsi['allow_redirects'])->toBeFalse()
         ->and($opsi['cookies'])->toBeFalse()
         ->and($opsi['curl'][CURLOPT_RESOLVE])->toBe(['drive.google.com:443:142.250.4.100'])
         ->and(pengunduh()->opsiSambungan('drive.google.com', '2001:4860::1')['curl'][CURLOPT_RESOLVE])->toBe(['drive.google.com:443:[2001:4860::1]']);
