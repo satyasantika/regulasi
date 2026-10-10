@@ -47,6 +47,16 @@ return [
             'report' => false,
         ],
 
+        // Berkas SEMENTARA (ekstraksi PDF, ekspor Excel antrean/Filament) — dihapus ≤ 24 jam oleh
+        // `berkas:bersihkan-tmp` (STANDAR-TEKNIS §1a.6). Tidak pernah disajikan langsung.
+        'tmp' => [
+            'driver' => 'local',
+            'root' => storage_path('app/tmp'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

@@ -10,10 +10,12 @@ use App\Models\Aktivitas;
 use App\Models\BadanPenetap;
 use App\Models\Dokumen;
 use App\Models\DokumenRelasi;
+use App\Models\Ekspor;
 use App\Models\EkstraksiTeks;
 use App\Models\JenisDokumen;
 use App\Models\KategoriSistem;
 use App\Models\KlienApi;
+use App\Models\LaporanEvaluasi;
 use App\Models\Permission;
 use App\Models\RiwayatStatusDokumen;
 use App\Models\Role;
@@ -27,6 +29,7 @@ use App\Services\Pencarian\PemilihMesinPencarian;
 use App\Services\Pencarian\PencarianDokumen;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Filament\Actions\Exports\Models\Export;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -49,6 +52,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(LoginResponse::class, MasukResponse::class);
+
+        // Catatan ekspor Filament memakai kunci UUIDv7 (STANDAR-TEKNIS §4a).
+        $this->app->bind(Export::class, Ekspor::class);
 
         // Kontrak akses berkas menurut BERKAS_MODE (02-ARSITEKTUR §4.1); saat ini hanya mode tautan.
         $this->app->bind(PenyimpananBerkas::class, fn ($app) => match (config('berkas.mode')) {
@@ -89,6 +95,7 @@ class AppServiceProvider extends ServiceProvider
             'riwayat_status_dokumen' => RiwayatStatusDokumen::class,
             'dokumen_relasi' => DokumenRelasi::class,
             'klien_api' => KlienApi::class,
+            'laporan_evaluasi' => LaporanEvaluasi::class,
         ]);
 
         // Super-admin lolos semua Gate/Policy (03-SKEMA §4.1).

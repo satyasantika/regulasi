@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Laporan\UnduhEksporController;
+use App\Http\Controllers\Laporan\UnduhLaporanEvaluasiController;
 use App\Http\Controllers\Publik\BukaTautanController;
 use App\Http\Controllers\Publik\DetailDokumenController;
 use App\Http\Controllers\Publik\SitemapController;
@@ -28,3 +30,14 @@ Route::get('/d/{tautanBerkas}/buka-api', [BukaTautanController::class, 'api'])
     ->whereUuid('tautanBerkas')
     ->middleware(['signed', 'throttle:buka'])
     ->name('tautan.buka-api');
+
+// Unduh ekspor Excel sementara (F11.2): bertanda tangan, hanya peminta; berkas dihapus ≤ 24 jam.
+Route::get('/ekspor/{berkas}', UnduhEksporController::class)
+    ->middleware(['auth', 'signed'])
+    ->name('ekspor.unduh');
+
+// PDF laporan evaluasi periode (F11.4): di-stream dari snapshot, tidak disimpan.
+Route::get('/laporan-evaluasi/{laporanEvaluasi}/pdf', UnduhLaporanEvaluasiController::class)
+    ->whereUuid('laporanEvaluasi')
+    ->middleware('auth')
+    ->name('laporan-evaluasi.pdf');

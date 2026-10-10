@@ -8,6 +8,7 @@ use App\Models\BadanPenetap;
 use App\Models\Dokumen;
 use App\Models\JenisDokumen;
 use App\Models\KategoriSistem;
+use App\Support\Laporan\StatistikDasbor;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -191,13 +192,15 @@ class CacheRegulasi
     }
 
     /**
-     * Bersihkan cache publik (BR-20).
+     * Bersihkan cache publik (BR-20) beserta cache agregat dasbor admin (F11.1).
      */
     public static function lupakanPublik(): void
     {
         foreach (self::KUNCI_PUBLIK as $kunci) {
             Cache::forget($kunci);
         }
+
+        StatistikDasbor::lupakan();
     }
 
     /**

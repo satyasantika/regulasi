@@ -14,6 +14,9 @@ return [
 
     'versi' => env('APP_VERSION', 'dev'),
 
+    // Subdirektori storage/app/tmp untuk berkas ekspor Excel antrean (F11.2), dihapus ≤ 24 jam.
+    'direktori_ekspor' => 'ekspor',
+
     // Alamat di kaki portal publik (perlu verifikasi oleh FKIP sebelum produksi).
     'alamat' => env('REGULASI_ALAMAT', 'Jl. Siliwangi No. 24, Kota Tasikmalaya, Jawa Barat 46115'),
 
