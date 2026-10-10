@@ -3,6 +3,7 @@
 namespace App\Support\Laporan;
 
 use App\Enums\StatusPublikasi;
+use App\Models\Dokumen;
 use App\Models\User;
 use InvalidArgumentException;
 
@@ -15,6 +16,8 @@ final class KatalogEkspor
     /** @var array<string, string> */
     public const array JENIS = [
         'statistik' => 'statistik-koleksi',
+        'pembukaan-tautan' => 'pembukaan-tautan',
+        'relasi-status' => 'relasi-status',
     ];
 
     /**
@@ -26,6 +29,8 @@ final class KatalogEkspor
 
         return match ($jenis) {
             'statistik' => self::statistik($parameter, $lingkup),
+            'pembukaan-tautan' => self::pembukaanTautan($parameter, $lingkup),
+            'relasi-status' => RelasiStatus::keDataEkspor($lingkup, is_string($parameter['keadaan'] ?? null) ? $parameter['keadaan'] : null),
             default => throw new InvalidArgumentException("Jenis ekspor [{$jenis}] tidak dikenal."),
         };
     }
@@ -54,6 +59,39 @@ final class KatalogEkspor
         ])->filter()->implode(', ');
 
         return StatistikKoleksi::keDataEkspor($baris, $dimensi, $subjudul);
+    }
+
+    /**
+     * @param  array<string, mixed>  $parameter
+     */
+    private static function pembukaanTautan(array $parameter, LingkupLaporan $lingkup): DataEkspor
+    {
+        $saringan = PembukaanTautan::saringan([
+            'periode' => ['dari' => $parameter['dari'] ?? null, 'sampai' => $parameter['sampai'] ?? null],
+            'saluran' => ['value' => $parameter['saluran'] ?? null],
+            'kategori' => ['value' => $parameter['kategori'] ?? null],
+        ]);
+
+        $baris = PembukaanTautan::perDokumen($lingkup, $saringan)
+            ->orderByDesc('dibuka_total')
+            ->orderBy('dokumen.sebutan_singkat')
+            ->get()
+            ->map(fn (Dokumen $d): array => [
+                $d->sebutan_singkat,
+                $d->judul,
+                $d->jenisDokumen->nama,
+                (int) $d->getAttribute('dibuka_web'),
+                (int) $d->getAttribute('dibuka_api'),
+                (int) $d->getAttribute('dibuka_total'),
+            ])
+            ->values()
+            ->all();
+
+        $subjudul = PembukaanTautan::labelPeriode($saringan)
+            .($saringan['saluran'] !== null ? ', saluran '.$saringan['saluran'] : '')
+            .($lingkup->adalahGlobal() ? '' : ', kategori yang ditugaskan');
+
+        return new DataEkspor('Pembukaan Tautan Berkas', $subjudul, ['Sebutan', 'Judul', 'Jenis dokumen', 'Dibuka via web', 'Dibuka via API', 'Total'], $baris);
     }
 
     private static function tahun(mixed $nilai): ?int
