@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\TokenAkses;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Carbon::setLocale('id');
+        Sanctum::usePersonalAccessTokenModel(TokenAkses::class);
         Date::use(CarbonImmutable::class);
 
         Model::preventLazyLoading(! $this->app->isProduction());
