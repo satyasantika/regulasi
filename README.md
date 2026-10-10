@@ -50,5 +50,16 @@ rgp php artisan migrate
 npm install && npm run build  # Node di host (container tidak memiliki Node); npm run dev untuk pengembangan
 ```
 
+Aktifkan hook git (sekali per klon) — `commit-msg` menolak pesan di luar Conventional Commits, `pre-commit`
+menjalankan Pint dan Pest di container `regulasi-php`:
+
+```bash
+chmod +x .githooks/*
+git config core.hooksPath .githooks
+```
+
+Gerbang kualitas: `rgp composer cek` (Pint `--test`, Larastan level 6, Pest). Laravel Boost (MCP `laravel-boost`)
+dijalankan agen AI lewat `docker exec -i regulasi-php php artisan boost:mcp` (`.mcp.json` lokal).
+
 Aplikasi: http://localhost:8034 · Mailpit: http://localhost:18018 · Meilisearch hanya dari jaringan internal
 (`rgp curl -s http://regulasi-meilisearch:7700/health`).
