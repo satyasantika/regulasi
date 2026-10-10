@@ -37,3 +37,14 @@ Thumbs.db
 
 # CLAUDE.md wajib terlacak (abaikan ignore global)
 !CLAUDE.md
+
+# Tambahan dari kerangka Laravel 13
+.phpactor.json
+/.codex
+/.cursor/
+/.nova
+/public/fonts-manifest.dev.json
+_ide_helper.php
+
+# Cache phpstan
+/build

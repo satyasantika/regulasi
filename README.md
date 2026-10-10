@@ -32,4 +32,86 @@ Referensi dasar hukum (Perpres 33/2012, Permenkumham 8/2019) dijelaskan di `docs
 
 ## Memulai
 
-Akan dilengkapi di F1.
+### Menjalankan lokal
+
+Infrastruktur berada di luar repo ini, di `/home/satya/code` (lihat `docs/keputusan/0001-lingkungan-dan-penyimpangan-standar.md`):
+container `regulasi-php`, `regulasi-nginx`, `regulasi-scheduler`, `regulasi-meilisearch` (berkas `docker-compose.yml`,
+image `php/regulasi.Dockerfile` dengan `poppler-utils`), MariaDB native di host (`db_regulasi`, `db_regulasi_testing`),
+Redis bersama (container `redis`, DB 44/45/46), dan Mailpit bersama (`alias-mailpit`). Tanpa Sail, tanpa PHP di host.
+
+```bash
+alias rgp='docker exec -it regulasi-php'
+cd /home/satya/code && docker compose up -d --build regulasi-php regulasi-nginx regulasi-scheduler regulasi-meilisearch
+cd regulasi
+cp .env.example .env          # isi DB_PASSWORD dan MEILISEARCH_KEY (= REGULASI_MEILISEARCH_KEY compose)
+rgp composer install
+rgp php artisan key:generate
+rgp php artisan migrate
+npm install && npm run build  # Node di host (container tidak memiliki Node); npm run dev untuk pengembangan
+```
+
+### Antrean dan penjadwal
+
+Antrean (`default`, `tautan`, `ekstraksi`, `indeks`, `notifikasi`, `ekspor`) dijalankan Horizon di service
+`regulasi-horizon`; penjadwal di service `regulasi-scheduler`. **Restart Horizon setelah mengubah kode job:**
+
+```bash
+cd /home/satya/code && docker compose restart regulasi-horizon
+```
+
+Dasbor Horizon: http://localhost:8034/horizon (environment `local`). Kesehatan: `GET /api/health`.
+
+### Basis data uji
+
+Uji (Pest) berjalan di MariaDB host, bukan SQLite, karena memakai indeks FULLTEXT dan CHECK. Buat sekali:
+
+```sql
+CREATE DATABASE db_regulasi_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- hook pre-commit memakai `php artisan test --parallel`: Laravel membuat db_regulasi_testing_test_N,
+-- sehingga pengguna `app` wajib berhak CREATE DATABASE (GRANT pada `db\_regulasi\_testing%` atau global).
+```
+
+`phpunit.xml`: `DB_CONNECTION=mariadb`, `DB_DATABASE=db_regulasi_testing`, `CACHE_STORE=array`,
+`QUEUE_CONNECTION=sync`, `SCOUT_DRIVER=collection`, `MAIL_MAILER=array` — uji tidak menyentuh Redis bersama.
+
+Lokal & waktu: `APP_LOCALE=id`, `APP_TIMEZONE=Asia/Jakarta`. Redis: DB 44 (default/lock), 45 (cache, kunci
+berawalan `regulasi:`), 46 (antrean).
+
+Aktifkan hook git (sekali per klon) — `commit-msg` menolak pesan di luar Conventional Commits, `pre-commit`
+menjalankan Pint dan Pest di container `regulasi-php`:
+
+```bash
+chmod +x .githooks/*
+git config core.hooksPath .githooks
+```
+
+Gerbang kualitas: `rgp composer cek` (Pint `--test`, Larastan level 6, Pest). Laravel Boost (MCP `laravel-boost`)
+dijalankan agen AI lewat `docker exec -i regulasi-php php artisan boost:mcp` (`.mcp.json` lokal).
+
+Aplikasi: http://localhost:8034/regulasi/ (juga http://localhost:8034 untuk pemeriksaan langsung) ·
+Mailpit: http://localhost:18018 · Meilisearch hanya dari jaringan internal
+(`rgp curl -s http://regulasi-meilisearch:7700/health`).
+
+### Subpath `/regulasi`
+
+Produksi: `https://supportfkip.unsil.ac.id/regulasi`. Reverse proxy memotong awalan sebelum meneruskan ke Nginx aplikasi,
+sedangkan aplikasi membangkitkan semua URL dengan awalan itu (`URL::forceRootUrl`, `ASSET_URL`, `SESSION_PATH=/regulasi`,
+`SESSION_COOKIE=regulasi_session`, `trustProxies`). Nginx lokal (`/home/satya/code/docker/nginx/regulasi.conf`) meniru
+pemotongan awalan itu, sehingga lokal dan produksi berperilaku sama. Aset dibangun dengan `ASSET_URL` terisi
+(`npm run build` membaca `.env`, base `/regulasi/build/`). Dilarang `href="/..."`, `src="/..."`, `action="/..."`,
+`fetch('/...')` di Blade/JS (diuji `tests/Arch/SubpathTest.php`). Livewire, Filament, dan Horizon yang dipasang
+kemudian wajib mengikuti awalan yang sama.
+
+Blok reverse proxy produksi (di server depan):
+
+```nginx
+location = /regulasi { return 301 /regulasi/; }
+location /regulasi/ {
+    proxy_pass http://127.0.0.1:<port>/;          # garis miring akhir = awalan dipotong
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Prefix /regulasi;
+    client_max_body_size 20m;
+}
+```
