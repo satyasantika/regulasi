@@ -41,7 +41,7 @@ class RingkasanMingguan extends NotifikasiRegulasi
 
     public function url(): ?string
     {
-        return route('filament.admin.pages.dashboard');
+        return route('filament.admin.pages.dasbor');
     }
 
     public function labelTombol(): string
