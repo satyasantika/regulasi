@@ -91,7 +91,7 @@ test('contoh .env.production memakai subpath, cookie aman, debug mati, dan tanpa
 
     expect($env)->toContain('APP_ENV=production')
         ->toContain('APP_DEBUG=false')
-        ->toContain('APP_VERSION=1.0.0')
+        ->toContain('APP_VERSION=1.1.0')
         ->toContain('APP_URL=https://supportfkip.unsil.ac.id/regulasi')
         ->toContain('ASSET_URL=https://supportfkip.unsil.ac.id/regulasi')
         ->toContain('SESSION_PATH=/regulasi')

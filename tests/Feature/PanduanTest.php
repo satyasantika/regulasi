@@ -56,7 +56,7 @@ test('halaman panduan mandiri: tanpa CDN atau skrip, responsif, siap cetak, berb
         expect($html)->toContain('<html lang="id">')
             ->toContain('@media print')
             ->toContain('name="viewport"')
-            ->toContain('versi 1.0.0')
+            ->toContain('versi 1.1.0')
             ->toContain('Kontak')
             ->not->toMatch('/<script\b/i')
             ->not->toMatch('/<link\b[^>]*href="https?:/i');
