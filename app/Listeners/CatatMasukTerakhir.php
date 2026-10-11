@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Models\User;
+use App\Support\Impersonasi;
 use Illuminate\Auth\Events\Login;
 
 /**
@@ -12,7 +13,8 @@ class CatatMasukTerakhir
 {
     public function handle(Login $event): void
     {
-        if ($event->user instanceof User) {
+        // Masuk lewat impersonasi bukan login pengguna itu sendiri.
+        if ($event->user instanceof User && ! Impersonasi::aktif()) {
             $event->user->forceFill(['terakhir_masuk_pada' => now()])->saveQuietly();
         }
     }

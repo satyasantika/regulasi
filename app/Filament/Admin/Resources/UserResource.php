@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources;
 
 use App\Actions\Pengguna\AturPenugasanKategori;
 use App\Actions\Pengguna\AturWajibGantiSandi;
+use App\Actions\Pengguna\MulaiImpersonasi;
 use App\Enums\Peran;
 use App\Filament\Admin\Resources\UserResource\Pages\CreateUser;
 use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
@@ -18,6 +19,7 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -151,6 +153,7 @@ class UserResource extends Resource
                 ViewAction::make(),
                 EditAction::make(),
                 static::aksiAturPenugasan(),
+                static::aksiImpersonasi(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -197,6 +200,31 @@ class UserResource extends Resource
                 app(AturPenugasanKategori::class)->handle($record, $kategori, $oleh);
 
                 Notification::make()->title('Penugasan kategori disimpan')->success()->send();
+            });
+    }
+
+    /**
+     * Super-admin masuk sebagai pengguna lain (UserPolicy::impersonate); spanduk menyediakan tombol kembali.
+     */
+    public static function aksiImpersonasi(): Action
+    {
+        return Action::make('impersonasi')
+            ->label('Masuk sebagai')
+            ->icon(Heroicon::OutlinedArrowRightEndOnRectangle)
+            ->color('warning')
+            ->authorize('impersonate')
+            ->requiresConfirmation()
+            ->modalHeading(fn (User $record): string => "Masuk sebagai {$record->name}?")
+            ->modalDescription('Anda akan melihat aplikasi persis seperti pengguna ini. Mulai, akhir, dan semua tindakan selama impersonasi tercatat di log aktivitas atas nama Anda.')
+            ->action(function (User $record) {
+                /** @var User $pelaku */
+                $pelaku = auth()->user();
+
+                app(MulaiImpersonasi::class)->handle($pelaku, $record);
+
+                $panel = $record->canAccessPanel(Filament::getPanel('admin')) ? 'admin' : 'akun';
+
+                return redirect()->to(Filament::getPanel($panel)->getUrl());
             });
     }
 

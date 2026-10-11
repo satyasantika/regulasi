@@ -4,6 +4,7 @@ namespace App\Filament\Auth;
 
 use App\Actions\Pengguna\PerbaruiProfil;
 use App\Models\User;
+use App\Support\Impersonasi;
 use Closure;
 use Filament\Auth\Pages\EditProfile;
 use Filament\Forms\Components\TextInput;
@@ -24,6 +25,9 @@ class EditProfil extends EditProfile
 {
     public function mount(): void
     {
+        // Profil dan kata sandi akun yang sedang diimpersonasi tidak boleh diubah super-admin.
+        abort_if(Impersonasi::aktif(), 403);
+
         parent::mount();
 
         $pengguna = $this->getUser();

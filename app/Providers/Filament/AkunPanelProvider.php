@@ -41,6 +41,8 @@ class AkunPanelProvider extends PanelProvider
             ->registration(Daftar::class)
             // Panduan pengguna HTML (F12.6): tautan di halaman masuk dan menu pengguna.
             ->renderHook(...Panduan::kaitHalamanMasuk())
+            // Spanduk impersonasi + tombol kembali ke akun super-admin.
+            ->renderHook(PanelsRenderHook::BODY_START, fn (): string => view('impersonasi.spanduk')->render())
             ->userMenuItems([Panduan::itemMenuPengguna()])
             ->passwordReset()
             ->emailVerification()

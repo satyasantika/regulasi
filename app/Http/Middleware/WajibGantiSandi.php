@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Support\Impersonasi;
 use Closure;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
@@ -19,7 +20,7 @@ class WajibGantiSandi
     {
         $pengguna = Filament::auth()->user();
 
-        if (! $pengguna instanceof User || ! $pengguna->wajib_ganti_sandi) {
+        if (! $pengguna instanceof User || ! $pengguna->wajib_ganti_sandi || Impersonasi::aktif()) {
             return $next($request);
         }
 
