@@ -16,6 +16,9 @@ use SensitiveParameter;
  */
 class Daftar extends Register
 {
+    /** Tata letak kiri-kanan bertema landing (resources/views/layouts/masuk.blade.php). */
+    protected static string $layout = 'layouts.masuk';
+
     protected function getEmailFormComponent(): Component
     {
         $domain = (string) config('regulasi.domain_registrasi');

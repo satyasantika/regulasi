@@ -47,7 +47,7 @@ class AkunPanelProvider extends PanelProvider
             ->multiFactorAuthentication([AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')])
             ->brandName('Regulasi FKIP Unsil')
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Indigo,
             ])
             ->topNavigation()
             ->maxContentWidth('5xl')
