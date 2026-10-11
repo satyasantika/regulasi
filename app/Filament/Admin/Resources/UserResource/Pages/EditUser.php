@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\UserResource\Pages;
 
 use App\Actions\Pengguna\AturPenugasanKategori;
+use App\Actions\Pengguna\AturWajibGantiSandi;
 use App\Actions\Pengguna\KirimTautanAturSandi;
 use App\Actions\Pengguna\UbahPengguna;
 use App\Enums\Peran;
@@ -63,10 +64,16 @@ class EditUser extends EditRecord
         /** @var list<string>|null $kategori */
         $kategori = array_key_exists('kategori_sistem', $data) ? array_values((array) $data['kategori_sistem']) : null;
 
+        $wajibGantiSandi = array_key_exists('wajib_ganti_sandi', $data) ? (bool) $data['wajib_ganti_sandi'] : null;
+
         /** @var array{name?: string, email?: string, nip?: string|null, kode_eksternal?: string|null, aktif?: bool, peran?: list<string>} $data */
-        $data = Arr::except($data, ['kategori_sistem']);
+        $data = Arr::except($data, ['kategori_sistem', 'wajib_ganti_sandi']);
 
         $pengguna = app(UbahPengguna::class)->handle($record, $data, $oleh);
+
+        if ($wajibGantiSandi !== null && $oleh->hasRole(Peran::SuperAdmin->value)) {
+            app(AturWajibGantiSandi::class)->handle([$pengguna], $wajibGantiSandi, $oleh);
+        }
 
         if ($kategori !== null && $pengguna->hasRole(Peran::Kontributor->value) && $oleh->can('aturPenugasan', $pengguna)) {
             app(AturPenugasanKategori::class)->handle($pengguna, $kategori, $oleh);

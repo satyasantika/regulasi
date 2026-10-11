@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Actions\Pengguna\AturPenugasanKategori;
+use App\Actions\Pengguna\AturWajibGantiSandi;
 use App\Enums\Peran;
 use App\Filament\Admin\Resources\UserResource\Pages\CreateUser;
 use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
@@ -13,6 +14,8 @@ use App\Models\Role;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
@@ -29,6 +32,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
@@ -103,6 +107,10 @@ class UserResource extends Resource
                     ->default(true)
                     ->disabled(fn (?User $record): bool => $record !== null && $record->is(auth()->user()))
                     ->helperText('Nonaktif = tidak bisa masuk panel. Akun Anda sendiri tidak dapat dinonaktifkan.'),
+                Toggle::make('wajib_ganti_sandi')
+                    ->label('Wajib ganti kata sandi')
+                    ->visibleOn('edit')
+                    ->helperText('Saat masuk berikutnya pengguna hanya dapat membuka halaman profil sampai kata sandinya diganti.'),
             ]);
     }
 
@@ -126,6 +134,7 @@ class UserResource extends Resource
                     ->placeholder('—')
                     ->toggleable(),
                 IconColumn::make('aktif')->label('Aktif')->boolean(),
+                IconColumn::make('wajib_ganti_sandi')->label('Wajib ganti sandi')->boolean()->toggleable(),
                 TextColumn::make('terakhir_masuk_pada')->label('Terakhir masuk')
                     ->dateTime('d F Y H:i')->placeholder('Belum pernah')->sortable(),
             ])
@@ -143,7 +152,12 @@ class UserResource extends Resource
                 EditAction::make(),
                 static::aksiAturPenugasan(),
             ])
-            ->toolbarActions([]);
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    static::aksiMassalWajibGantiSandi(true),
+                    static::aksiMassalWajibGantiSandi(false),
+                ]),
+            ]);
     }
 
     /**
@@ -184,6 +198,28 @@ class UserResource extends Resource
 
                 Notification::make()->title('Penugasan kategori disimpan')->success()->send();
             });
+    }
+
+    /**
+     * Aksi massal super-admin: wajibkan atau cabut kewajiban ganti kata sandi (AturWajibGantiSandi).
+     */
+    public static function aksiMassalWajibGantiSandi(bool $wajib): BulkAction
+    {
+        return BulkAction::make($wajib ? 'wajibkanGantiSandi' : 'cabutWajibGantiSandi')
+            ->label($wajib ? 'Wajibkan ganti kata sandi' : 'Cabut kewajiban ganti kata sandi')
+            ->icon($wajib ? Heroicon::OutlinedKey : Heroicon::OutlinedXMark)
+            ->visible(fn (): bool => auth()->user()?->can('pengguna.kelola') ?? false)
+            ->requiresConfirmation()
+            ->action(function (Collection $records) use ($wajib): void {
+                /** @var User $oleh */
+                $oleh = auth()->user();
+
+                /** @var Collection<int, User> $records */
+                $jumlah = app(AturWajibGantiSandi::class)->handle($records, $wajib, $oleh);
+
+                Notification::make()->title("{$jumlah} akun diperbarui")->success()->send();
+            })
+            ->deselectRecordsAfterCompletion();
     }
 
     public static function getPages(): array

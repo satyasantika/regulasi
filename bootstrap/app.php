@@ -7,6 +7,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
@@ -21,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(AwalanSubpath::class);
         $middleware->append(HeaderKeamanan::class);
+
+        // Portal publik juga memeriksa hash kata sandi di sesi: setelah ganti sandi, sesi di perangkat lain keluar
+        // (panel Filament memakai AuthenticateSession miliknya sendiri).
+        $middleware->web(append: [AuthenticateSession::class]);
 
         // Tamu API tidak dialihkan ke halaman masuk: 401 JSON (BR-18); selain itu ke rute login (bila ada) atau
         // halaman masuk panel akun.

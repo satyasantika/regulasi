@@ -31,6 +31,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $kode_eksternal
  * @property bool $aktif
  * @property CarbonImmutable|null $terakhir_masuk_pada
+ * @property bool $wajib_ganti_sandi
+ * @property CarbonImmutable|null $sandi_diubah_pada
  */
 #[Fillable(['name', 'email', 'password', 'nip', 'prodi_id', 'kode_eksternal', 'aktif'])]
 #[Hidden(['password', 'remember_token', 'app_authentication_secret', 'app_authentication_recovery_codes'])]
@@ -58,6 +60,8 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
             'password' => 'hashed',
             'aktif' => 'boolean',
             'terakhir_masuk_pada' => 'datetime',
+            'wajib_ganti_sandi' => 'boolean',
+            'sandi_diubah_pada' => 'datetime',
             'app_authentication_secret' => 'encrypted',
             'app_authentication_recovery_codes' => 'encrypted:array',
         ];

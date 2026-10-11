@@ -4,7 +4,9 @@ namespace App\Providers\Filament;
 
 use App\Filament\Akun\Pages\Daftar;
 use App\Filament\Akun\Pages\Dasbor;
+use App\Filament\Auth\EditProfil;
 use App\Filament\Auth\Masuk;
+use App\Http\Middleware\WajibGantiSandi;
 use App\Support\Panduan;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
@@ -42,7 +44,7 @@ class AkunPanelProvider extends PanelProvider
             ->userMenuItems([Panduan::itemMenuPengguna()])
             ->passwordReset()
             ->emailVerification()
-            ->profile()
+            ->profile(EditProfil::class)
             // MFA opsional bagi pengguna panel akun.
             ->multiFactorAuthentication([AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')])
             ->brandName('Regulasi FKIP Unsil')
@@ -68,6 +70,7 @@ class AkunPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                WajibGantiSandi::class,
             ]);
     }
 }
