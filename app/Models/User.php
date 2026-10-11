@@ -106,10 +106,15 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     }
 
     /**
-     * Peran penerbit (super-admin, admin-regulasi) wajib memakai MFA.
+     * Peran penerbit (super-admin, admin-regulasi) wajib memakai MFA selama MFA_AKTIF=true.
      */
     public function wajibMfa(): bool
     {
+        // Flag MFA_AKTIF=false mematikan MFA seluruhnya (ADR 0002).
+        if (! config('regulasi.mfa_aktif')) {
+            return false;
+        }
+
         // Pengecualian hanya akun demo panduan (@contoh.test) di APP_ENV=local untuk tangkapan layar (PanduanSeeder).
         if (app()->isLocal() && str_ends_with((string) $this->email, '@'.self::DOMAIN_PANDUAN)) {
             return false;

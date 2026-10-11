@@ -44,9 +44,12 @@ class AdminPanelProvider extends PanelProvider
             // Panduan pengguna HTML (F12.6): tautan di halaman masuk dan menu pengguna.
             ->renderHook(...Panduan::kaitHalamanMasuk())
             ->userMenuItems([Panduan::itemMenuPengguna()])
-            // MFA wajib bagi super-admin & admin-regulasi (WajibMfa), opsional bagi kontributor.
+            // MFA wajib bagi super-admin & admin-regulasi (WajibMfa), opsional bagi kontributor; seluruhnya mati bila
+            // MFA_AKTIF=false (penyedia kosong, WajibMfa melewatkan). Rute tetap terdaftar sehingga flag dapat diuji.
             ->multiFactorAuthentication(
-                [AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')],
+                fn (): array => config('regulasi.mfa_aktif')
+                    ? [AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')]
+                    : [],
                 isRequired: true,
             )
             ->multiFactorAuthenticationRequiredMiddlewareName(WajibMfa::class)

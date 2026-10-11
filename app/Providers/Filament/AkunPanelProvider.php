@@ -45,8 +45,12 @@ class AkunPanelProvider extends PanelProvider
             ->passwordReset()
             ->emailVerification()
             ->profile(EditProfil::class)
-            // MFA opsional bagi pengguna panel akun.
-            ->multiFactorAuthentication([AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')])
+            // MFA opsional bagi pengguna panel akun; mati bila MFA_AKTIF=false.
+            ->multiFactorAuthentication(
+                fn (): array => config('regulasi.mfa_aktif')
+                    ? [AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')]
+                    : [],
+            )
             ->brandName('Regulasi FKIP Unsil')
             ->colors([
                 'primary' => Color::Indigo,

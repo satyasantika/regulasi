@@ -85,7 +85,7 @@ test('seeder pengguna awal gagal jelas di produksi bila env kosong', function ()
     app()->detectEnvironment(fn () => 'production');
 
     expect(fn () => (new PenggunaAwalSeeder)->run())
-        ->toThrow(RuntimeException::class, 'SEED_SUPERADMIN_EMAIL');
+        ->toThrow(RuntimeException::class, 'REGULASI_SUPERADMIN_PASSWORD');
 });
 
 test('akun contoh hanya dibuat di lingkungan lokal', function () {

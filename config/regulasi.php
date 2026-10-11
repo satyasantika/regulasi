@@ -23,11 +23,18 @@ return [
     // Reverse proxy tepercaya (STANDAR-TEKNIS §2.4): produksi = IP reverse proxy, lokal = *.
     'trusted_proxies' => env('TRUSTED_PROXIES'),
 
-    // Super-admin awal untuk PenggunaAwalSeeder (03-SKEMA §4.1). Wajib diisi di produksi.
+    // Super-admin awal untuk PenggunaAwalSeeder (idempoten). Surel bawaan fkip@unsil.ac.id; kata sandi HANYA dari .env
+    // (REGULASI_SUPERADMIN_PASSWORD, wajib di produksi). Akun baru ditandai wajib ganti sandi saat masuk pertama.
     'seed_superadmin' => [
-        'email' => env('SEED_SUPERADMIN_EMAIL'),
-        'password' => env('SEED_SUPERADMIN_PASSWORD'),
+        'email' => env('REGULASI_SUPERADMIN_EMAIL', 'fkip@unsil.ac.id'),
+        'password' => env('REGULASI_SUPERADMIN_PASSWORD'),
+        'nama' => env('REGULASI_SUPERADMIN_NAMA', 'Super Admin FKIP'),
     ],
+
+    // Autentikasi dua langkah (MFA, aplikasi autentikator) di kedua panel. true (bawaan): MFA tersedia dan WAJIB bagi
+    // super-admin & admin-regulasi. false: MFA dimatikan seluruhnya (tidak diminta saat masuk, tidak tampil di profil).
+    // Rekomendasi: tetap true di produksi (docs/keputusan/0002-flag-mfa-aktif.md).
+    'mfa_aktif' => (bool) env('MFA_AKTIF', true),
 
     // Seeder dokumen contoh (03-SKEMA §4.5): URL naskah lokal (di-.gitignore) yang mengisi tautan kosong, dan
     // demo lokal yang menerbitkan semua dokumen contoh melewati BR-05 (hanya bila APP_ENV=local).

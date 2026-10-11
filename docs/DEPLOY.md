@@ -45,7 +45,7 @@ git checkout v1.1.0
 cp .env.production.example .env.production
 # Isi: APP_KEY (php artisan key:generate --show), DB_PASSWORD, DB_ROOT_PASSWORD, REDIS_PASSWORD,
 # MEILISEARCH_KEY (acak ≥ 16 byte, mis. openssl rand -hex 24), MAIL_*, TRUSTED_PROXIES,
-# SEED_SUPERADMIN_EMAIL/SEED_SUPERADMIN_PASSWORD, REGULASI_ALAMAT (perlu verifikasi FKIP).
+# REGULASI_SUPERADMIN_PASSWORD (super-admin fkip@unsil.ac.id), MFA_AKTIF=true, REGULASI_ALAMAT (perlu verifikasi FKIP).
 export APP_VERSION=1.1.0
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 docker compose --env-file .env.production -f docker-compose.prod.yml exec app php artisan db:seed --force
@@ -62,7 +62,9 @@ curl -fsS http://127.0.0.1:8034/api/health        # {"status":"ok","versi":"1.0.
 - Aset Vite dibangun di image dengan `ASSET_URL=https://supportfkip.unsil.ac.id/regulasi` (build arg).
 - Volume `tmp` (`storage/app/tmp`) dipakai bersama `app`, `queue`, `scheduler`: unduhan sementara ekstraksi (dihapus
   di `finally`) dan ekspor Excel (dibersihkan ≤ 24 jam oleh `berkas:bersihkan-tmp`).
-- Super-admin wajib MFA: saat masuk pertama diminta memasang aplikasi autentikator; ganti kata sandi awal segera.
+- Super-admin `fkip@unsil.ac.id` (dari `REGULASI_SUPERADMIN_PASSWORD`) wajib MFA selama `MFA_AKTIF=true` dan
+  ditandai wajib ganti sandi: saat masuk pertama diminta memasang aplikasi autentikator lalu mengganti kata sandi awal
+  (ADR 0002).
 
 ### Indeks pencarian (Meilisearch)
 

@@ -53,7 +53,7 @@ class DokumenContohSeeder extends Seeder
         $pelaku = User::role(Peran::SuperAdmin->value)->orderBy('created_at')->first();
 
         if (! $pelaku instanceof User) {
-            $this->peringatan('Super-admin belum ada (SEED_SUPERADMIN_*): dokumen contoh dilewati.');
+            $this->peringatan('Super-admin belum ada (REGULASI_SUPERADMIN_PASSWORD): dokumen contoh dilewati.');
 
             return;
         }

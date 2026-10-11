@@ -27,6 +27,8 @@ Rujukan langkah teknis: `docs/DEPLOY.md`; skenario uji: `docs/uat/hasil-uat.md`;
 | ☐ | **Kartu aplikasi di landing supportfkip** | Tambah tautan `regulasi/` dan `regulasi/panduan/` di `index.html` akar supportfkip (PG-01) | TI fakultas |
 | ☐ | **Cadangan di luar server** | Salin `./backup/mariadb` ke penyimpanan lain; uji pulih pertama dicatat (docs/DEPLOY.md §Uji pulih semester, G-11) | TI fakultas |
 | ☐ | **Pemindaian port** | Pastikan hanya `WEB_PORT` terbuka untuk proxy; MariaDB/Redis/Meilisearch tidak terjangkau dari luar (KM-13) | TI fakultas |
+| ☐ | **Super-admin awal `fkip@unsil.ac.id`** | Isi `REGULASI_SUPERADMIN_PASSWORD` di `.env.production` (jangan di repo), `db:seed --force`, masuk pertama: pasang MFA lalu ganti kata sandi awal (akun ditandai wajib ganti sandi). Setelah itu kosongkan kembali nilai sandi di `.env.production` bila diinginkan — seeder tidak menimpa akun yang sudah ada | Super Admin / TI fakultas |
+| ☐ | **Flag `MFA_AKTIF`** | Bawaan `true` (wajib MFA bagi super-admin & admin-regulasi). Mematikan (`MFA_AKTIF=false`) adalah keputusan pemilik sistem; catat tanggal, alasan, dan tanggal dinyalakan kembali di tabel ini. Risiko & rekomendasi: `docs/keputusan/0002-flag-mfa-aktif.md` | Pemilik sistem |
 | ☐ | **SMTP kampus** | Isi `MAIL_*`, uji surel atur kata sandi, notifikasi tolak/terbit, ringkasan mingguan | TI fakultas |
 | ☐ | **Uptime monitor** | Pantau `https://supportfkip.unsil.ac.id/regulasi/api/health` (G-12) | TI fakultas |
 

@@ -99,8 +99,9 @@ test('contoh .env.production memakai subpath, cookie aman, debug mati, dan tanpa
         ->toContain('SESSION_SECURE_COOKIE=true')
         ->toContain('MEILISEARCH_HOST=http://meilisearch:7700')
         ->toContain('REGULASI_FT_MIN_TOKEN=2')
+        ->toContain('MFA_AKTIF=true')
         ->not->toMatch('/^TRUSTED_PROXIES=\*/m')
-        ->not->toMatch('/^(APP_KEY|DB_PASSWORD|DB_ROOT_PASSWORD|REDIS_PASSWORD|MAIL_PASSWORD|MEILISEARCH_KEY|SEED_SUPERADMIN_PASSWORD)=\S/m');
+        ->not->toMatch('/^(APP_KEY|DB_PASSWORD|DB_ROOT_PASSWORD|REDIS_PASSWORD|MAIL_PASSWORD|MEILISEARCH_KEY|REGULASI_SUPERADMIN_PASSWORD)=\S/m');
 });
 
 test('cadangan harian 02:00 WIB dengan retensi 30 hari, log, dan pemulihan menolak produksi', function () use ($akar) {
