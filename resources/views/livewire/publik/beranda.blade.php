@@ -26,6 +26,14 @@
                 </div>
             </form>
 
+            <div class="mt-5 flex flex-wrap gap-3 text-sm">
+                <a href="{{ route('dokumen.index') }}" class="inline-flex min-h-11 items-center rounded-xl bg-teal-400 px-4 font-semibold text-indigo-950 hover:bg-teal-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Telusuri semua dokumen</a>
+                <a href="#panduan" class="inline-flex min-h-11 items-center rounded-xl px-4 font-semibold text-white ring-1 ring-white/50 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Panduan pengguna</a>
+                @guest
+                    <a href="{{ route('filament.akun.auth.login') }}" class="inline-flex min-h-11 items-center rounded-xl px-4 font-semibold text-white ring-1 ring-white/50 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Masuk dengan akun Unsil</a>
+                @endguest
+            </div>
+
             <dl class="mt-8 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
                 <div class="rounded-xl bg-white/10 p-4 ring-1 ring-white/20">
                     <dt class="text-xs text-indigo-100">Dokumen terbit</dt>
@@ -156,5 +164,40 @@
                 @endif
             </aside>
         </div>
+
+        {{-- Keunggulan repositori --}}
+        <section class="mt-14" aria-labelledby="judul-fitur">
+            <h2 id="judul-fitur" class="text-xl font-bold text-slate-900">Mengapa memakai repositori ini</h2>
+            <p class="mt-1 max-w-3xl text-slate-600">Satu rujukan regulasi bagi Akreditasi, SDM, Persuratan, Aset/BMN, Microteaching, LMS, Keuangan, Puspresma, Kerja Sama, dan FKIP Edu.</p>
+            <ul class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach ($fitur as [$judulFitur, $isiFitur])
+                    <li class="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+                        <h3 class="font-semibold text-indigo-900">{{ $judulFitur }}</h3>
+                        <p class="mt-1.5 text-sm text-slate-700">{{ $isiFitur }}</p>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+
+        {{-- Panduan per peran (panduan super-admin sengaja tidak ditampilkan di landing) --}}
+        <section id="panduan" class="mt-14 scroll-mt-20" aria-labelledby="judul-panduan">
+            <div class="flex flex-wrap items-baseline justify-between gap-3">
+                <h2 id="judul-panduan" class="text-xl font-bold text-slate-900">Panduan pengguna per peran</h2>
+                <a href="{{ asset('panduan/index.html') }}" class="inline-flex min-h-11 items-center text-sm font-medium text-indigo-800 underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-indigo-700">Semua panduan</a>
+            </div>
+            <p class="mt-1 max-w-3xl text-slate-600">Panduan bergambar langkah demi langkah. Pilih sesuai peran Anda.</p>
+            <ul class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                @foreach ($panduan as [$berkasPanduan, $namaPeran, $isiPeran])
+                    <li>
+                        <a href="{{ asset('panduan/'.$berkasPanduan) }}"
+                           class="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition hover:-translate-y-0.5 hover:border-teal-600 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-700">
+                            <span class="font-semibold text-indigo-900">{{ $namaPeran }}</span>
+                            <span class="mt-1.5 flex-1 text-sm text-slate-700">{{ $isiPeran }}</span>
+                            <span class="mt-3 text-sm font-semibold text-teal-800">Buka panduan <span aria-hidden="true">→</span></span>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
     </div>
 </div>
