@@ -36,7 +36,7 @@ Rujukan langkah teknis: `docs/DEPLOY.md`; skenario uji: `docs/uat/hasil-uat.md`;
 |---|---|---|
 | ☐ | **Klien API uji di DB dev** | `db_regulasi` memuat satu klien API uji lokal (dibuat saat F9 untuk mencoba API). Cabut tokennya / hapus klien bila tidak dipakai; jangan disalin ke produksi |
 | ☐ | **Akun demo panduan** | `PanduanSeeder` (F12.6, hanya `APP_ENV=local`) membuat akun `panduan.<peran>@contoh.test` (tanpa MFA khusus akun demo lokal) dan data rekaan berlabel "(Contoh Panduan)". Dijalankan dengan `migrate:fresh` — pakai DB lokal/khusus. Tangkapan layar v1.0.0 dibuat dari DB terpisah `db_regulasi_panduan` (sudah dihapus); `db_regulasi` dev tidak diubah |
-| ☐ | **Remote git belum ada** | Repositori hanya lokal (branch per fase + tag `v0.1.0`…`v1.0.0`). Buat remote privat `regulasi-fkip`, `git push -u origin main --tags`, aktifkan proteksi branch `main` (wajib PR + CI hijau). Workflow `.github/workflows/ci.yml` & `docker.yml` aktif setelah itu |
+| ☐ | **Remote GitHub & auto-pull** | Remote `https://github.com/satyasantika/regulasi.git` (belum di-push dari mesin pengembang). Manusia: `git push -u origin main --tags`, proteksi branch `main` (wajib PR + CI hijau), isi GitHub Secrets `SERVER_HOST`, `SERVER_USER`, `SSH_PRIVATE_KEY` (opsional `SERVER_PORT`), siapkan clone + deploy key di server. Lihat docs/DEPLOY.md "Auto-pull dari GitHub" |
 | ☐ | **Image uji lokal** | Uji build menyisakan image `regulasi-app:uji`, `regulasi-web:uji`, `regulasi-backup:uji` di Docker lokal; hapus bila tidak perlu (`docker image rm …`) |
 
 ## 4. Go-live (05-UJI §4) — status per 10 Oktober 2026

@@ -126,3 +126,31 @@ test('cadangan harian 02:00 WIB dengan retensi 30 hari, log, dan pemulihan menol
         ->toContain('regulasi:reindeks --hapus')
         ->toContain('berkas:periksa-tautan');
 });
+
+test('auto-pull: deploy dipicu tag rilis, lolos uji penuh, dan skrip rilis menjaga cadangan, kesehatan, rollback', function () use ($akar) {
+    $alur = (string) file_get_contents($akar.'/.github/workflows/deploy.yml');
+    $ci = (string) file_get_contents($akar.'/.github/workflows/ci.yml');
+    $skrip = (string) file_get_contents($akar.'/scripts/deploy.sh');
+
+    expect($alur)->toContain("tags: [ 'v[0-9]+.[0-9]+.[0-9]+' ]")
+        ->toContain('needs: uji')
+        ->toContain('uses: ./.github/workflows/ci.yml')
+        ->toContain('cancel-in-progress: false')
+        ->toContain('secrets.SSH_PRIVATE_KEY')
+        ->toContain('cd ~/docker-apps/regulasi')
+        ->toContain('git fetch --tags')
+        ->toContain('bash scripts/deploy.sh')
+        ->not->toContain('branches:')
+        ->not->toMatch('/BEGIN [A-Z ]*PRIVATE KEY/')
+        ->and($ci)->toContain('workflow_call:')->toContain('scripts/*.sh')
+        ->and($skrip)->toContain('set -euo pipefail')
+        ->toContain('IMAGE_APP="regulasi-app"')
+        ->toContain('git merge-base --is-ancestor')
+        ->toContain('backup.sh')
+        ->toContain('/api/health')
+        ->toContain('horizon:terminate')
+        ->toContain('--rollback')
+        ->toContain('--no-build')
+        ->not->toContain('--no-verify')
+        ->and(is_executable($akar.'/scripts/deploy.sh'))->toBeTrue();
+});

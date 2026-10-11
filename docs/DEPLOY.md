@@ -9,7 +9,8 @@ Pola `docker-apps` (STANDAR-TEKNIS §7, sama dengan sistem keuangan): container 
 
 ## Prasyarat server
 
-- Docker Engine + Compose v2, akses `git` ke repositori (belum ada remote — lihat "Butir manusia" di bawah).
+- Docker Engine + Compose v2, akses `git` ke repositori `https://github.com/satyasantika/regulasi.git` (repo privat:
+  *deploy key* baca-saja di server).
 - HTTPS valid di server depan `supportfkip.unsil.ac.id` (sertifikat dikelola UPT TIK).
 - Port host `WEB_PORT` (bawaan 8034) hanya dapat dijangkau reverse proxy depan. Meilisearch, MariaDB, dan Redis
   **tidak** membuka port host (KM-13).
@@ -39,13 +40,13 @@ location /regulasi/ {
 ## Deploy pertama
 
 ```bash
-git clone <repo> regulasi && cd regulasi
-git checkout v1.0.0
+git clone https://github.com/satyasantika/regulasi.git ~/docker-apps/regulasi && cd ~/docker-apps/regulasi
+git checkout v1.1.0
 cp .env.production.example .env.production
 # Isi: APP_KEY (php artisan key:generate --show), DB_PASSWORD, DB_ROOT_PASSWORD, REDIS_PASSWORD,
 # MEILISEARCH_KEY (acak ≥ 16 byte, mis. openssl rand -hex 24), MAIL_*, TRUSTED_PROXIES,
 # SEED_SUPERADMIN_EMAIL/SEED_SUPERADMIN_PASSWORD, REGULASI_ALAMAT (perlu verifikasi FKIP).
-export APP_VERSION=1.0.0
+export APP_VERSION=1.1.0
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
 docker compose --env-file .env.production -f docker-compose.prod.yml exec app php artisan db:seed --force
 curl -fsS http://127.0.0.1:8034/api/health        # {"status":"ok","versi":"1.0.0",...}
@@ -97,6 +98,48 @@ curl -fsS http://127.0.0.1:8034/api/health                                      
 ```
 
 Bila rilis mengubah pengaturan indeks atau `toSearchableArray`, jalankan `regulasi:reindeks` setelahnya.
+
+## Auto-pull dari GitHub (CD)
+
+Rilis produksi berjalan otomatis dari GitHub Actions: push tag `vX.Y.Z` → workflow `.github/workflows/deploy.yml`
+menjalankan uji penuh (job `uji` = `ci.yml`: shellcheck, Pint, PHPStan, Pest, Pest ekstraksi) → job `deploy` masuk ke
+server lewat SSH dan **menarik** tag itu:
+
+```bash
+cd ~/docker-apps/regulasi
+git fetch --tags --prune --force origin && git fetch origin main
+git checkout --detach "refs/tags/$TAG"
+bash scripts/deploy.sh
+```
+
+`scripts/deploy.sh` (ikut di repo, dapat dijalankan manual di server):
+
+1. menolak bila HEAD bukan tag `vX.Y.Z`, tag tidak berada di riwayat `origin/main`, atau working tree kotor;
+2. cadangan MariaDB pra-migrasi lewat service `backup` (dilewati pada deploy pertama);
+3. `build` image `regulasi-app`, `regulasi-web`, `regulasi-backup` bertag versi, lalu `up -d` (container `app`
+   menjalankan `migrate --force`, `optimize`, `scout:sync-index-settings`);
+4. health check `http://127.0.0.1:${WEB_PORT:-8034}/api/health` maks. 2 menit (gagal = job merah + 50 baris log `app`);
+5. `horizon:terminate` agar pekerja memuat kode baru; hapus image lama (3 versi terakhir disimpan).
+
+Push biasa ke `main` **tidak** menggelar apa pun; hanya tag rilis.
+
+| GitHub Secret | Isi |
+|---|---|
+| `SERVER_HOST` | Nama host/IP server Docker FKIP (perlu verifikasi dengan UPT TIK) |
+| `SERVER_USER` | Akun deploy di server (anggota grup `docker`) |
+| `SSH_PRIVATE_KEY` | Kunci privat khusus deploy (ed25519); kunci publiknya di `~/.ssh/authorized_keys` akun deploy |
+| `SERVER_PORT` | Opsional, port SSH bila bukan 22 |
+
+Persiapan server sekali:
+
+- `git clone https://github.com/satyasantika/regulasi.git ~/docker-apps/regulasi`; repo privat → tambahkan
+  *deploy key* baca-saja (Settings → Deploy keys) agar `git fetch` berjalan tanpa kata sandi.
+- `.env.production` di `~/docker-apps/regulasi` (tidak di-commit), lalu deploy pertama (bagian di atas).
+- Rahasia hanya di GitHub Secrets dan `.env.production` server; tidak ada host/kunci di repo.
+
+Deploy ulang/rollback dari GitHub: *Actions → Deploy regulasi → Run workflow* dengan tag tujuan. Rollback cepat di
+server tanpa build ulang: `bash scripts/deploy.sh --rollback X.Y.Z` (`--list` menampilkan versi yang image-nya masih
+ada). Rollback hanya mengembalikan kode, bukan skema — lihat bagian berikut.
 
 ## Rollback ke tag sebelumnya
 
@@ -183,7 +226,8 @@ docker build -f docker/Dockerfile --target web -t regulasi-web:uji .
 docker run --rm --entrypoint pdftotext regulasi-app:uji -v      # poppler tersedia
 ```
 
-Workflow `.github/workflows/docker.yml` membangun kedua image (tanpa push) pada setiap tag `v*`.
+Workflow `.github/workflows/docker.yml` membangun kedua image (tanpa push) pada setiap tag `v*`; workflow
+`deploy.yml` menggelarnya ke server (bagian "Auto-pull dari GitHub").
 
 Uji asap lokal 10 Oktober 2026 (compose produksi lengkap, proyek `regulasi-ujiprod`, port 18934, lalu `down -v`):
 seluruh layanan berjalan; `/api/health` → `{"status":"ok","versi":"1.0.0",…,"pencarian":"ok"}`; migrasi &

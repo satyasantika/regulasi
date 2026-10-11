@@ -1,0 +1,52 @@
+# Penggelaran otomatis (auto-pull): server menarik tag rilis vX.Y.Z dari GitHub lalu menjalankan scripts/deploy.sh.
+# Hanya tag yang lolos uji penuh (pint, phpstan, pest, shellcheck — dipakai ulang dari ci.yml) yang sampai ke server.
+# Rilis dipicu dengan:
+#   git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z
+# Rahasia repositori (diisi manusia, Settings → Secrets and variables → Actions):
+#   SERVER_HOST, SERVER_USER, SSH_PRIVATE_KEY, dan opsional SERVER_PORT (bawaan 22).
+# Lihat docs/DEPLOY.md bagian "Auto-pull dari GitHub".
+name: Deploy regulasi
+on:
+  push:
+    tags: [ 'v[0-9]+.[0-9]+.[0-9]+' ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag rilis yang di-deploy ulang (mis. v1.1.0)'
+        required: true
+
+concurrency:
+  group: deploy-regulasi
+  cancel-in-progress: false
+
+jobs:
+  uji:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: uji
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - name: Validasi nama tag
+        run: |
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Tag tidak valid: $TAG"; exit 1; }
+
+      - name: Tarik tag di server dan rilis
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          TAG: ${{ env.TAG }}
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: TAG
+          script_stop: true
+          script: |
+            cd ~/docker-apps/regulasi
+            git fetch --tags --prune --force origin
+            git fetch origin main
+            git checkout --detach "refs/tags/$TAG"
+            bash scripts/deploy.sh
