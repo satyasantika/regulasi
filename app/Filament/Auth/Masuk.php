@@ -11,6 +11,9 @@ use Filament\Notifications\Notification;
  */
 class Masuk extends Login
 {
+    /** Tata letak kiri-kanan bertema landing (resources/views/layouts/masuk.blade.php). */
+    protected static string $layout = 'layouts.masuk';
+
     /**
      * @param  string|null  $method
      * @param  string|null  $component

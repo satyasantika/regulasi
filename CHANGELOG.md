@@ -5,6 +5,39 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+## [1.1.0] - 2026-10-12
+
+### Ditambahkan
+- Deploy otomatis dari GitHub (auto-pull): push tag `vX.Y.Z` → uji penuh (`ci.yml` dipakai ulang, kini juga
+  shellcheck) → server menarik tag lewat SSH dan menjalankan `scripts/deploy.sh` (cadangan pra-migrasi, build,
+  health check, `horizon:terminate`, rollback cepat `--rollback X.Y.Z`). GitHub Secrets: `SERVER_HOST`,
+  `SERVER_USER`, `SSH_PRIVATE_KEY`, opsional `SERVER_PORT` (docs/DEPLOY.md).
+- Landing page diperkaya: ajakan telusuri/masuk, bagian keunggulan repositori, dan kartu panduan per peran
+  (panduan super-admin tidak ditampilkan di landing; berkasnya tetap di `public/panduan/`).
+- Halaman masuk kiri-kanan bertema landing untuk panel admin dan akun (juga halaman daftar), tema bersama
+  `public/css/regulasi.css`; warna utama panel menjadi indigo.
+- Halaman eror bertema untuk 401, 403, 404, 419, 429, 500, 503 serta cadangan 4xx/5xx: tombol kembali & beranda,
+  tombol masuk (401/419) dan coba lagi (429/500/503), aman subpath, tanpa detail teknis.
+- Profil untuk semua peran (nama, NIP, ganti kata sandi). Ganti sandi mengeluarkan sesi di perangkat lain
+  (AuthenticateSession kini juga di portal), mengganti token ingat-saya, dan tercatat di log aktivitas.
+- Wajib ganti kata sandi per akun (kolom `wajib_ganti_sandi`, `sandi_diubah_pada`): diatur super-admin lewat form atau
+  aksi massal; middleware `WajibGantiSandi` memaksa ke halaman profil.
+- Super-admin awal `fkip@unsil.ac.id` dari seeder idempoten; kata sandi hanya dari `REGULASI_SUPERADMIN_PASSWORD`
+  di `.env`; ditandai wajib ganti sandi saat masuk pertama.
+- Flag `MFA_AKTIF` (bawaan `true`): `false` mematikan MFA seluruhnya. Keputusan & risiko di
+  `docs/keputusan/0002-flag-mfa-aktif.md`.
+- Impor massal pengguna lewat salin-tempel Excel (nama, surel, peran, kategori kontributor) dengan pratinjau,
+  validasi domain `@unsil.ac.id`, idempoten (surel terdaftar dilewati), hanya super-admin.
+- Impersonasi oleh super-admin (bukan diri sendiri/super-admin lain/akun nonaktif) dengan spanduk "Kembali ke akun
+  saya", tercatat di log aktivitas (setiap entri memuat `impersonasi_oleh`), melewati MFA & wajib ganti sandi sasaran.
+
+### Diubah
+- Variabel super-admin awal `SEED_SUPERADMIN_EMAIL`/`SEED_SUPERADMIN_PASSWORD` diganti `REGULASI_SUPERADMIN_EMAIL`
+  (bawaan `fkip@unsil.ac.id`) dan `REGULASI_SUPERADMIN_PASSWORD`.
+- Panduan HTML 1.1.0: profil & kata sandi untuk semua peran, impor tempel, wajib ganti sandi, impersonasi, dan MFA
+  untuk super-admin, halaman masuk dan eror di indeks (tangkapan layar halaman baru menyusul).
+- README ditulis ulang; `APP_VERSION=1.1.0`.
+
 ### Keamanan
 - Uji regresi CSRF rute keluar panel (KM-06): POST tanpa token ditolak 419 untuk pengguna masuk; 302 untuk tamu
   terbukti bukan celah (autentikasi berjalan sebelum pemeriksaan CSRF, tanpa sesi yang diakhiri).

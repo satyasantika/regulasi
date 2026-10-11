@@ -29,7 +29,7 @@ code,kbd{font-family:ui-monospace,monospace;background:#f1f5f9;border:1px solid 
 </style>
 </head>
 <body>
-<header><div class="wadah"><strong>Regulasi FKIP Unsil</strong><p>Panduan pengguna · versi 1.0.0 · 11 Oktober 2026</p></div></header>
+<header><div class="wadah"><strong>Regulasi FKIP Unsil</strong><p>Panduan pengguna · versi 1.1.0 · 12 Oktober 2026</p></div></header>
 <div class="wadah">
 <nav class="atas"><a href="index.html">← Daftar panduan</a> · <a href="../">Buka aplikasi</a></nav>
 <main>
@@ -49,10 +49,13 @@ code,kbd{font-family:ui-monospace,monospace;background:#f1f5f9;border:1px solid 
 <tr><td><code>berkas:bersihkan-tmp [--jam=24]</code></td><td>Hapus berkas sementara ekstraksi/ekspor (harian 00:45)</td></tr>
 <tr><td><code>regulasi:siapkan-uat</code></td><td>Data &amp; akun UAT per peran (ditolak di produksi)</td></tr></table>
 <p>Jalankan di container aplikasi, mis. <code>docker compose --env-file .env.production -f docker-compose.prod.yml exec app php artisan …</code>. Rincian relasi: <code>docs/RELASI.md</code>; operasional: <code>docs/DEPLOY.md</code>.</p>
+<h2>Profil &amp; kata sandi</h2>
+<p>Buka menu pengguna (pojok kanan atas) → <b>Profil</b>. Anda dapat mengubah <b>nama</b> dan <b>NIP/NIDN/NPM</b>; surel adalah identitas masuk dan hanya diubah super-admin. Untuk <b>ganti kata sandi</b>, isi kata sandi baru, ulangi, lalu masukkan kata sandi saat ini. Kata sandi baru harus berbeda dari yang lama.</p>
+<p class="catatan">Setelah kata sandi diganti, perangkat lain yang sedang masuk dengan akun Anda <b>otomatis keluar</b>. Bila akun Anda ditandai <b>wajib ganti kata sandi</b> (mis. akun baru dengan sandi awal), setiap halaman mengarah ke Profil sampai kata sandi diganti.</p>
 <h2>Tanya-jawab</h2><dl class="tj"><dt>Mengapa status target belum berubah?</dt><dd>Sumber harus terbit dan tanggal efektifnya sudah tiba; bila belum, halaman target menampilkan "relasi tertunda".</dd><dt>Relasi keliru?</dt><dd>Hapus relasi (alasan wajib) lalu tambah yang benar; status dihitung ulang.</dd><dt>Pencarian tidak toleran salah ketik?</dt><dd>Meilisearch mati; portal memakai cadangan basis data. Hubungi TI fakultas.</dd></dl>
 <h2>Kontak</h2><p>Admin Regulasi FKIP (regulasi-fkip@unsil.ac.id) · Admin TI Fakultas untuk akun &amp; MFA</p>
 </main>
 </div>
-<footer>Regulasi FKIP Universitas Siliwangi · panduan versi 1.0.0, diperbarui 11 Oktober 2026 · Admin Regulasi FKIP (regulasi-fkip@unsil.ac.id) · Admin TI Fakultas untuk akun &amp; MFA</footer>
+<footer>Regulasi FKIP Universitas Siliwangi · panduan versi 1.1.0, diperbarui 12 Oktober 2026 · Admin Regulasi FKIP (regulasi-fkip@unsil.ac.id) · Admin TI Fakultas untuk akun &amp; MFA</footer>
 </body>
 </html>

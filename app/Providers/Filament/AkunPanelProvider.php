@@ -4,7 +4,9 @@ namespace App\Providers\Filament;
 
 use App\Filament\Akun\Pages\Daftar;
 use App\Filament\Akun\Pages\Dasbor;
+use App\Filament\Auth\EditProfil;
 use App\Filament\Auth\Masuk;
+use App\Http\Middleware\WajibGantiSandi;
 use App\Support\Panduan;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
@@ -39,15 +41,21 @@ class AkunPanelProvider extends PanelProvider
             ->registration(Daftar::class)
             // Panduan pengguna HTML (F12.6): tautan di halaman masuk dan menu pengguna.
             ->renderHook(...Panduan::kaitHalamanMasuk())
+            // Spanduk impersonasi + tombol kembali ke akun super-admin.
+            ->renderHook(PanelsRenderHook::BODY_START, fn (): string => view('impersonasi.spanduk')->render())
             ->userMenuItems([Panduan::itemMenuPengguna()])
             ->passwordReset()
             ->emailVerification()
-            ->profile()
-            // MFA opsional bagi pengguna panel akun.
-            ->multiFactorAuthentication([AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')])
+            ->profile(EditProfil::class)
+            // MFA opsional bagi pengguna panel akun; mati bila MFA_AKTIF=false.
+            ->multiFactorAuthentication(
+                fn (): array => config('regulasi.mfa_aktif')
+                    ? [AppAuthentication::make()->recoverable()->brandName('Regulasi FKIP Unsil')]
+                    : [],
+            )
             ->brandName('Regulasi FKIP Unsil')
             ->colors([
-                'primary' => Color::Blue,
+                'primary' => Color::Indigo,
             ])
             ->topNavigation()
             ->maxContentWidth('5xl')
@@ -68,6 +76,7 @@ class AkunPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                WajibGantiSandi::class,
             ]);
     }
 }

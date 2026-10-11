@@ -1,34 +1,79 @@
 # Regulasi FKIP Unsil
 
-Repositori terpusat dokumen hukum dan dokumen pendukung bagi seluruh sistem Fakultas Keguruan dan Ilmu
-Pendidikan (FKIP) Universitas Siliwangi. Sistem ini menyimpan metadata lengkap (jenis, nomor, tahun, tentang,
-badan penetap, tanggal penetapan/pengundangan/berlaku, status berlaku, subjek, kategori sistem, abstrak),
-tautan berkas naskah (tanpa unggah ke server), relasi status antardokumen (mencabut, mengubah, melaksanakan),
-alur verifikasi sebelum terbit, pencarian teks lengkap, portal publik, dan API baca untuk sistem FKIP lain
-(Akreditasi, SDM, Persuratan, Aset/BMN, Microteaching, LMS, Keuangan, Puspresma, Kerja Sama, FKIP Edu).
-Nama "JDIH" sengaja tidak dipakai karena cakupannya lebih luas dari dokumen hukum dan sistem ini bukan portal
-JDIH resmi yang terdaftar di JDIHN.
+[![CI](https://github.com/satyasantika/regulasi/actions/workflows/ci.yml/badge.svg)](https://github.com/satyasantika/regulasi/actions/workflows/ci.yml)
+
+Repositori terpusat **dokumen hukum dan dokumen pendukung** Fakultas Keguruan dan Ilmu Pendidikan (FKIP)
+Universitas Siliwangi: undang-undang, peraturan pemerintah, peraturan menteri, peraturan BAN-PT/LAM, peraturan dan
+keputusan rektor/dekan, surat edaran, SOP, pedoman, dan manual aplikasi. Satu rujukan regulasi bagi sistem-sistem
+FKIP — Akreditasi, SDM, Persuratan, Aset/BMN, Microteaching, LMS, Keuangan, Puspresma, Kerja Sama, dan FKIP Edu.
+
+Produksi: `https://supportfkip.unsil.ac.id/regulasi`. Sistem ini bukan portal JDIH resmi (tidak terdaftar di JDIHN);
+naskah resmi tetap mengacu pada sumber penerbitnya. Skema metadata mengikuti semangat Permenkumham 8/2019 tentang
+Standar Pengelolaan Dokumen dan Informasi Hukum.
+
+## Fitur
+
+- **Metadata lengkap** per dokumen: jenis, nomor, tahun, tentang, badan penetap (T.E.U.), tempat & tanggal
+  penetapan, pengundangan, berlaku, sumber, subjek, kategori sistem, dan abstrak.
+- **Berkas berupa tautan**, tanpa unggah ke server: naskah utama, lampiran, abstrak, dan halaman sumber resmi
+  (Shared Drive fakultas atau situs pemerintah berdaftar putih), dibuka lewat rute bercatat.
+- **Alur verifikasi**: draf → menunggu verifikasi → terbit/ditolak → diarsipkan, dengan riwayat status.
+- **Relasi status simetris otomatis**: mencabut/dicabut oleh, mengubah/diubah oleh, melaksanakan/dilaksanakan oleh;
+  status berlaku diperbarui sendiri (termasuk penerapan terjadwal).
+- **Pencarian teks lengkap** Meilisearch berfaset dan toleran salah ketik, dengan cadangan FULLTEXT MariaDB;
+  teks PDF diekstraksi dari tautan secara aman (unduh sementara anti-SSRF, langsung dihapus).
+- **Portal publik** dengan landing page, daftar berfilter, detail dokumen dan pratinjau Google Drive, sitemap & SEO.
+- **API baca JSON:API v1** bertoken untuk sistem FKIP lain.
+- **Akun**: halaman masuk kiri-kanan, profil & ganti kata sandi (mengeluarkan sesi di perangkat lain), wajib ganti
+  sandi per akun, MFA aplikasi autentikator (flag `MFA_AKTIF`), impor massal pengguna lewat salin-tempel Excel, dan
+  impersonasi oleh super-admin yang tercatat.
+- **Laporan**: dasbor, statistik, kelengkapan metadata, pemanfaatan, relasi status, penggunaan API, ekspor Excel, dan
+  laporan evaluasi PDF; jejak audit seluruh perubahan; halaman eror bertema.
+
+## Peran
+
+| Peran | Akses |
+|---|---|
+| Tamu | Membaca dokumen publik yang terbit |
+| `pengguna` | Masuk dengan surel `@unsil.ac.id`; membaca dokumen internal |
+| `kontributor` | Mengisi draf dokumen dan tautan berkas pada kategori sistem yang ditugaskan |
+| `admin-regulasi` | Memverifikasi, menerbitkan, mengelola relasi & status, master data, dan laporan |
+| `super-admin` | Mengelola pengguna & peran, klien API, log aktivitas, Horizon, impersonasi |
+| Klien API | Sistem FKIP lain dengan token Sanctum (baca saja) |
+
+Panduan bergambar per peran tersedia di `public/panduan/` (tersaji di `/regulasi/panduan/`).
 
 ## Tumpukan teknologi
 
-Laravel 13 · PHP 8.5 (di container) · MariaDB 10.11 (host) · Redis 7 · Filament 5 · Livewire 4 ·
-Tailwind CSS 4 · Meilisearch + Laravel Scout · Horizon · Sanctum · Pest 4 · Larastan · Pint.
+Laravel 13 · PHP 8.5 · MariaDB 10.11 · Redis 7 · Filament 5 · Livewire 4 · Tailwind CSS 4 · Vite ·
+Meilisearch + Laravel Scout · Horizon · Sanctum · spatie/laravel-permission · spatie/laravel-activitylog ·
+poppler-utils · Pest 4 · Larastan · Pint.
 
-Penyesuaian terhadap standar paket (PHP, basis data, Docker) dicatat di `docs/keputusan/`.
+Penyesuaian terhadap standar teknis (PHP, basis data, Docker, MFA) dicatat di [`docs/keputusan/`](docs/keputusan/README.md).
 
-## Dokumen
+## Deploy
 
-Referensi dasar hukum (Perpres 33/2012, Permenkumham 8/2019) dijelaskan di `docs/referensi/README.md`.
+Produksi memakai Docker Compose (`docker-compose.prod.yml`: app, web, queue/Horizon, scheduler, MariaDB, Redis,
+Meilisearch, backup) di belakang reverse proxy subpath `/regulasi`. Rilis berjalan otomatis: push tag `vX.Y.Z` ke
+GitHub → uji penuh → server menarik tag dan menjalankan `scripts/deploy.sh` (cadangan pra-migrasi, build, health check,
+rollback cepat). Rincian, GitHub Secrets yang dibutuhkan, cadangan & pemulihan: [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
-Operasional: [`docs/DEPLOY.md`](docs/DEPLOY.md) (Docker produksi, pembaruan, rollback, reindeks),
-[`docs/KINERJA.md`](docs/KINERJA.md) (pengukuran kinerja), [`docs/api.md`](docs/api.md) (API baca v1),
-[`docs/OPERASIONAL.md`](docs/OPERASIONAL.md) (butir yang perlu tindakan/verifikasi manusia),
-[`docs/uat/hasil-uat.md`](docs/uat/hasil-uat.md) (lembar UAT; data uji: `php artisan regulasi:siapkan-uat`),
-panduan [`docs/PANDUAN-ADMIN.md`](docs/PANDUAN-ADMIN.md) dan [`docs/PANDUAN-KONTRIBUTOR.md`](docs/PANDUAN-KONTRIBUTOR.md).
+## Dokumentasi
 
-## Memulai
+- [`docs/DEPLOY.md`](docs/DEPLOY.md) — Docker produksi, auto-pull, pembaruan, rollback, cadangan, reindeks.
+- [`docs/OPERASIONAL.md`](docs/OPERASIONAL.md) — butir yang memerlukan tindakan/verifikasi manusia, status go-live.
+- [`docs/api.md`](docs/api.md) — API baca v1.
+- [`docs/KINERJA.md`](docs/KINERJA.md) — pengukuran kinerja.
+- [`docs/RELASI.md`](docs/RELASI.md) — aturan relasi status antardokumen.
+- [`docs/uat/hasil-uat.md`](docs/uat/hasil-uat.md) — lembar UAT (data uji: `php artisan regulasi:siapkan-uat`).
+- [`docs/PANDUAN-ADMIN.md`](docs/PANDUAN-ADMIN.md), [`docs/PANDUAN-KONTRIBUTOR.md`](docs/PANDUAN-KONTRIBUTOR.md),
+  dan panduan HTML di `public/panduan/`.
+- Dasar hukum rujukan (Perpres 33/2012, Permenkumham 8/2019): `docs/referensi/README.md`.
+- Riwayat rilis: [`CHANGELOG.md`](CHANGELOG.md).
 
-### Menjalankan lokal
+## Menjalankan lokal
+
+### Persiapan
 
 Infrastruktur berada di luar repo ini, di `/home/satya/code` (lihat `docs/keputusan/0001-lingkungan-dan-penyimpangan-standar.md`):
 container `regulasi-php`, `regulasi-nginx`, `regulasi-scheduler`, `regulasi-meilisearch` (berkas `docker-compose.yml`,
@@ -42,7 +87,7 @@ cd regulasi
 cp .env.example .env          # isi DB_PASSWORD dan MEILISEARCH_KEY (= REGULASI_MEILISEARCH_KEY compose)
 rgp composer install
 rgp php artisan key:generate
-rgp php artisan migrate
+rgp php artisan migrate --seed  # super-admin fkip@unsil.ac.id bila REGULASI_SUPERADMIN_PASSWORD diisi
 npm install && npm run build  # Node di host (container tidak memiliki Node); npm run dev untuk pengembangan
 ```
 
@@ -167,3 +212,12 @@ Skrip `tests/panduan/tangkap.mjs` menyimpan `public/panduan/img/<peran>/NN-<lang
 PNG palet terkompresi; kata sandi/kode MFA/token disamarkan). Teks halaman disunting langsung di `public/panduan/*.html`
 (HTML mandiri, CSS di berkas, tanpa CDN/JS, semua tautan relatif). `PanduanTest` memeriksa kelengkapan halaman,
 gambar, tautan relatif, dan ukuran total ≤ 15 MB.
+
+## Lisensi & kontak
+
+Kode aplikasi berlisensi MIT (lihat `composer.json`); naskah dokumen hukum tetap milik penerbitnya masing-masing.
+Dikembangkan untuk Fakultas Keguruan dan Ilmu Pendidikan, Universitas Siliwangi, Tasikmalaya.
+
+- Konten & verifikasi dokumen: Admin Regulasi FKIP — regulasi-fkip@unsil.ac.id
+- Akun, MFA, dan server: Admin TI Fakultas
+- Pengelola repositori: Satya Santika

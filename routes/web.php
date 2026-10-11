@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ImpersonasiController;
 use App\Http\Controllers\Laporan\UnduhEksporController;
 use App\Http\Controllers\Laporan\UnduhLaporanEvaluasiController;
 use App\Http\Controllers\Publik\BukaTautanController;
@@ -41,3 +42,8 @@ Route::get('/laporan-evaluasi/{laporanEvaluasi}/pdf', UnduhLaporanEvaluasiContro
     ->whereUuid('laporanEvaluasi')
     ->middleware('auth')
     ->name('laporan-evaluasi.pdf');
+
+// Akhiri impersonasi super-admin (dimulai dari aksi tabel Pengguna; tercatat di log aktivitas).
+Route::post('/impersonasi/berhenti', [ImpersonasiController::class, 'berhenti'])
+    ->middleware('auth')
+    ->name('impersonasi.berhenti');

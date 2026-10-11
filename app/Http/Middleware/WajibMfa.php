@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Support\Impersonasi;
 use Closure;
 use Filament\Auth\MultiFactor\MultiFactorChallenge;
 use Filament\Facades\Filament;
@@ -19,7 +20,7 @@ class WajibMfa
     {
         $pengguna = Filament::auth()->user();
 
-        if ($pengguna instanceof User && $pengguna->wajibMfa() && ! MultiFactorChallenge::make()->hasEnabledProviders($pengguna)) {
+        if (! Impersonasi::aktif() && $pengguna instanceof User && $pengguna->wajibMfa() && ! MultiFactorChallenge::make()->hasEnabledProviders($pengguna)) {
             return redirect()->guest(Filament::getSetUpRequiredMultiFactorAuthenticationUrl());
         }
 

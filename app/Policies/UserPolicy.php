@@ -40,6 +40,17 @@ class UserPolicy
     }
 
     /**
+     * Impersonasi: hanya super-admin, bukan diri sendiri, bukan super-admin lain, dan akun sasaran aktif.
+     */
+    public function impersonate(User $user, User $model): bool
+    {
+        return $user->hasRole(Peran::SuperAdmin->value)
+            && $user->isNot($model)
+            && ! $model->hasRole(Peran::SuperAdmin->value)
+            && $model->aktif;
+    }
+
+    /**
      * Tidak ada hapus permanen; gunakan aktif = false.
      */
     public function delete(User $user, User $model): bool

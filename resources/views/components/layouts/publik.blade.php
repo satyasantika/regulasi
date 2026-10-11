@@ -20,6 +20,7 @@
     @livewireStyles
 </head>
 <body class="flex min-h-screen flex-col bg-slate-50 font-sans text-slate-800 antialiased">
+@include('impersonasi.spanduk')
 <a href="#konten" class="sr-only z-50 rounded-md bg-white px-4 py-2 font-semibold text-indigo-900 shadow focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
     Lewati ke konten utama
 </a>

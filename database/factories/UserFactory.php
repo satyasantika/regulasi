@@ -35,6 +35,7 @@ class UserFactory extends Factory
             'kode_eksternal' => null,
             'aktif' => true,
             'terakhir_masuk_pada' => null,
+            'wajib_ganti_sandi' => false,
         ];
     }
 
@@ -45,6 +46,16 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'aktif' => false,
+        ]);
+    }
+
+    /**
+     * Pengguna yang wajib mengganti kata sandi pada kesempatan pertama.
+     */
+    public function wajibGantiSandi(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'wajib_ganti_sandi' => true,
         ]);
     }
 

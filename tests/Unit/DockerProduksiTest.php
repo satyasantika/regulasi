@@ -91,7 +91,7 @@ test('contoh .env.production memakai subpath, cookie aman, debug mati, dan tanpa
 
     expect($env)->toContain('APP_ENV=production')
         ->toContain('APP_DEBUG=false')
-        ->toContain('APP_VERSION=1.0.0')
+        ->toContain('APP_VERSION=1.1.0')
         ->toContain('APP_URL=https://supportfkip.unsil.ac.id/regulasi')
         ->toContain('ASSET_URL=https://supportfkip.unsil.ac.id/regulasi')
         ->toContain('SESSION_PATH=/regulasi')
@@ -99,8 +99,9 @@ test('contoh .env.production memakai subpath, cookie aman, debug mati, dan tanpa
         ->toContain('SESSION_SECURE_COOKIE=true')
         ->toContain('MEILISEARCH_HOST=http://meilisearch:7700')
         ->toContain('REGULASI_FT_MIN_TOKEN=2')
+        ->toContain('MFA_AKTIF=true')
         ->not->toMatch('/^TRUSTED_PROXIES=\*/m')
-        ->not->toMatch('/^(APP_KEY|DB_PASSWORD|DB_ROOT_PASSWORD|REDIS_PASSWORD|MAIL_PASSWORD|MEILISEARCH_KEY|SEED_SUPERADMIN_PASSWORD)=\S/m');
+        ->not->toMatch('/^(APP_KEY|DB_PASSWORD|DB_ROOT_PASSWORD|REDIS_PASSWORD|MAIL_PASSWORD|MEILISEARCH_KEY|REGULASI_SUPERADMIN_PASSWORD)=\S/m');
 });
 
 test('cadangan harian 02:00 WIB dengan retensi 30 hari, log, dan pemulihan menolak produksi', function () use ($akar) {
@@ -125,4 +126,32 @@ test('cadangan harian 02:00 WIB dengan retensi 30 hari, log, dan pemulihan menol
     expect((string) file_get_contents($akar.'/docker/backup/pulihkan-uji.sh'))
         ->toContain('regulasi:reindeks --hapus')
         ->toContain('berkas:periksa-tautan');
+});
+
+test('auto-pull: deploy dipicu tag rilis, lolos uji penuh, dan skrip rilis menjaga cadangan, kesehatan, rollback', function () use ($akar) {
+    $alur = (string) file_get_contents($akar.'/.github/workflows/deploy.yml');
+    $ci = (string) file_get_contents($akar.'/.github/workflows/ci.yml');
+    $skrip = (string) file_get_contents($akar.'/scripts/deploy.sh');
+
+    expect($alur)->toContain("tags: [ 'v[0-9]+.[0-9]+.[0-9]+' ]")
+        ->toContain('needs: uji')
+        ->toContain('uses: ./.github/workflows/ci.yml')
+        ->toContain('cancel-in-progress: false')
+        ->toContain('secrets.SSH_PRIVATE_KEY')
+        ->toContain('cd ~/docker-apps/regulasi')
+        ->toContain('git fetch --tags')
+        ->toContain('bash scripts/deploy.sh')
+        ->not->toContain('branches:')
+        ->not->toMatch('/BEGIN [A-Z ]*PRIVATE KEY/')
+        ->and($ci)->toContain('workflow_call:')->toContain('scripts/*.sh')
+        ->and($skrip)->toContain('set -euo pipefail')
+        ->toContain('IMAGE_APP="regulasi-app"')
+        ->toContain('git merge-base --is-ancestor')
+        ->toContain('backup.sh')
+        ->toContain('/api/health')
+        ->toContain('horizon:terminate')
+        ->toContain('--rollback')
+        ->toContain('--no-build')
+        ->not->toContain('--no-verify')
+        ->and(is_executable($akar.'/scripts/deploy.sh'))->toBeTrue();
 });

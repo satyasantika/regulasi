@@ -99,7 +99,9 @@ class AppServiceProvider extends ServiceProvider
         ]);
 
         // Super-admin lolos semua Gate/Policy (03-SKEMA §4.1).
-        Gate::before(fn (User $user): ?bool => $user->hasRole(Peran::SuperAdmin->value) ? true : null);
+        // Super-admin lolos semua gate, kecuali impersonasi yang batasannya (bukan diri sendiri/super-admin lain/nonaktif)
+        // tetap diperiksa UserPolicy::impersonate.
+        Gate::before(fn (User $user, string $kemampuan): ?bool => $kemampuan !== 'impersonate' && $user->hasRole(Peran::SuperAdmin->value) ? true : null);
         Gate::policy(Aktivitas::class, ActivityPolicy::class);
 
         // Rate limit buka tautan 30/menit per pengguna atau IP (02-ARSITEKTUR §3.4, BR-17).

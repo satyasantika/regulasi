@@ -27,6 +27,8 @@ Rujukan langkah teknis: `docs/DEPLOY.md`; skenario uji: `docs/uat/hasil-uat.md`;
 | ☐ | **Kartu aplikasi di landing supportfkip** | Tambah tautan `regulasi/` dan `regulasi/panduan/` di `index.html` akar supportfkip (PG-01) | TI fakultas |
 | ☐ | **Cadangan di luar server** | Salin `./backup/mariadb` ke penyimpanan lain; uji pulih pertama dicatat (docs/DEPLOY.md §Uji pulih semester, G-11) | TI fakultas |
 | ☐ | **Pemindaian port** | Pastikan hanya `WEB_PORT` terbuka untuk proxy; MariaDB/Redis/Meilisearch tidak terjangkau dari luar (KM-13) | TI fakultas |
+| ☐ | **Super-admin awal `fkip@unsil.ac.id`** | Isi `REGULASI_SUPERADMIN_PASSWORD` di `.env.production` (jangan di repo), `db:seed --force`, masuk pertama: pasang MFA lalu ganti kata sandi awal (akun ditandai wajib ganti sandi). Setelah itu kosongkan kembali nilai sandi di `.env.production` bila diinginkan — seeder tidak menimpa akun yang sudah ada | Super Admin / TI fakultas |
+| ☐ | **Flag `MFA_AKTIF`** | Bawaan `true` (wajib MFA bagi super-admin & admin-regulasi). Mematikan (`MFA_AKTIF=false`) adalah keputusan pemilik sistem; catat tanggal, alasan, dan tanggal dinyalakan kembali di tabel ini. Risiko & rekomendasi: `docs/keputusan/0002-flag-mfa-aktif.md` | Pemilik sistem |
 | ☐ | **SMTP kampus** | Isi `MAIL_*`, uji surel atur kata sandi, notifikasi tolak/terbit, ringkasan mingguan | TI fakultas |
 | ☐ | **Uptime monitor** | Pantau `https://supportfkip.unsil.ac.id/regulasi/api/health` (G-12) | TI fakultas |
 
@@ -36,7 +38,7 @@ Rujukan langkah teknis: `docs/DEPLOY.md`; skenario uji: `docs/uat/hasil-uat.md`;
 |---|---|---|
 | ☐ | **Klien API uji di DB dev** | `db_regulasi` memuat satu klien API uji lokal (dibuat saat F9 untuk mencoba API). Cabut tokennya / hapus klien bila tidak dipakai; jangan disalin ke produksi |
 | ☐ | **Akun demo panduan** | `PanduanSeeder` (F12.6, hanya `APP_ENV=local`) membuat akun `panduan.<peran>@contoh.test` (tanpa MFA khusus akun demo lokal) dan data rekaan berlabel "(Contoh Panduan)". Dijalankan dengan `migrate:fresh` — pakai DB lokal/khusus. Tangkapan layar v1.0.0 dibuat dari DB terpisah `db_regulasi_panduan` (sudah dihapus); `db_regulasi` dev tidak diubah |
-| ☐ | **Remote git belum ada** | Repositori hanya lokal (branch per fase + tag `v0.1.0`…`v1.0.0`). Buat remote privat `regulasi-fkip`, `git push -u origin main --tags`, aktifkan proteksi branch `main` (wajib PR + CI hijau). Workflow `.github/workflows/ci.yml` & `docker.yml` aktif setelah itu |
+| ☐ | **Remote GitHub & auto-pull** | Remote `https://github.com/satyasantika/regulasi.git` (belum di-push dari mesin pengembang). Manusia: `git push -u origin main --tags`, proteksi branch `main` (wajib PR + CI hijau), isi GitHub Secrets `SERVER_HOST`, `SERVER_USER`, `SSH_PRIVATE_KEY` (opsional `SERVER_PORT`), siapkan clone + deploy key di server. Lihat docs/DEPLOY.md "Auto-pull dari GitHub" |
 | ☐ | **Image uji lokal** | Uji build menyisakan image `regulasi-app:uji`, `regulasi-web:uji`, `regulasi-backup:uji` di Docker lokal; hapus bila tidak perlu (`docker image rm …`) |
 
 ## 4. Go-live (05-UJI §4) — status per 10 Oktober 2026

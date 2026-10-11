@@ -7,6 +7,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
+  workflow_call:
 
 jobs:
   uji:
@@ -65,6 +66,9 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate
+
+      - name: Shellcheck skrip rilis, docker & cadangan
+        run: shellcheck --severity=warning scripts/*.sh docker/entrypoint.sh docker/backup/*.sh
 
       - name: Pint
         run: ./vendor/bin/pint --test
