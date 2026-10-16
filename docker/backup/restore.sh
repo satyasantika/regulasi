@@ -3,7 +3,7 @@
 # Pemakaian: restore.sh <YYYY-MM-DD | berkas.sql.gz> [--paksa]
 #   <YYYY-MM-DD>   memakai dump terbaru di $BACKUP_DIR/<tanggal>/
 # Menolak berjalan bila APP_ENV=production kecuali --paksa. Basis data tujuan = DB_DATABASE.
-# Setelah pulih jalankan di container app: php artisan regulasi:reindeks --hapus && php artisan berkas:periksa-tautan
+# Setelah pulih jalankan di container app: php artisan regulasi:bangun-kamus && php artisan berkas:periksa-tautan
 # (skrip docker/backup/pulihkan-uji.sh melakukannya otomatis untuk compose produksi).
 set -eu
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Uji pulih (host): pulihkan cadangan ke basis data UJI lewat service backup compose produksi, lalu bangun ulang
-# indeks pencarian dan periksa tautan di container app yang menunjuk basis data uji.
+# kamus pencarian dan periksa tautan di container app yang menunjuk basis data uji.
 # Pemakaian (dari root repo di server/staging): docker/backup/pulihkan-uji.sh <YYYY-MM-DD> [db_uji]
 # Jangan jalankan terhadap basis data produksi: DB tujuan bawaan "regulasi_pulih".
 set -eu
@@ -15,9 +15,8 @@ if [ "$DB_UJI" = "$(grep -E '^DB_DATABASE=' .env.production | cut -d= -f2)" ]; t
 fi
 
 $C exec -T -e DB_DATABASE="$DB_UJI" -e APP_ENV=testing backup /usr/local/bin/restore.sh "$TANGGAL"
-# Kredensial root (backup) diperlukan karena DB uji berbeda dari DB aplikasi.
-$C run --rm -T -e DB_DATABASE="$DB_UJI" -e DB_USERNAME=root -e DB_PASSWORD="$(grep -E '^DB_ROOT_PASSWORD=' .env.production | cut -d= -f2)" \
-    -e SCOUT_PREFIX=pulih_ -e QUEUE_CONNECTION=sync -e RUN_MIGRATIONS=false app sh -c '
-        php artisan regulasi:reindeks --hapus &&
+# restore.sh membuat DB uji bila pengguna aplikasi berhak; bila tidak, minta pemilik server membuatnya lebih dulu.
+$C run --rm -T -e DB_DATABASE="$DB_UJI" -e QUEUE_CONNECTION=sync -e RUN_MIGRATIONS=false app sh -c '
+        php artisan regulasi:bangun-kamus &&
         php artisan berkas:periksa-tautan'
-echo "Bandingkan jumlah dengan produksi, cek pencarian, lalu hapus DB uji: DROP DATABASE \`$DB_UJI\`; dan indeks pulih_dokumen."
+echo "Bandingkan jumlah dengan produksi dan cek pencarian; hapus DB uji \`$DB_UJI\` secara manual bila sudah tidak diperlukan."

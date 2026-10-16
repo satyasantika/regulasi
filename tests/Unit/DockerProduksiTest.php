@@ -1,5 +1,7 @@
 <?php
 
+use Symfony\Component\Yaml\Yaml;
+
 /**
  * Berkas Docker produksi (F12.3): image app/web, compose, entrypoint, dan contoh .env.production.
  */
@@ -18,7 +20,8 @@ test('image produksi memuat poppler-utils, ekstensi wajib, user non-root, dan op
 
     expect($dockerfile)->toContain('poppler-utils')
         ->toContain('pdo_mysql intl bcmath gd zip pcntl')
-        ->toContain('pecl install redis')
+        ->not->toMatch('/redis|horizon/i')
+        ->toContain('ARG PHP_VERSION=8.5')
         ->toContain('opcache')
         ->toContain('composer install --no-dev')
         ->toContain('npm run build')
@@ -31,34 +34,48 @@ test('image produksi memuat poppler-utils, ekstensi wajib, user non-root, dan op
         ->toContain('expose_php = Off');
 });
 
-test('compose produksi memuat app, web, queue (horizon), scheduler, mariadb, redis AOF, dan meilisearch dipin', function () use ($akar) {
-    $compose = (string) file_get_contents($akar.'/docker-compose.prod.yml');
+test('compose produksi hanya memuat app, web, scheduler, dan backup tanpa container database', function () use ($akar) {
+    $kompos = Yaml::parseFile($akar.'/docker-compose.prod.yml');
+    $mentah = (string) file_get_contents($akar.'/docker-compose.prod.yml');
 
-    foreach (['app:', 'web:', 'queue:', 'scheduler:', 'mariadb:', 'redis:', 'meilisearch:', 'backup:'] as $layanan) {
-        expect($compose)->toContain("\n  {$layanan}");
+    expect(array_keys($kompos['services']))->toEqualCanonicalizing(['app', 'web', 'scheduler', 'backup']);
+
+    foreach (['queue', 'redis', 'mariadb', 'mysql', 'db', 'meilisearch'] as $layanan) {
+        expect($kompos['services'])->not->toHaveKey($layanan);
     }
 
-    expect($compose)->toContain('"php", "artisan", "horizon"')
-        ->toContain('"php", "artisan", "schedule:work"')
-        ->toContain('image: mariadb:10.11')
-        ->toContain('image: redis:7-alpine')
-        ->toContain('"--appendonly", "yes"')
-        ->toContain('image: getmeili/meilisearch:v1.54')
-        ->toContain('MEILI_ENV: production')
-        ->toContain('MEILI_MASTER_KEY: ${MEILISEARCH_KEY')
-        ->toContain('tmp:/var/www/html/storage/app/tmp')
-        ->toContain('/api/health')
-        ->toContain('env_file: .env.production')
-        ->not->toContain('getmeili/meilisearch:latest')
-        ->not->toContain('7700:7700');
+    foreach (['mariadb', 'redis', 'meilisearch'] as $volume) {
+        expect($kompos['volumes'])->not->toHaveKey($volume);
+    }
+
+    // hasil parse (tanpa komentar): tidak ada image/perintah Redis, Horizon, atau Meilisearch, dan tidak ada image server DB
+    expect(json_encode($kompos))->not->toMatch('/horizon|redis|meili|image":"(mariadb|mysql)/i')
+        ->and($kompos['services']['scheduler']['command'])->toBe(['php', 'artisan', 'schedule:work'])
+        ->and($kompos['services']['scheduler']['stop_grace_period'])->toBe('60s')
+        ->and($kompos['services']['scheduler'])->not->toHaveKey('depends_on')
+        ->and($kompos['services']['web']['healthcheck']['test'][1])->toContain('/api/health')
+        ->and($mentah)->toContain('env_file: .env.production')
+        ->toContain('tmp:/var/www/html/storage/app/tmp');
 });
 
-test('mariadb produksi memakai token FULLTEXT 2 huruf tanpa stopword', function () use ($akar) {
-    $cnf = (string) file_get_contents($akar.'/docker/mariadb/regulasi.cnf');
+test('semua container terhubung ke basis data host lewat host-gateway, berbatas memori, dan lognya dirotasi', function () use ($akar) {
+    $kompos = Yaml::parseFile($akar.'/docker-compose.prod.yml');
 
-    expect($cnf)->toContain('innodb_ft_min_token_size = 2')
-        ->toContain('innodb_ft_enable_stopword = 0')
-        ->toContain('character-set-server = utf8mb4');
+    foreach (['app', 'scheduler', 'backup'] as $nama) {
+        expect($kompos['services'][$nama]['extra_hosts'])->toContain('host.docker.internal:host-gateway');
+    }
+
+    foreach ($kompos['services'] as $nama => $layanan) {
+        expect($layanan)->toHaveKey('mem_limit')
+            ->and($layanan['logging']['driver'])->toBe('json-file')
+            ->and($layanan['logging']['options'])->toBe(['max-size' => '10m', 'max-file' => '3']);
+    }
+
+    expect($kompos['services']['backup']['environment']['DB_HOST'])->toBe('host.docker.internal');
+});
+
+test('docker/mariadb dihapus: setelan FULLTEXT server kini milik pemilik server MariaDB host', function () use ($akar) {
+    expect(file_exists($akar.'/docker/mariadb/regulasi.cnf'))->toBeFalse();
 });
 
 test('entrypoint menunggu DB, bermigrasi hanya bila RUN_MIGRATIONS=true, dan menyiapkan cache', function () use ($akar) {
@@ -70,7 +87,8 @@ test('entrypoint menunggu DB, bermigrasi hanya bila RUN_MIGRATIONS=true, dan men
         ->toContain('php artisan optimize')
         ->toContain('php artisan filament:optimize')
         ->toContain('php artisan icons:cache')
-        ->toContain('php artisan scout:sync-index-settings')
+        ->toContain('php artisan regulasi:bangun-kamus')
+        ->not->toContain('scout:sync-index-settings')
         ->not->toMatch('/^\s*php artisan storage:link/m')
         ->and(is_executable($akar.'/docker/entrypoint.sh'))->toBeTrue();
 });
@@ -101,8 +119,11 @@ test('contoh .env.production memakai subpath, cookie aman, debug mati, dan tanpa
         ->not->toContain('MEILISEARCH')
         ->toContain('REGULASI_FT_MIN_TOKEN=3')
         ->toContain('MFA_AKTIF=true')
+        ->toContain("\nDB_HOST=host.docker.internal\n")
+        ->toContain("\nDB_DATABASE=db_regulasi\n")
+        ->not->toMatch('/^(REDIS_|HORIZON_|MARIADB_|DB_ROOT_PASSWORD|MEILISEARCH)/m')
         ->not->toMatch('/^TRUSTED_PROXIES=\*/m')
-        ->not->toMatch('/^(APP_KEY|DB_PASSWORD|DB_ROOT_PASSWORD|REDIS_PASSWORD|MAIL_PASSWORD|MEILISEARCH_KEY|REGULASI_SUPERADMIN_PASSWORD)=\S/m');
+        ->not->toMatch('/^(APP_KEY|DB_PASSWORD|REDIS_PASSWORD|MAIL_PASSWORD|MEILISEARCH_KEY|REGULASI_SUPERADMIN_PASSWORD)=\S/m');
 });
 
 test('cadangan harian 02:00 WIB dengan retensi 30 hari, log, dan pemulihan menolak produksi', function () use ($akar) {
@@ -125,7 +146,9 @@ test('cadangan harian 02:00 WIB dengan retensi 30 hari, log, dan pemulihan menol
     }
 
     expect((string) file_get_contents($akar.'/docker/backup/pulihkan-uji.sh'))
-        ->toContain('regulasi:reindeks --hapus')
+        ->toContain('regulasi:bangun-kamus')
+        ->not->toContain('regulasi:reindeks')
+        ->not->toContain('DB_ROOT_PASSWORD')
         ->toContain('berkas:periksa-tautan');
 });
 
@@ -150,7 +173,8 @@ test('auto-pull: deploy dipicu tag rilis, lolos uji penuh, dan skrip rilis menja
         ->toContain('git merge-base --is-ancestor')
         ->toContain('backup.sh')
         ->toContain('/api/health')
-        ->toContain('horizon:terminate')
+        ->toContain('queue:restart')
+        ->not->toContain('horizon')
         ->toContain('--rollback')
         ->toContain('--no-build')
         ->not->toContain('--no-verify')

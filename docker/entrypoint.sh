@@ -1,7 +1,7 @@
 #!/bin/sh
-# Entrypoint container app/queue/scheduler Regulasi FKIP Unsil.
-# - Menunggu basis data siap (maks. DB_TUNGGU_DETIK, bawaan 60).
-# - Migrasi & sinkron pengaturan indeks Meilisearch hanya bila RUN_MIGRATIONS=true (container app).
+# Entrypoint container app/scheduler Regulasi FKIP Unsil.
+# - Menunggu basis data siap di host (maks. DB_TUNGGU_DETIK, bawaan 60).
+# - Migrasi & pembangunan kamus istilah pencarian hanya bila RUN_MIGRATIONS=true (container app).
 # - Cache config/route/view/event + komponen Filament & ikon. storage:link TIDAK dipakai (tidak ada berkas publik).
 set -eu
 
@@ -27,9 +27,9 @@ php artisan icons:cache
 
 if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
     php artisan migrate --force --no-interaction
-    # Pengaturan indeks (filter, sort, sinonim). Gagal tidak menghentikan aplikasi: pencarian memakai cadangan
-    # FULLTEXT sampai Meilisearch sehat (02-ARSITEKTUR §5.2).
-    php artisan scout:sync-index-settings || echo "Peringatan: scout:sync-index-settings gagal; jalankan ulang setelah Meilisearch sehat." >&2
+    # Kamus istilah (koreksi salah ketik, sinonim). Gagal tidak menghentikan aplikasi: pencarian FULLTEXT tetap
+    # berjalan tanpa koreksi sampai kamus terbangun (02-ARSITEKTUR §5.1).
+    php artisan regulasi:bangun-kamus || echo "Peringatan: regulasi:bangun-kamus gagal; jalankan ulang secara manual." >&2
 fi
 
 exec "$@"
