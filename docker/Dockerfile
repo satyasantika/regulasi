@@ -44,7 +44,7 @@ COPY app/Livewire ./app/Livewire
 COPY --from=vendor /var/www/html/vendor/laravel/framework/src/Illuminate/Pagination/resources/views ./vendor/laravel/framework/src/Illuminate/Pagination/resources/views
 RUN npm run build
 
-# ---------- app: PHP-FPM (juga dipakai queue/Horizon & scheduler) ----------
+# ---------- app: PHP-FPM (juga dipakai scheduler dan worker antrean) ----------
 FROM base AS app
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY --chown=www-data:www-data . .

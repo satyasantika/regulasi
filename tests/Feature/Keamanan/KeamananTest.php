@@ -42,7 +42,7 @@ function tautanKeamanan(Dokumen $dokumen, string $id = '1KeamananUjiTautanBerkas
     ]);
 }
 
-test('header keamanan dan CSP terpasang di portal, panel, horizon, dan API', function (string $path, bool $superAdmin) {
+test('header keamanan dan CSP terpasang di portal, panel, dan API', function (string $path, bool $superAdmin) {
     if ($superAdmin) {
         $this->actingAs(penggunaDenganPeran(Peran::SuperAdmin));
     }
@@ -70,7 +70,6 @@ test('header keamanan dan CSP terpasang di portal, panel, horizon, dan API', fun
     'masuk admin' => ['/admin/login', false],
     'masuk akun' => ['/akun/login', false],
     'admin' => ['/admin', true],
-    'horizon' => ['/horizon', true],
     'kesehatan api' => ['/api/health', false],
 ]);
 

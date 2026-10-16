@@ -3,7 +3,7 @@
 it('hanya memakai antrean default dan berat', function () {
     $diizinkan = ['default', 'berat'];
 
-    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(app_path())) as $berkas) {
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__, 2).'/app')) as $berkas) {
         if ($berkas->getExtension() !== 'php') {
             continue;
         }
@@ -13,13 +13,13 @@ it('hanya memakai antrean default dan berat', function () {
         preg_match_all('/function getJobQueue\(\)[^{]*\{\s*return\s*[\'"]([^\'"]+)[\'"]/', $isi, $cocok2);
 
         foreach (array_merge($cocok[1], $cocok2[1]) as $nama) {
-            expect($nama)->toBeIn($diizinkan, str_replace(app_path().'/', '', $berkas->getPathname())." memakai antrean '{$nama}'");
+            expect($nama)->toBeIn($diizinkan, str_replace(dirname(__DIR__, 2).'/app'.'/', '', $berkas->getPathname())." memakai antrean '{$nama}'");
         }
     }
 });
 
 it('tidak memakai Redis di kode aplikasi', function () {
-    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(app_path())) as $berkas) {
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(dirname(__DIR__, 2).'/app')) as $berkas) {
         if ($berkas->getExtension() !== 'php') {
             continue;
         }

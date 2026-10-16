@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Header keamanan global (02-ARSITEKTUR §8, F12.1, KM-08). CSP kompatibel Filament/Livewire/Alpine (skrip inline &
  * evaluasi Alpine); sematan hanya dari Google Drive/Docs (pratinjau naskah, F8.3); halaman aplikasi (termasuk
- * /admin dan /horizon) tidak dapat disematkan situs lain (X-Frame-Options + frame-ancestors). HSTS hanya di produksi
+ * /admin) tidak dapat disematkan situs lain (X-Frame-Options + frame-ancestors). HSTS hanya di produksi
  * (HTTPS diakhiri reverse proxy kampus). Referrer-Policy yang sudah dipasang rute (mis. no-referrer pada
  * /d/{id}/buka) tidak ditimpa.
  */

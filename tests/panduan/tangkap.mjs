@@ -118,7 +118,6 @@ const ALUR = {
         ['buat-pengguna', (p) => buka(p, '/admin/pengguna/create'), { penuh: true }],
         ['klien-api', (p) => bukaTautan(p, '/admin/klien-api', '/admin/klien-api/', 'Sistem Aset'), { penuh: true }],
         ['log-aktivitas', (p) => buka(p, '/admin/log-aktivitas')],
-        ['horizon', (p) => buka(p, '/horizon')],
     ],
 };
 
