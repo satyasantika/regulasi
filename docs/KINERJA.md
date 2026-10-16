@@ -3,6 +3,12 @@
 Catatan pengukuran F12.2 (04-PROMPT-BERTAHAP). Target: beranda (cache hangat) < 300 ms dan `/dokumen` berfilter
 < 500 ms pada 5.000 dokumen di lingkungan lokal.
 
+> **Catatan Profil Ringan (menunggu pemilik):** pengukuran di bawah dilakukan pada kondisi saat ini (Meilisearch +
+> Redis). Profil Ringan berlaku setelah Fase B, dengan pencarian Scout driver `database` + kamus istilah; angka
+> "Cadangan FULLTEXT" di bawah adalah rujukan terdekat. Angka target tidak diubah di dokumen ini. Agen sebelumnya
+> mengubah target kinerja pencarian dari < 200 ms menjadi < 500 ms (terlihat di PRD); perubahan itu **menunggu
+> persetujuan pemilik** dan belum boleh dianggap final. Ukur ulang setelah Fase B.
+
 ## Lingkungan pengukuran
 
 - Tanggal: 10 Oktober 2026, mesin pengembang (WSL2), container `regulasi-php` (PHP 8.5-FPM, OPcache CLI mati,

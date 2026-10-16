@@ -5,6 +5,24 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+### Diubah
+- Dokumentasi diselaraskan dengan Profil Ringan (STANDAR-TEKNIS §1b, keputusan 15 Oktober 2026): README, DEPLOY,
+  OPERASIONAL, KINERJA, dan docs/keputusan diberi penanda "Profil Ringan berlaku setelah Fase B; kondisi saat ini: ...".
+  Tanpa perubahan kode. Target kinerja pencarian < 200 ms menjadi < 500 ms (oleh agen sebelumnya) menunggu persetujuan pemilik.
+
+### Diubah (16 Oktober 2026)
+- Dokumentasi diselaraskan dengan keputusan pemilik 16 Oktober 2026: PHP 8.5; basis data MariaDB 10.11+ native di host
+  (bukan MySQL 8.4, bukan container); SQLite tidak dipakai; kolasi bawaan `utf8mb4_unicode_ci`. Paket vibecoding
+  (PRD, arsitektur, skema, prompt bertahap, uji penerimaan, CLAUDE.md), README, DEPLOY, dan ADR 0001/indeks ADR
+  disesuaikan; ADR 0001 kini sejalan dengan standar. Tanpa perubahan kode.
+
+### Diubah (16 Oktober 2026, lanjutan)
+- Dokumentasi diselaraskan dengan keputusan pemilik lanjutan (ADR 0003): nama database seragam `db_regulasi`/`db_regulasi_testing`
+  (paket vibecoding, CLAUDE.md); tipe kolom UUID mengikuti Blueprint Laravel 13 (tipe `UUID` native MariaDB, bukan `CHAR(36)`;
+  skema 03 diperbarui; gerbang uji UUID ditambahkan); produksi memakai MariaDB native di host lewat `host.docker.internal`
+  (service `mariadb` di compose produksi ditandai Fase B); `composer.json` `^8.5` ditandai Fase B; nama antrean lama
+  `tautan`/`ekstraksi`/`ekspor` dipetakan ke `default`/`berat`. Tanpa perubahan kode.
+
 ## [1.1.0] - 2026-10-12
 
 ### Ditambahkan

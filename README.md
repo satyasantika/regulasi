@@ -5,7 +5,7 @@
 Repositori terpusat **dokumen hukum dan dokumen pendukung** Fakultas Keguruan dan Ilmu Pendidikan (FKIP)
 Universitas Siliwangi: undang-undang, peraturan pemerintah, peraturan menteri, peraturan BAN-PT/LAM, peraturan dan
 keputusan rektor/dekan, surat edaran, SOP, pedoman, dan manual aplikasi. Satu rujukan regulasi bagi sistem-sistem
-FKIP — Akreditasi, SDM, Persuratan, Aset/BMN, Microteaching, LMS, Keuangan, Puspresma, Kerja Sama, dan FKIP Edu.
+FKIP — Akreditasi, SDM, Persuratan, Aset/BMN, Microteaching, Keuangan, Puspresma, Kerja Sama, dan FKIP Edu (LMS ditunda).
 
 Produksi: `https://supportfkip.unsil.ac.id/regulasi`. Sistem ini bukan portal JDIH resmi (tidak terdaftar di JDIHN);
 naskah resmi tetap mengacu pada sumber penerbitnya. Skema metadata mengikuti semangat Permenkumham 8/2019 tentang
@@ -20,8 +20,9 @@ Standar Pengelolaan Dokumen dan Informasi Hukum.
 - **Alur verifikasi**: draf → menunggu verifikasi → terbit/ditolak → diarsipkan, dengan riwayat status.
 - **Relasi status simetris otomatis**: mencabut/dicabut oleh, mengubah/diubah oleh, melaksanakan/dilaksanakan oleh;
   status berlaku diperbarui sendiri (termasuk penerapan terjadwal).
-- **Pencarian teks lengkap** Meilisearch berfaset dan toleran salah ketik, dengan cadangan FULLTEXT MariaDB;
-  teks PDF diekstraksi dari tautan secara aman (unduh sementara anti-SSRF, langsung dihapus).
+- **Pencarian teks lengkap** berfaset dan toleran salah ketik. Target (Profil Ringan): Scout driver `database`
+  (FULLTEXT) + kamus istilah, Meilisearch hanya cadangan. Kondisi saat ini: Meilisearch dengan cadangan FULLTEXT
+  MariaDB; teks PDF diekstraksi dari tautan secara aman (unduh sementara anti-SSRF, langsung dihapus).
 - **Portal publik** dengan landing page, daftar berfilter, detail dokumen dan pratinjau Google Drive, sitemap & SEO.
 - **API baca JSON:API v1** bertoken untuk sistem FKIP lain.
 - **Akun**: halaman masuk kiri-kanan, profil & ganti kata sandi (mengeluarkan sesi di perangkat lain), wajib ganti
@@ -38,25 +39,50 @@ Standar Pengelolaan Dokumen dan Informasi Hukum.
 | `pengguna` | Masuk dengan surel `@unsil.ac.id`; membaca dokumen internal |
 | `kontributor` | Mengisi draf dokumen dan tautan berkas pada kategori sistem yang ditugaskan |
 | `admin-regulasi` | Memverifikasi, menerbitkan, mengelola relasi & status, master data, dan laporan |
-| `super-admin` | Mengelola pengguna & peran, klien API, log aktivitas, Horizon, impersonasi |
+| `super-admin` | Mengelola pengguna & peran, klien API, log aktivitas, impersonasi (dasbor Horizon hanya ada pada kondisi saat ini; hilang di Profil Ringan) |
 | Klien API | Sistem FKIP lain dengan token Sanctum (baca saja) |
 
 Panduan bergambar per peran tersedia di `public/panduan/` (tersaji di `/regulasi/panduan/`).
 
 ## Tumpukan teknologi
 
-Laravel 13 · PHP 8.5 · MariaDB 10.11 · Redis 7 · Filament 5 · Livewire 4 · Tailwind CSS 4 · Vite ·
-Meilisearch + Laravel Scout · Horizon · Sanctum · spatie/laravel-permission · spatie/laravel-activitylog ·
-poppler-utils · Pest 4 · Larastan · Pint.
+**Kondisi saat ini (kode berjalan):** Laravel 13 · PHP 8.5 · MariaDB 10.11 · Redis 7 · Filament 5 · Livewire 4 ·
+Tailwind CSS 4 · Vite · Meilisearch + Laravel Scout · Horizon · Sanctum · spatie/laravel-permission ·
+spatie/laravel-activitylog · poppler-utils · Pest 4 · Larastan · Pint.
+
+**Target Profil Ringan (berlaku setelah Fase B):** tanpa Redis, Horizon, Octane, dan Meilisearch bawaan; antrean,
+cache, sesi, dan lock di MariaDB (driver `database`); pencarian Scout driver `database` + kamus istilah; kesehatan lewat
+`/api/health`; dua antrean (`default`, `berat`); tidak ada dasbor antrean. Standar (diperbarui keputusan 16 Oktober 2026) menetapkan PHP 8.5, MariaDB 10.11+ native di host (dev dan produksi,
+nama database `db_<app>`), dan kolom UUID tipe native MariaDB lewat Blueprint Laravel. Image yang berjalan sudah PHP 8.5.11,
+tetapi `composer.json` masih `"php": "^8.3"` (butir Fase B: `^8.5`).
 
 Penyesuaian terhadap standar teknis (PHP, basis data, Docker, MFA) dicatat di [`docs/keputusan/`](docs/keputusan/README.md).
 
+> **Profil Ringan (keputusan 15 Oktober 2026).** Dokumen perancangan sudah beralih ke Profil Ringan
+> (STANDAR-TEKNIS §1b): tanpa Redis, Horizon, dan Octane; antrean/cache/sesi/lock di MariaDB; pencarian Scout driver
+> database + kamus istilah (Meilisearch hanya cadangan). Profil Ringan berlaku setelah Fase B; kondisi saat ini
+> adalah Redis + Horizon + Meilisearch. Bagian tumpukan, deploy, dan perintah di bawah masih
+> menggambarkan kode yang saat ini berjalan (Redis, Horizon, Meilisearch) dan akan disesuaikan saat penyesuaian kode
+> (Fase B) dikerjakan. LMS ditunda.
+
 ## Deploy
 
+> Profil Ringan berlaku setelah Fase B; kondisi saat ini: compose produksi masih berisi queue/Horizon, Redis, dan
+> Meilisearch. Target: satu container penjadwal yang juga menjalankan worker antrean, tanpa Redis/Horizon/Meilisearch.
+
 Produksi memakai Docker Compose (`docker-compose.prod.yml`: app, web, queue/Horizon, scheduler, MariaDB, Redis,
-Meilisearch, backup) di belakang reverse proxy subpath `/regulasi`. Rilis berjalan otomatis: push tag `vX.Y.Z` ke
+Meilisearch, backup; **kondisi saat ini**. Target (keputusan 16 Oktober 2026): MariaDB native di host lewat
+`host.docker.internal` (`extra_hosts: host-gateway`), compose produksi tanpa container database. Penghapusan service `mariadb`
+dari compose adalah butir Fase B) di belakang reverse proxy subpath `/regulasi`. Rilis berjalan otomatis: push tag `vX.Y.Z` ke
 GitHub → uji penuh → server menarik tag dan menjalankan `scripts/deploy.sh` (cadangan pra-migrasi, build, health check,
 rollback cepat). Rincian, GitHub Secrets yang dibutuhkan, cadangan & pemulihan: [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
+## Keputusan yang menunggu pemilik
+
+- Angka target kinerja pencarian: target pencarian pernah diubah dari < 200 ms menjadi < 500 ms tanpa persetujuan
+  (PRD §kinerja). Perubahan itu **menunggu persetujuan pemilik**; angka tidak diubah lagi di dokumen ini.
+- Diselesaikan keputusan pemilik 16 Oktober 2026: standar kini PHP 8.5 + MariaDB 10.11+ (kolasi `utf8mb4_unicode_ci`,
+  tanpa SQLite); ADR 0001 sejalan dengan standar, tidak perlu dicabut.
 
 ## Dokumentasi
 
@@ -75,6 +101,9 @@ rollback cepat). Rincian, GitHub Secrets yang dibutuhkan, cadangan & pemulihan: 
 
 ### Persiapan
 
+> Profil Ringan berlaku setelah Fase B; kondisi saat ini: persiapan di bawah masih memasang Redis bersama dan
+> `regulasi-meilisearch`.
+
 Infrastruktur berada di luar repo ini, di `/home/satya/code` (lihat `docs/keputusan/0001-lingkungan-dan-penyimpangan-standar.md`):
 container `regulasi-php`, `regulasi-nginx`, `regulasi-scheduler`, `regulasi-meilisearch` (berkas `docker-compose.yml`,
 image `php/regulasi.Dockerfile` dengan `poppler-utils`), MariaDB native di host (`db_regulasi`, `db_regulasi_testing`),
@@ -92,6 +121,10 @@ npm install && npm run build  # Node di host (container tidak memiliki Node); np
 ```
 
 ### Antrean dan penjadwal
+
+> Profil Ringan berlaku setelah Fase B; kondisi saat ini: Horizon di service `regulasi-horizon` (uraian di bawah).
+> Target: penjadwal menyalakan worker `database` tiap menit (`--stop-when-empty`), dua antrean (`default`, `berat`),
+> tanpa Horizon dan tanpa `horizon:snapshot`; pantau lewat `/api/health`, `queue:failed`, `queue:retry`.
 
 Antrean (`default`, `tautan`, `ekstraksi`, `indeks`, `notifikasi`, `ekspor`) dijalankan Horizon di service
 `regulasi-horizon`; penjadwal di service `regulasi-scheduler`. **Restart Horizon setelah mengubah kode job:**
@@ -121,12 +154,15 @@ cd /home/satya/code && docker compose restart regulasi-scheduler
 | Senin 07:30 | `regulasi:ringkasan-mingguan` (surel ke admin-regulasi) |
 | Tiap 5 menit | `horizon:snapshot` |
 
-Notifikasi (lonceng panel admin + surel, antrean `notifikasi`) terkirim lewat Mailpit bersama saat pengembangan:
+Notifikasi (lonceng panel admin + surel, antrean `notifikasi`; kondisi saat ini, menjadi `default` pada Profil Ringan) terkirim lewat Mailpit bersama saat pengembangan:
 http://localhost:18018.
 
 ### Pencarian (Scout + Meilisearch)
 
-Indeks `regulasi_dokumen` hanya berisi dokumen terbit (`SCOUT_PREFIX=regulasi_`, job indeks di antrean `indeks`).
+> Profil Ringan berlaku setelah Fase B; kondisi saat ini: Meilisearch (uraian di bawah). Target: Scout driver
+> `database` + kamus istilah; Meilisearch hanya cadangan bila kriteria uji tidak tercapai.
+
+Indeks `regulasi_dokumen` hanya berisi dokumen terbit (`SCOUT_PREFIX=regulasi_`, job indeks di antrean `indeks`; kondisi saat ini, Fase B menggantinya dengan Scout driver `database`).
 Setelah memasang atau mengubah `config/scout.php`/sinonim (`config/regulasi.php` → `sinonim`), terapkan pengaturan
 indeks lalu impor ulang:
 
@@ -135,12 +171,15 @@ rgp php artisan scout:sync-index-settings
 rgp php artisan scout:import "App\Models\Dokumen"
 ```
 
-Ekstraksi teks PDF dari tautan berjalan di antrean `ekstraksi` (`regulasi:ekstraksi-ulang --gagal|--tanpa-teks|--tautan=ID`);
+Ekstraksi teks PDF dari tautan berjalan di antrean `ekstraksi` (kondisi saat ini; pada Profil Ringan menjadi antrean `berat`, pemetaan STANDAR-TEKNIS §1b) (`regulasi:ekstraksi-ulang --gagal|--tanpa-teks|--tautan=ID`);
 sisa berkas sementara disapu `berkas:bersihkan-tmp`.
 
 ### Basis data uji
 
-Uji (Pest) berjalan di MariaDB host, bukan SQLite, karena memakai indeks FULLTEXT dan CHECK. Buat sekali:
+> Catatan: uraian uji di bawah menggambarkan kondisi saat ini (Redis bersama, grup `meilisearch`); pada Profil Ringan
+> (setelah Fase B) uji memakai driver `database`/`array` tanpa Redis dan tanpa suite Meilisearch.
+
+Uji (Pest) berjalan di MariaDB host (SQLite tidak dipakai) karena memakai indeks FULLTEXT dan CHECK. Buat sekali:
 
 ```sql
 CREATE DATABASE db_regulasi_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

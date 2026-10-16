@@ -1,11 +1,25 @@
 # Deploy produksi — Regulasi FKIP Unsil
 
+> **Profil Ringan berlaku setelah Fase B; kondisi saat ini:** dokumen ini menggambarkan kode yang berjalan
+> (container `queue` Horizon, `redis`, `meilisearch`, MariaDB 10.11). Target Profil Ringan (STANDAR-TEKNIS §1b):
+> tanpa Redis, Horizon, Octane, dan Meilisearch bawaan; antrean/cache/sesi/lock di MariaDB; satu container `scheduler`
+> yang juga menjalankan worker antrean (`--stop-when-empty` tiap menit); dua antrean (`default`, `berat`); pencarian
+> Scout driver `database` + kamus istilah; pemantauan lewat `/api/health`, `queue:failed`, `queue:retry`. Langkah
+> `horizon:terminate`, indeks Meilisearch, dan dasbor Horizon di bawah akan hilang/berubah saat Fase B dikerjakan.
+> Versi basis data: standar kini MariaDB 10.11+ (keputusan pemilik 16 Oktober 2026). **Produksi memakai MariaDB native di host**
+> lewat `host.docker.internal` (`extra_hosts: host.docker.internal:host-gateway`), sama dengan aplikasi produksi lain; compose
+> produksi tidak boleh memuat container database. Service `mariadb` di `docker-compose.prod.yml` saat ini **ditandai Fase B**
+> (dihapus bersama volume/`depends_on`-nya; `DB_HOST=host.docker.internal`, `DB_DATABASE=db_regulasi`, pengguna DB tidak
+> berubah). Service `backup` memakai `mariadb-dump` ke host yang sama. Setelan FULLTEXT (`innodb_ft_min_token_size=2`,
+> `innodb_ft_enable_stopword=0`) pindah ke `my.cnf` MariaDB host. Versi PHP: PHP 8.5 (image `php:8.5-fpm` Alpine).
+
 Pola `docker-apps` (STANDAR-TEKNIS §7, sama dengan sistem keuangan): container `app` (PHP-FPM, migrasi),
 `web` (Nginx), `queue` (Horizon), `scheduler` (`schedule:work`), `mariadb` (10.11), `redis` (7, AOF), dan
 `meilisearch` (v1.54, dipin). Aplikasi dipasang di subpath `https://supportfkip.unsil.ac.id/regulasi`.
 
-> Basis data produksi memakai **MariaDB 10.11** (bukan `mysql:8.4` seperti paket): sama dengan lingkungan
-> pengembangan dan CI tempat seluruh uji dijalankan (ADR 0001).
+> Basis data produksi memakai **MariaDB 10.11+ native di host** (keputusan pemilik 16 Oktober 2026), sama dengan lingkungan
+> pengembangan; CI memakai service container MariaDB sementara (diperbolehkan). Kondisi saat ini: container `mariadb:10.11` di
+> compose produksi (dihapus pada Fase B). Nama database `db_regulasi`; pemulihan uji memakai `db_regulasi_pulih`.
 
 ## Prasyarat server
 
@@ -177,10 +191,10 @@ Meilisearch **tidak dicadangkan** karena dibangun ulang dari basis data (`regula
 - Pulihkan ke lingkungan **uji** (menolak `APP_ENV=production` tanpa `--paksa`):
 
   ```bash
-  docker/backup/pulihkan-uji.sh 2026-10-10 regulasi_pulih   # restore.sh → DB uji, lalu regulasi:reindeks --hapus & berkas:periksa-tautan
+  docker/backup/pulihkan-uji.sh 2026-10-10 db_regulasi_pulih   # restore.sh → DB uji, lalu regulasi:reindeks --hapus & berkas:periksa-tautan
   ```
 
-  Langsung di container: `… exec -e DB_DATABASE=regulasi_pulih backup /usr/local/bin/restore.sh <YYYY-MM-DD|berkas.sql.gz>`
+  Langsung di container: `… exec -e DB_DATABASE=db_regulasi_pulih backup /usr/local/bin/restore.sh <YYYY-MM-DD|berkas.sql.gz>`
   (memverifikasi `.sha256` dan `gzip -t`, membuat DB bila belum ada, mencetak jumlah dokumen).
 - Pemulihan produksi (darurat): hentikan `app queue scheduler`, `restore.sh <tanggal> --paksa` dengan
   `DB_DATABASE` produksi, jalankan lagi layanan, lalu `regulasi:reindeks --hapus`.
@@ -211,6 +225,8 @@ Formulir catatan hasil (salin ke arsip TI fakultas):
 |  |  |  |  |  |  |  |  |  |  |  |  |
 
 ## Horizon, penjadwal & log
+
+> Kondisi saat ini; pada Profil Ringan (setelah Fase B) tidak ada dasbor Horizon maupun `horizon:snapshot`.
 
 - Dasbor antrean: `https://supportfkip.unsil.ac.id/regulasi/horizon` (hanya **super-admin**, masuk panel dulu).
 - Penjadwal: `… exec scheduler php artisan schedule:list` harus menampilkan seluruh jadwal (terapkan status 00:15,

@@ -2,6 +2,10 @@
 
 Daftar ini menghimpun hal-hal yang **tidak dapat diselesaikan dari kode** (fakta regulasi, keputusan kebijakan,
 infrastruktur kampus) yang tercatat sepanjang F0–F12. Centang setelah ditangani; cantumkan nama & tanggal.
+> **Profil Ringan berlaku setelah Fase B; kondisi saat ini:** butir yang menyebut Horizon, Redis, atau Meilisearch
+> (mis. G-10, pemindaian port, token FULLTEXT) mengacu pada kode berjalan dan akan disesuaikan setelah Fase B
+> (STANDAR-TEKNIS §1b; pada target, FULLTEXT MariaDB menjadi mesin utama sehingga butir token FULLTEXT berlaku penuh).
+
 Rujukan langkah teknis: `docs/DEPLOY.md`; skenario uji: `docs/uat/hasil-uat.md`; go-live: 05-UJI-PENERIMAAN §4.
 
 ## 1. Data seed & fakta regulasi
@@ -21,7 +25,7 @@ Rujukan langkah teknis: `docs/DEPLOY.md`; skenario uji: `docs/uat/hasil-uat.md`;
 
 | ✓ | Butir | Tindakan | Penanggung jawab |
 |---|---|---|---|
-| ☐ | **`innodb_ft_min_token_size`** | MariaDB lokal (host) memakai bawaan 3: "PP", "UU", "SE" tidak tercari di cadangan FULLTEXT (Meilisearch tidak terpengaruh). Produksi memakai `docker/mariadb/regulasi.cnf` (2, stopword mati) + `REGULASI_FT_MIN_TOKEN=2`. Bila MariaDB produksi bukan container compose, pasang setelan yang sama di `my.cnf` **sebelum** migrasi lalu bangun ulang indeks FULLTEXT (G-05) | TI fakultas |
+| ☐ | **`innodb_ft_min_token_size`** | MariaDB lokal (host) memakai bawaan 3: "PP", "UU", "SE" tidak tercari di cadangan FULLTEXT (Meilisearch tidak terpengaruh). Produksi memakai `docker/mariadb/regulasi.cnf` (2, stopword mati) + `REGULASI_FT_MIN_TOKEN=2`. Pada target (keputusan 16 Oktober 2026) MariaDB produksi native di host, bukan container compose: pasang setelan yang sama di `my.cnf` host **sebelum** migrasi lalu bangun ulang indeks FULLTEXT (G-05). Perilaku FULLTEXT dibuktikan oleh gerbang uji `PencarianDatabaseTest` (Fase B), bukan diputuskan di dokumen ini | TI fakultas |
 | ☐ | **robots.txt gateway** | Salin isi `public/robots.txt` (Disallow `/regulasi/admin`, `/regulasi/akun`, `/regulasi/d/`, `/regulasi/livewire`; `Sitemap: …/regulasi/sitemap.xml`) ke robots.txt akar `supportfkip.unsil.ac.id` | TI fakultas |
 | ☐ | **Reverse proxy & HTTPS** | Blok `location /regulasi/` (docs/DEPLOY.md), `TRUSTED_PROXIES` = IP proxy, sertifikat valid | TI fakultas |
 | ☐ | **Kartu aplikasi di landing supportfkip** | Tambah tautan `regulasi/` dan `regulasi/panduan/` di `index.html` akar supportfkip (PG-01) | TI fakultas |
