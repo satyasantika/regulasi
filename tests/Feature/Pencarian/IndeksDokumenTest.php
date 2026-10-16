@@ -94,11 +94,11 @@ test('terbitkan mendorong MakeSearchable ke antrean indeks, arsipkan mendorong R
 
     Queue::fake();
     app(TerbitkanDokumen::class)->handle($dokumen, $admin);
-    Queue::assertPushedOn('indeks', MakeSearchable::class);
+    Queue::assertPushedOn('default', MakeSearchable::class);
 
     Queue::fake();
     app(ArsipkanDokumen::class)->handle($dokumen->refresh(), $admin, 'Diganti peraturan yang lebih baru.');
-    Queue::assertPushedOn('indeks', RemoveFromSearch::class);
+    Queue::assertPushedOn('default', RemoveFromSearch::class);
     Queue::assertNotPushed(MakeSearchable::class);
 });
 
@@ -113,7 +113,7 @@ test('menyimpan draf tidak menyentuh indeks; mengubah dokumen terbit mengindeks 
     Queue::assertNothingPushed();
 
     app(SimpanDokumen::class)->handle(['judul' => 'Judul terbit baru', 'kategori_sistem' => [$kategori]], $admin, $terbit);
-    Queue::assertPushedOn('indeks', MakeSearchable::class);
+    Queue::assertPushedOn('default', MakeSearchable::class);
 });
 
 test('teks tautan diekstraksi dan status berlaku berubah memicu reindeks', function () {
@@ -122,11 +122,11 @@ test('teks tautan diekstraksi dan status berlaku berubah memicu reindeks', funct
 
     Queue::fake();
     TeksTautanDiekstraksi::dispatch($tautan, $tautan->ekstraksi);
-    Queue::assertPushedOn('indeks', MakeSearchable::class);
+    Queue::assertPushedOn('default', MakeSearchable::class);
 
     Queue::fake();
     StatusBerlakuBerubah::dispatch($dokumen, StatusBerlaku::Berlaku, StatusBerlaku::Dicabut);
-    Queue::assertPushedOn('indeks', MakeSearchable::class);
+    Queue::assertPushedOn('default', MakeSearchable::class);
 });
 
 test('teks diekstraksi pada dokumen draf tidak mengindeks', function () {

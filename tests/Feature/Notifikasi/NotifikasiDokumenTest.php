@@ -83,9 +83,9 @@ test('ajukan memberi tahu admin-regulasi lewat database dan surel di antrean not
         $basisData = $n->toDatabase($admin);
 
         return $kanal === ['database', 'mail']
-            && $n->queue === 'notifikasi'
+            && $n->queue === 'default'
             && $n->afterCommit === true
-            && $n->viaQueues() === ['database' => 'notifikasi', 'mail' => 'notifikasi']
+            && $n->viaQueues() === ['database' => 'default', 'mail' => 'default']
             && $n->dokumenId === $dokumen->getKey()
             && $basisData['title'] === "Dokumen menunggu verifikasi: {$dokumen->sebutan_singkat}"
             && $basisData['format'] === 'filament'

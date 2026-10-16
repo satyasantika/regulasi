@@ -185,7 +185,7 @@ test('galat tak terduga diulang lalu failed() menandai gagal dan menambah percob
         ->and($job->tries)->toBe(3)
         ->and($job->timeout)->toBe(300)
         ->and($job->backoff())->toBe([60, 300, 900])
-        ->and($job->queue)->toBe('ekstraksi')
+        ->and($job->queue)->toBe('berat')
         ->and(glob(storage_path("app/{$this->folder}/*")))->toBe([]);
 });
 
@@ -196,8 +196,8 @@ test('menyimpan tautan naskah mengantrekan pemeriksaan dan ekstraksi; jenis lain
 
     $naskah = app(SimpanTautanBerkas::class)->handle($dokumen, ['url' => 'https://drive.google.com/file/d/'.ID_EKSTRAKSI.'/view', 'jenis' => 'naskah_utama'], $admin)['tautan'];
 
-    Queue::assertPushedOn('tautan', PeriksaTautanBerkas::class);
-    Queue::assertPushedOn('ekstraksi', EkstrakTeksTautan::class, fn (EkstrakTeksTautan $job): bool => $job->tautanId === $naskah->getKey());
+    Queue::assertPushedOn('default', PeriksaTautanBerkas::class);
+    Queue::assertPushedOn('berat', EkstrakTeksTautan::class, fn (EkstrakTeksTautan $job): bool => $job->tautanId === $naskah->getKey());
     expect(ekstraksiDari($naskah)->status)->toBe(StatusEkstraksi::Belum);
 
     Queue::fake();

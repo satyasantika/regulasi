@@ -34,7 +34,7 @@ test('--gagal hanya mengantrekan ekstraksi gagal dengan percobaan di bawah 5', f
 
     $this->artisan('regulasi:ekstraksi-ulang', ['--gagal' => true])->expectsOutput('1 ekstraksi diantrekan ulang.')->assertSuccessful();
 
-    Queue::assertPushedOn('ekstraksi', EkstrakTeksTautan::class, fn (EkstrakTeksTautan $job): bool => $job->tautanId === $ulang->getKey());
+    Queue::assertPushedOn('berat', EkstrakTeksTautan::class, fn (EkstrakTeksTautan $job): bool => $job->tautanId === $ulang->getKey());
     Queue::assertPushed(EkstrakTeksTautan::class, 1);
 });
 

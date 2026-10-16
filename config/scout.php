@@ -45,10 +45,10 @@ return [
     |
     */
 
-    // Antrean `indeks` (02-ARSITEKTUR §3.2). Uji memakai SCOUT_QUEUE_CONNECTION=sync (phpunit.xml).
+    // Profil Ringan: sinkronisasi indeks lewat antrean `default` di database. Uji memakai SCOUT_QUEUE_CONNECTION=sync.
     'queue' => [
-        'connection' => env('SCOUT_QUEUE_CONNECTION', 'redis'),
-        'queue' => 'indeks',
+        'connection' => env('SCOUT_QUEUE_CONNECTION', 'database'),
+        'queue' => 'default',
     ],
 
     /*

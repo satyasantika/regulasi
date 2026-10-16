@@ -61,7 +61,7 @@ test('tautan Drive /file/d/{id}/view diterima dengan drive_file_id benar dan pem
         ->and($hasil['peringatan'])->toBeNull()
         ->and($dokumen->naskahUtama()->first()?->is($tautan))->toBeTrue();
 
-    Queue::assertPushedOn('tautan', PeriksaTautanBerkas::class);
+    Queue::assertPushedOn('default', PeriksaTautanBerkas::class);
 });
 
 test('pola Drive open?id, uc?id, dan Google Docs terurai', function (string $url, PenyediaTautan $penyedia) {

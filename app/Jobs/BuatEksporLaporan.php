@@ -34,7 +34,7 @@ class BuatEksporLaporan implements ShouldQueue
         public array $parameter,
         public string $penggunaId,
     ) {
-        $this->onQueue('ekspor');
+        $this->onConnection('database-berat')->onQueue('berat');
     }
 
     public static function direktori(): string

@@ -156,7 +156,7 @@ test('ekspor statistik masuk antrean ekspor dan menghasilkan berkas berheader ba
         ->callAction('eksporExcel')
         ->assertNotified('Ekspor diantrekan');
 
-    Queue::assertPushedOn('ekspor', BuatEksporLaporan::class, fn (BuatEksporLaporan $job): bool => $job->jenis === 'statistik'
+    Queue::assertPushedOn('berat', BuatEksporLaporan::class, fn (BuatEksporLaporan $job): bool => $job->jenis === 'statistik'
         && $job->parameter['dimensi'] === 'jenis'
         && $job->penggunaId === $admin->id);
 
@@ -191,12 +191,14 @@ test('ekspor kelengkapan lewat Filament masuk antrean ekspor', function () {
     Livewire::actingAs(penggunaDenganPeran(Peran::AdminRegulasi))->test(LaporanKelengkapan::class)
         ->callAction(TestAction::make('eksporExcel')->table());
 
-    Queue::assertPushedOn('ekspor', ChainedBatch::class);
+    Queue::assertPushedOn('berat', ChainedBatch::class);
     expect(Ekspor::query()->sole()->file_disk)->toBe('tmp');
 });
 
 test('berkas ekspor kelengkapan berbahasa Indonesia dan tidak dapat diunduh pengguna lain', function () {
     Storage::fake('tmp');
+    // phpunit.xml memakai antrean sync; koneksi database-berat (produksi) dijalankan sinkron agar berkas terbentuk di uji ini.
+    config(['queue.connections.database-berat' => ['driver' => 'sync']]);
     koleksiDokumenLengkap();
     koleksiDokumen('PERMEN', atribut: ['abstrak' => null]);
     $admin = penggunaDenganPeran(Peran::AdminRegulasi);

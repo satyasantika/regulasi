@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Ekstraksi teks PDF di balik tautan (antrean `ekstraksi`, US-EKS-01/02, BR-14, 02-ARSITEKTUR §13.2):
+ * Ekstraksi teks PDF di balik tautan (koneksi `database-berat`, antrean `berat`, US-EKS-01/02, BR-14, 02-ARSITEKTUR §13.2):
  * unduh sementara lewat PenyimpananBerkas::ambilSementara (PengunduhAman) → pdfinfo → pdftotext → simpan ke
  * ekstraksi_teks → berkas sementara SELALU dihapus di finally.
  *
@@ -41,7 +41,7 @@ class EkstrakTeksTautan implements ShouldBeUnique, ShouldQueue
 
     public function __construct(public string $tautanId)
     {
-        $this->onQueue('ekstraksi');
+        $this->onConnection('database-berat')->onQueue('berat');
     }
 
     public function uniqueId(): string

@@ -80,7 +80,7 @@ test('job memakai antrean tautan, unik per tautan, dan dilepas ulang saat batas 
     $tautan = tautanUntukDiperiksa();
 
     $job = new PeriksaTautanBerkas($tautan);
-    expect($job->queue)->toBe('tautan')
+    expect($job->queue)->toBe('default')
         ->and($job)->toBeInstanceOf(ShouldBeUnique::class)
         ->and($job->uniqueId())->toBe($tautan->getKey());
 

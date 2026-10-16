@@ -36,7 +36,6 @@ test('uji berjalan di basis data db_regulasi_testing', function () {
         ->and(config('database.connections.mariadb.database'))->toBe('db_regulasi_testing');
 });
 
-test('antrean redis memakai koneksi queue tersendiri', function () {
-    expect(config('queue.connections.redis.connection'))->toBe('queue')
-        ->and(config('database.redis.queue.database'))->not->toBeNull();
+test('antrean bawaan memakai database (Profil Ringan)', function () {
+    expect(config('queue.connections'))->toHaveKeys(['database', 'database-berat']);
 });
