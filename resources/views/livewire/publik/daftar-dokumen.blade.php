@@ -17,8 +17,11 @@
             </div>
         </form>
 
-        @if ($hasil->mesin === 'database')
-            <p class="mt-2 text-xs text-slate-600">Pencarian sederhana sedang dipakai; hasil untuk salah ketik mungkin terbatas.</p>
+        @if ($hasil->dikoreksiDari !== null)
+            <p class="mt-2 text-sm text-slate-700" role="status">
+                Menampilkan hasil untuk <strong>{{ $hasil->kueriDipakai }}</strong>.
+                <button type="button" wire:click="$set('persis', true)" class="font-medium text-indigo-700 underline hover:text-indigo-900">Cari persis &ldquo;{{ $hasil->dikoreksiDari }}&rdquo;</button>
+            </p>
         @endif
 
         <div class="mt-6 grid gap-6 md:grid-cols-[16rem_1fr] lg:grid-cols-[18rem_1fr]">

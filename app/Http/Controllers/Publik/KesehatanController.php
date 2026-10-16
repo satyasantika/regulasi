@@ -7,13 +7,12 @@ use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Throwable;
 
 /**
  * GET /api/health — pemeriksaan kesehatan untuk pemantauan dan sistem FKIP lain (STANDAR-TEKNIS §1b dan §6).
  *
- * 503 hanya bila basis data gagal. Pencarian (Meilisearch, selama masih dipakai), job tertunda > 10 menit,
+ * 503 hanya bila basis data gagal (pencarian ada di basis data yang sama). Job tertunda > 10 menit,
  * job gagal 24 jam, dan detak penjadwal (> 5 menit) bersifat informatif agar healthcheck kontainer tidak memicu
  * restart berantai. Tanpa Redis.
  */
@@ -25,7 +24,6 @@ class KesehatanController extends Controller
     {
         $layanan = [
             'database' => $this->periksa(fn () => DB::select('select 1')),
-            'pencarian' => $this->periksaPencarian(),
             'job_tertunda' => $this->hitung(fn () => DB::table('jobs')
                 ->whereNull('reserved_at')
                 ->where('available_at', '<=', now()->subMinutes(10)->getTimestamp())
@@ -76,21 +74,6 @@ class KesehatanController extends Controller
             $cek();
 
             return 'ok';
-        } catch (Throwable) {
-            return 'gagal';
-        }
-    }
-
-    private function periksaPencarian(): string
-    {
-        $host = config('services.meilisearch.host');
-
-        if (! is_string($host) || $host === '') {
-            return 'tidak_dikonfigurasi';
-        }
-
-        try {
-            return Http::timeout(2)->get(rtrim($host, '/').'/health')->successful() ? 'ok' : 'gagal';
         } catch (Throwable) {
             return 'gagal';
         }

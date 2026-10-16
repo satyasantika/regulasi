@@ -23,7 +23,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * API baca v1 dokumen (US-API-01, BR-01, BR-02, BR-18). Hanya dokumen terbit; dokumen internal hanya untuk token
- * berability dokumen:baca-internal. Daftar memakai layanan PencarianDokumen (Meilisearch/cadangan FULLTEXT).
+ * berability dokumen:baca-internal. Daftar memakai layanan PencarianDokumen (MariaDB FULLTEXT + kamus istilah).
  */
 class DokumenController extends Controller
 {

@@ -57,7 +57,7 @@ test('filter kategori aset dan status berlaku hanya menampilkan dokumen yang coc
         ->and($faset['status_berlaku']['opsi']['dicabut']['jumlah'])->toBe(1)
         ->and($uji->viewData('hasil')->mesin)->toBe('database');
 
-    $uji->assertSee('Pencarian sederhana sedang dipakai');
+    $uji->assertDontSee('Pencarian sederhana sedang dipakai')->assertDontSee('Menampilkan hasil untuk');
 });
 
 test('rute jenis peraturan menteri hanya menampilkan PERMEN dengan breadcrumb dan judul yang benar', function () {

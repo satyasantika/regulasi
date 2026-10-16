@@ -7,8 +7,8 @@ use App\Events\TeksTautanDiekstraksi;
 use App\Models\Dokumen;
 
 /**
- * Reindeks dokumen pemilik saat teks tautannya selesai diekstraksi atau status berlakunya berubah (F7.2).
- * Kedua event dikirim setelah commit; dokumen non-terbit dikeluarkan dari indeks.
+ * Picu pembangunan ulang kamus pencarian untuk dokumen pemilik saat teks tautannya selesai diekstraksi atau status berlakunya berubah (F7.2).
+ * Kedua event dikirim setelah commit; pembangunan ulang digabung (BangunKamusIstilah unik).
  */
 class PerbaruiIndeksDokumen
 {

@@ -36,6 +36,9 @@ Schedule::command('berkas:periksa-tautan')->weeklyOn(1, '06:30')->timezone($zona
 // US-NOT-03: ringkasan mingguan ke admin-regulasi.
 Schedule::command('regulasi:ringkasan-mingguan')->weeklyOn(1, '07:30')->timezone($zona)->withoutOverlapping()->onOneServer();
 
+// Kamus istilah pencarian dibangun ulang mingguan (02-ARSITEKTUR §5.1); juga dipicu saat dokumen terbit/diubah.
+Schedule::command('regulasi:bangun-kamus')->weeklyOn(0, '02:00')->timezone($zona)->withoutOverlapping()->onOneServer();
+
 // Profil Ringan (STANDAR-TEKNIS §1b): tanpa Horizon/Redis. Penjadwal menyalakan worker tiap menit dan
 // berhenti saat antrean kosong; jeda proses job paling lama ±1 menit.
 Schedule::command('queue:work database --queue=default --stop-when-empty --max-time=55 --timeout=60 --tries=3')

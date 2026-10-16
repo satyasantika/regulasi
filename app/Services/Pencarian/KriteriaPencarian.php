@@ -32,6 +32,7 @@ final readonly class KriteriaPencarian
      * @param  list<string>  $badan
      * @param  list<string>  $kelompok
      * @param  int  $perHalamanMaks  batas per halaman (portal 50, API 100)
+     * @param  bool  $persis  true = jangan koreksi salah ketik lewat kamus istilah
      */
     public function __construct(
         ?string $q = null,
@@ -46,6 +47,7 @@ final readonly class KriteriaPencarian
         int $perHalaman = 20,
         public bool $sertakanInternal = false,
         int $perHalamanMaks = self::PER_HALAMAN_MAKS,
+        public bool $persis = false,
     ) {
         $this->q = trim(mb_substr((string) $q, 0, 200));
         $this->urut = in_array($urut, self::URUTAN, true) ? $urut : 'relevan';
@@ -73,6 +75,29 @@ final readonly class KriteriaPencarian
             perHalaman: (int) ($data['per_halaman'] ?? 20),
             sertakanInternal: $sertakanInternal,
             perHalamanMaks: $perHalamanMaks,
+            persis: (bool) ($data['persis'] ?? false),
+        );
+    }
+
+    /**
+     * Salinan dengan kata kunci lain (dipakai untuk mengulang pencarian dengan kueri terkoreksi).
+     */
+    public function denganKueri(string $q): self
+    {
+        return new self(
+            q: $q,
+            jenis: $this->jenis,
+            tahun: $this->tahun,
+            status: $this->status,
+            kategori: $this->kategori,
+            badan: $this->badan,
+            kelompok: $this->kelompok,
+            urut: $this->urut,
+            halaman: $this->halaman,
+            perHalaman: $this->perHalaman,
+            sertakanInternal: $this->sertakanInternal,
+            perHalamanMaks: self::PER_HALAMAN_MAKS_API,
+            persis: true,
         );
     }
 

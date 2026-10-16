@@ -25,7 +25,7 @@ use App\Models\TokenAkses;
 use App\Models\User;
 use App\Policies\ActivityPolicy;
 use App\Services\Berkas\TautanEksternal;
-use App\Services\Pencarian\PemilihMesinPencarian;
+use App\Services\Pencarian\PencarianDatabase;
 use App\Services\Pencarian\PencarianDokumen;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
@@ -62,8 +62,8 @@ class AppServiceProvider extends ServiceProvider
             default => throw new InvalidArgumentException('BERKAS_MODE ['.config('berkas.mode').'] belum didukung.'),
         });
 
-        // Mesin pencarian: Meilisearch bila sehat, selain itu cadangan FULLTEXT (02-ARSITEKTUR §5.2).
-        $this->app->bind(PencarianDokumen::class, fn ($app) => $app->make(PemilihMesinPencarian::class)->pilih());
+        // Mesin pencarian Profil Ringan: MariaDB FULLTEXT + kamus istilah (02-ARSITEKTUR §5.1).
+        $this->app->bind(PencarianDokumen::class, PencarianDatabase::class);
     }
 
     /**

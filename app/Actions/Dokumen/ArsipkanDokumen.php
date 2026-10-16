@@ -46,6 +46,6 @@ class ArsipkanDokumen extends TransisiPublikasi
     {
         app(TerapkanRelasiDokumen::class)->handle($dokumen, $oleh);
 
-        $dokumen->unsearchable();
+        $dokumen->sinkronkanIndeks();
     }
 }

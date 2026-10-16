@@ -52,9 +52,10 @@ test('jadwal memuat semua tugas dengan cron, zona Asia/Jakarta, tanpa tumpang ti
         'activitylog:clean' => '30 1 * * *',
         'berkas:periksa-tautan' => '30 6 * * 1',
         'regulasi:ringkasan-mingguan' => '30 7 * * 1',
+        'regulasi:bangun-kamus' => '0 2 * * 0',
     ];
 
-    // 7 tugas bisnis + 2 worker antrean + detak penjadwal + 2 pemangkasan (Profil Ringan)
+    // 8 tugas bisnis + 2 worker antrean + detak penjadwal + 2 pemangkasan (Profil Ringan)
     expect($tugas)->toHaveCount(count($harapan) + 5);
 
     foreach ($harapan as $perintah => $cron) {

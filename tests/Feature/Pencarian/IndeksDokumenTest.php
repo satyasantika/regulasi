@@ -11,16 +11,16 @@ use App\Enums\StatusEkstraksi;
 use App\Enums\StatusPublikasi;
 use App\Events\StatusBerlakuBerubah;
 use App\Events\TeksTautanDiekstraksi;
+use App\Jobs\BangunKamusIstilah;
 use App\Models\Dokumen;
 use App\Models\EkstraksiTeks;
 use App\Models\JenisDokumen;
 use App\Models\KategoriSistem;
-use App\Models\Tag;
 use App\Models\TautanBerkas;
+use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
-use Laravel\Scout\Jobs\MakeSearchable;
-use Laravel\Scout\Jobs\RemoveFromSearch;
+use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
@@ -54,25 +54,23 @@ function tautanDenganTeks(Dokumen $dokumen, JenisTautan $jenis, string $teks, St
     return $tautan;
 }
 
-test('indeks bernama regulasi_dokumen dan memuat kategori, tag, serta isi teks terpotong naskah utama lebih dulu', function () {
-    config(['regulasi.potong_isi_teks_kata' => 6]);
-    $dokumen = dokumenTerindeks(['status_publikasi' => StatusPublikasi::Terbit, 'dipublikasikan_pada' => now()]);
-    $dokumen->tag()->attach(Tag::factory()->create(['nama' => 'Tata Naskah Dinas']));
-    tautanDenganTeks($dokumen, JenisTautan::Lampiran, 'lampiran matriks penilaian satu dua tiga');
-    tautanDenganTeks($dokumen, JenisTautan::Lampiran, 'teks gagal tidak diindeks', StatusEkstraksi::TanpaTeks);
+test('Scout memakai driver database dan indeks bernama regulasi_dokumen', function () {
+    expect(config('scout.driver'))->toBe('database')
+        ->and(config('scout.queue'))->toBeFalse()
+        ->and((new Dokumen)->searchableAs())->toBe('regulasi_dokumen');
+});
+
+test('toSearchableArray hanya memuat kolom nyata tabel dokumen yang dicari', function () {
+    $dokumen = dokumenTerindeks(['status_publikasi' => StatusPublikasi::Terbit, 'nomor' => '53', 'sebutan_singkat' => 'Permendikbudristek 53/2023']);
 
     $data = Dokumen::query()->findOrFail($dokumen->getKey())->toSearchableArray();
 
-    expect((new Dokumen)->searchableAs())->toBe('regulasi_dokumen')
-        ->and($data['kategori'])->toBe(['aset'])
-        ->and($data['tag'])->toBe(['Tata Naskah Dinas'])
-        ->and($data['isi_teks'])->toBe('naskah utama tata naskah dinas lampiran')
-        ->and($data['kelompok'])->toBe('peraturan')
-        ->and($data['status_berlaku'])->toBe('berlaku')
-        ->and($data['visibilitas'])->toBe('publik')
-        ->and($data['tanggal_penetapan_ts'])->toBe($dokumen->tanggal_penetapan->getTimestamp())
-        ->and($data['url'])->toEndWith("/dokumen/{$dokumen->getKey()}/{$dokumen->slug}")
-        ->and($data)->toHaveKeys(['id', 'sebutan_singkat', 'sebutan', 'judul', 'nomor', 'tahun', 'jenis', 'jenis_nama', 'badan_penetap', 'badan_nama', 'tanpa_berkas', 'abstrak', 'dipublikasikan_pada_ts', 'jumlah_dibuka']);
+    expect(array_keys($data))->toBe(['id', 'sebutan_singkat', 'judul', 'nomor', 'abstrak'])
+        ->and($data['nomor'])->toBe('53');
+
+    foreach (array_keys($data) as $kolom) {
+        expect(Schema::hasColumn('dokumen', $kolom))->toBeTrue("kolom {$kolom} tidak ada di tabel dokumen");
+    }
 });
 
 test('hanya dokumen terbit dan tidak terhapus yang searchable', function () {
@@ -88,21 +86,20 @@ test('hanya dokumen terbit dan tidak terhapus yang searchable', function () {
         ->and($terhapus->shouldBeSearchable())->toBeFalse();
 });
 
-test('terbitkan mendorong MakeSearchable ke antrean indeks, arsipkan mendorong RemoveFromSearch', function () {
+test('terbitkan dan arsipkan memicu pembangunan ulang kamus di antrean berat', function () {
     $admin = penggunaDenganPeran(Peran::AdminRegulasi);
     $dokumen = dokumenTerindeks(['status_publikasi' => StatusPublikasi::MenungguVerifikasi]);
 
     Queue::fake();
     app(TerbitkanDokumen::class)->handle($dokumen, $admin);
-    Queue::assertPushedOn('default', MakeSearchable::class);
+    Queue::assertPushedOn('berat', BangunKamusIstilah::class);
 
     Queue::fake();
     app(ArsipkanDokumen::class)->handle($dokumen->refresh(), $admin, 'Diganti peraturan yang lebih baru.');
-    Queue::assertPushedOn('default', RemoveFromSearch::class);
-    Queue::assertNotPushed(MakeSearchable::class);
+    Queue::assertPushedOn('berat', BangunKamusIstilah::class);
 });
 
-test('menyimpan draf tidak menyentuh indeks; mengubah dokumen terbit mengindeks ulang', function () {
+test('menyimpan draf tidak memicu kamus; mengubah dokumen terbit memicunya', function () {
     $admin = penggunaDenganPeran(Peran::AdminRegulasi);
     $draf = dokumenTerindeks();
     $terbit = dokumenTerindeks(['status_publikasi' => StatusPublikasi::Terbit]);
@@ -110,51 +107,29 @@ test('menyimpan draf tidak menyentuh indeks; mengubah dokumen terbit mengindeks 
 
     Queue::fake();
     app(SimpanDokumen::class)->handle(['judul' => 'Judul draf baru', 'kategori_sistem' => [$kategori]], $admin, $draf);
-    Queue::assertNothingPushed();
+    Queue::assertNotPushed(BangunKamusIstilah::class);
 
     app(SimpanDokumen::class)->handle(['judul' => 'Judul terbit baru', 'kategori_sistem' => [$kategori]], $admin, $terbit);
-    Queue::assertPushedOn('default', MakeSearchable::class);
+    Queue::assertPushedOn('berat', BangunKamusIstilah::class);
 });
 
-test('teks tautan diekstraksi dan status berlaku berubah memicu reindeks', function () {
+test('teks tautan diekstraksi dan status berlaku berubah memicu kamus', function () {
     $dokumen = dokumenTerindeks(['status_publikasi' => StatusPublikasi::Terbit]);
     $tautan = TautanBerkas::query()->where('pemilik_id', $dokumen->getKey())->with('ekstraksi')->firstOrFail();
 
     Queue::fake();
     TeksTautanDiekstraksi::dispatch($tautan, $tautan->ekstraksi);
-    Queue::assertPushedOn('default', MakeSearchable::class);
+    Queue::assertPushedOn('berat', BangunKamusIstilah::class);
 
     Queue::fake();
     StatusBerlakuBerubah::dispatch($dokumen, StatusBerlaku::Berlaku, StatusBerlaku::Dicabut);
-    Queue::assertPushedOn('default', MakeSearchable::class);
+    Queue::assertPushedOn('berat', BangunKamusIstilah::class);
 });
 
-test('teks diekstraksi pada dokumen draf tidak mengindeks', function () {
-    $dokumen = dokumenTerindeks();
-    $tautan = TautanBerkas::query()->where('pemilik_id', $dokumen->getKey())->with('ekstraksi')->firstOrFail();
+test('job kamus unik sampai mulai diproses dan memakai koneksi database-berat', function () {
+    $job = new BangunKamusIstilah;
 
-    Queue::fake();
-    TeksTautanDiekstraksi::dispatch($tautan, $tautan->ekstraksi);
-
-    Queue::assertNotPushed(MakeSearchable::class);
-});
-
-test('pengaturan indeks memuat atribut filter dan sinonim dua arah', function () {
-    $pengaturan = config('scout.meilisearch.index-settings')[Dokumen::class];
-
-    expect($pengaturan['filterableAttributes'])->toContain('kategori', 'status_berlaku', 'visibilitas', 'badan_penetap')
-        ->and($pengaturan['typoTolerance'])->toBe(['disableOnAttributes' => ['nomor']])
-        ->and($pengaturan['synonyms']['uu'])->toBe(['undang-undang'])
-        ->and($pengaturan['synonyms']['undang-undang'])->toBe(['uu'])
-        ->and($pengaturan['synonyms']['tata naskah dinas'])->toBe(['tnd']);
-});
-
-test('regulasi:reindeks mengimpor ulang hanya dokumen terbit', function () {
-    dokumenTerindeks(['status_publikasi' => StatusPublikasi::Terbit]);
-    dokumenTerindeks(['status_publikasi' => StatusPublikasi::Terbit]);
-    dokumenTerindeks();
-
-    $this->artisan('regulasi:reindeks', ['--hapus' => true])
-        ->expectsOutputToContain('2 dokumen terbit diindeks ulang ke regulasi_dokumen')
-        ->assertSuccessful();
+    expect($job)->toBeInstanceOf(ShouldBeUniqueUntilProcessing::class)
+        ->and($job->connection)->toBe('database-berat')
+        ->and($job->queue)->toBe('berat');
 });

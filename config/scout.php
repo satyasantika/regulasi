@@ -1,8 +1,5 @@
 <?php
 
-use App\Models\Dokumen;
-use App\Support\SinonimPencarian;
-
 return [
 
     /*
@@ -19,7 +16,7 @@ return [
     |
     */
 
-    'driver' => env('SCOUT_DRIVER', 'collection'),
+    'driver' => env('SCOUT_DRIVER', 'database'),
 
     /*
     |--------------------------------------------------------------------------
@@ -45,11 +42,8 @@ return [
     |
     */
 
-    // Profil Ringan: sinkronisasi indeks lewat antrean `default` di database. Uji memakai SCOUT_QUEUE_CONNECTION=sync.
-    'queue' => [
-        'connection' => env('SCOUT_QUEUE_CONNECTION', 'database'),
-        'queue' => 'default',
-    ],
+    // Profil Ringan: driver `database` tidak punya indeks terpisah, jadi sinkronisasi Scout tidak diantrekan.
+    'queue' => false,
 
     /*
     |--------------------------------------------------------------------------
@@ -126,43 +120,6 @@ return [
             // 'users' => [
             //     'searchableAttributes' => ['id', 'name', 'email'],
             //     'attributesForFaceting'=> ['filterOnly(email)'],
-            // ],
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Meilisearch Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure your Meilisearch settings. Meilisearch is an open
-    | source search engine with minimal configuration. Below, you can state
-    | the host and key information for your own Meilisearch installation.
-    |
-    | See: https://www.meilisearch.com/docs/learn/configuration/instance_options#all-instance-options
-    |
-    */
-
-    'meilisearch' => [
-        'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
-        'key' => env('MEILISEARCH_KEY'),
-        // 02-ARSITEKTUR §5.1. Terapkan dengan `php artisan scout:sync-index-settings` (atau regulasi:reindeks).
-        'index-settings' => [
-            Dokumen::class => [
-                'searchableAttributes' => ['sebutan_singkat', 'judul', 'nomor', 'tag', 'abstrak', 'isi_teks'],
-                'filterableAttributes' => ['jenis', 'kelompok', 'tahun', 'status_berlaku', 'kategori',
-                    'badan_penetap', 'visibilitas', 'tanpa_berkas'],
-                'sortableAttributes' => ['tahun', 'tanggal_penetapan_ts', 'dipublikasikan_pada_ts', 'jumlah_dibuka'],
-                'typoTolerance' => ['disableOnAttributes' => ['nomor']],
-                'synonyms' => SinonimPencarian::duaArah((array) ((require __DIR__.'/regulasi.php')['sinonim'] ?? [])),
-            ],
-        ],
-        'model-settings' => [
-            // User::class => [
-            //     'embedding' => [
-            //         'embedder' => 'default',
-            //         'dimensions' => 1536,
-            //     ],
             // ],
         ],
     ],

@@ -97,8 +97,9 @@ test('contoh .env.production memakai subpath, cookie aman, debug mati, dan tanpa
         ->toContain('SESSION_PATH=/regulasi')
         ->toContain('SESSION_COOKIE=regulasi_session')
         ->toContain('SESSION_SECURE_COOKIE=true')
-        ->toContain('MEILISEARCH_HOST=http://meilisearch:7700')
-        ->toContain('REGULASI_FT_MIN_TOKEN=2')
+        ->toContain('SCOUT_DRIVER=database')
+        ->not->toContain('MEILISEARCH')
+        ->toContain('REGULASI_FT_MIN_TOKEN=3')
         ->toContain('MFA_AKTIF=true')
         ->not->toMatch('/^TRUSTED_PROXIES=\*/m')
         ->not->toMatch('/^(APP_KEY|DB_PASSWORD|DB_ROOT_PASSWORD|REDIS_PASSWORD|MAIL_PASSWORD|MEILISEARCH_KEY|REGULASI_SUPERADMIN_PASSWORD)=\S/m');

@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             BadanPenetapSeeder::class,
             KategoriSistemSeeder::class,
             TagSeeder::class,
+            SinonimPencarianSeeder::class,
             PenggunaAwalSeeder::class,
         ]);
 

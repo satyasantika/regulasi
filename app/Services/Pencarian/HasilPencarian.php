@@ -15,11 +15,14 @@ final readonly class HasilPencarian
     /**
      * @param  LengthAwarePaginator<int, Dokumen>  $dokumen
      * @param  array<string, array<string, int>>  $faset
-     * @param  'meilisearch'|'database'  $mesin
+     * @param  'database'  $mesin
+     * @param  string|null  $dikoreksiDari  kueri asli bila hasil memakai kueri terkoreksi kamus istilah
      */
     public function __construct(
         public LengthAwarePaginator $dokumen,
         public array $faset,
         public string $mesin,
+        public ?string $kueriDipakai = null,
+        public ?string $dikoreksiDari = null,
     ) {}
 }

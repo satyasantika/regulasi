@@ -91,7 +91,7 @@ return [
     // Masa berlaku URL buka tautan bertanda tangan untuk klien API (dokumen internal, F9.2).
     'masa_tautan_api_menit' => 10,
 
-    // Sinonim pencarian Meilisearch (02-ARSITEKTUR §5.1).
+    // Sinonim pencarian awal (02-ARSITEKTUR §5.1); dimuat dua arah ke tabel sinonim_pencarian oleh SinonimPencarianSeeder.
     'sinonim' => [
         'uu' => ['undang-undang'],
         'pp' => ['peraturan pemerintah'],
