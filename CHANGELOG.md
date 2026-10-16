@@ -5,6 +5,30 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 
 ## [Belum dirilis]
 
+### Diubah (Profil Ringan di kode, cabang `feat/profil-ringan`)
+- **PHP `^8.5`** di `composer.json`; **UUID native MariaDB** dibuktikan gerbang uji (`tests/Feature/UuidTest.php`: tipe `uuid`
+  semua kolom id, tipe FK = tipe kolom yang diacu, 100 id UUIDv7 terurut pada `ORDER BY id`, morph; `tests/Arch/UuidTest.php`
+  melarang `char('..._id', 36)`/`binary('..._id', 16)`). Hanya dua query `information_schema` untuk seluruh skema.
+- **Antrean di database**: koneksi `database` (`after_commit`) dan `database-berat` (antrean `berat`, `retry_after` 960);
+  hanya antrean `default` dan `berat` (nama lama `notifikasi`, `tautan`, `indeks` → `default`; `ekstraksi`, `ekspor` →
+  `berat`, termasuk ekspor Filament). Worker dinyalakan penjadwal tiap menit (`--stop-when-empty`), dengan detak penjadwal,
+  `queue:prune-failed` dan `queue:prune-batches`; `horizon:snapshot` dihapus. Sesi, cache, dan `Cache::lock` di database.
+- **`GET /api/health`** tanpa Redis: `database`, `job_tertunda` (> 10 menit), `job_gagal_24j`, `detak_penjadwal`; 503 hanya
+  bila basis data gagal. Kunci `layanan.redis` dan `layanan.pencarian` dihapus.
+- **Pencarian**: Meilisearch diganti Laravel Scout driver `database` + FULLTEXT MariaDB + kamus istilah. Tabel baru
+  `istilah_pencarian` dan `sinonim_pencarian`, perintah `regulasi:bangun-kamus` (mingguan, pascadeploy, dan lewat job
+  `BangunKamusIstilah` di antrean `berat`), koreksi salah ketik `KoreksiIstilah` (levenshtein ≤ 2, ≤ 1 untuk token ≤ 5
+  huruf; hanya bila hasil kosong; pesan "Menampilkan hasil untuk …" dengan tautan "Cari persis"), sinonim dua arah di
+  kueri FULLTEXT. Dicabut: `meilisearch/meilisearch-php`, `PemilihMesinPencarian`, `PencarianMeilisearch`, `regulasi:reindeks`,
+  suite `tests/Integrasi`.
+- **Horizon dicabut**: paket, provider, gate, config, rute `/horizon`, izin `horizon.akses` (seeder dan migrasi data
+  `hapus_izin_horizon_akses`), baris panduan super-admin dan tangkapan layar Horizon. Tes arsitektur anti-Horizon/Redis/Meilisearch.
+- **Compose produksi** hanya `app`, `web`, `scheduler`, `backup` (klien `mariadb-dump` ke MariaDB host lewat
+  `host.docker.internal`); tanpa `mariadb`, `redis`, `meilisearch`, `queue`; `mem_limit` dan rotasi log; Dockerfile tanpa
+  `phpredis`; `docker/mariadb/regulasi.cnf` dihapus; `.env.production.example` memakai `DB_HOST=host.docker.internal` dan `db_regulasi`.
+- CI (`ci.yml`): service Redis dan ekstensi `redis` dihapus (bagian lain tidak diubah).
+- Peralihan dari rilis lama: `docs/DEPLOY.md` bagian "Peralihan dari rilis lama". Keputusan terbuka: ADR 0004.
+
 ### Diubah
 - Dokumentasi diselaraskan dengan Profil Ringan (STANDAR-TEKNIS §1b, keputusan 15 Oktober 2026): README, DEPLOY,
   OPERASIONAL, KINERJA, dan docs/keputusan diberi penanda "Profil Ringan berlaku setelah Fase B; kondisi saat ini: ...".
@@ -28,7 +52,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan
 ### Ditambahkan
 - Deploy otomatis dari GitHub (auto-pull): push tag `vX.Y.Z` → uji penuh (`ci.yml` dipakai ulang, kini juga
   shellcheck) → server menarik tag lewat SSH dan menjalankan `scripts/deploy.sh` (cadangan pra-migrasi, build,
-  health check, `horizon:terminate`, rollback cepat `--rollback X.Y.Z`). GitHub Secrets: `SERVER_HOST`,
+  health check, `horizon:terminate` (kini `queue:restart`), rollback cepat `--rollback X.Y.Z`). GitHub Secrets: `SERVER_HOST`,
   `SERVER_USER`, `SSH_PRIVATE_KEY`, opsional `SERVER_PORT` (docs/DEPLOY.md).
 - Landing page diperkaya: ajakan telusuri/masuk, bagian keunggulan repositori, dan kartu panduan per peran
   (panduan super-admin tidak ditampilkan di landing; berkasnya tetap di `public/panduan/`).

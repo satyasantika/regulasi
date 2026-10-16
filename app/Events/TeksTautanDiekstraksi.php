@@ -9,7 +9,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Ekstraksi teks sebuah tautan selesai (berhasil atau tanpa teks). Dipakai untuk reindeks dokumen pemilik (F7.2).
+ * Ekstraksi teks sebuah tautan selesai (berhasil atau tanpa teks). Dipakai untuk membangun ulang kamus pencarian (F7.2).
  */
 class TeksTautanDiekstraksi implements ShouldDispatchAfterCommit
 {

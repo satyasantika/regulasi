@@ -1,6 +1,6 @@
 # Tangkapan layar panduan (F12.6). Lokal saja:
 #   docker exec regulasi-php php artisan migrate:fresh --seeder=PanduanSeeder   # basis data lokal/panduan, BUKAN produksi
-#   docker exec regulasi-php php artisan regulasi:reindeks
+#   docker exec regulasi-php php artisan regulasi:bangun-kamus
 #   PANDUAN_PASSWORD=... docker compose -f docker-compose.panduan.yml --profile panduan run --rm regulasi-panduan [peran ...]
 # network_mode host: URL absolut aplikasi (APP_URL lokal http://localhost:8034/regulasi) dapat dibuka dari container.
 # Alternatif jaringan docker: docker run --network code_laranet … dengan PANDUAN_BASE_URL yang sama dengan APP_URL server.

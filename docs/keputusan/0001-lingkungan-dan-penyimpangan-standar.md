@@ -2,6 +2,8 @@
 
 - Status: Diterima
 - Tanggal: 2026-10-10
+- Pembaruan 16 Oktober 2026: baris Redis, Meilisearch, Horizon, dan compose produksi pada tabel di bawah menggambarkan
+  rilis lama; kode kini mengikuti Profil Ringan (ADR 0004).
 
 Mesin pengembang sudah memiliki infrastruktur Docker bersama untuk seluruh sistem FKIP (pola yang sama dengan
 sistem `keuangan`, ADR 0003 di repo itu). Keputusan ini menggantikan bagian standar teknis bila bertentangan:

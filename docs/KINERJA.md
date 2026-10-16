@@ -3,11 +3,12 @@
 Catatan pengukuran F12.2 (04-PROMPT-BERTAHAP). Target: beranda (cache hangat) < 300 ms dan `/dokumen` berfilter
 < 500 ms pada 5.000 dokumen di lingkungan lokal.
 
-> **Catatan Profil Ringan (menunggu pemilik):** pengukuran di bawah dilakukan pada kondisi saat ini (Meilisearch +
-> Redis). Profil Ringan berlaku setelah Fase B, dengan pencarian Scout driver `database` + kamus istilah; angka
-> "Cadangan FULLTEXT" di bawah adalah rujukan terdekat. Angka target tidak diubah di dokumen ini. Agen sebelumnya
+> **Catatan Profil Ringan (menunggu pemilik):** pengukuran di bawah dilakukan pada rilis lama (10 Oktober 2026, Meilisearch +
+> Redis). Kode kini memakai pencarian Scout driver `database` + FULLTEXT + kamus istilah; angka
+> "Cadangan FULLTEXT" di bawah adalah rujukan terdekat dan **belum diukur ulang** pada kode baru (kamus menambah satu
+> kueri `istilah_pencarian` yang di-cache 60 menit, dan satu kueri ulang bila hasil kosong). Angka target tidak diubah di dokumen ini. Agen sebelumnya
 > mengubah target kinerja pencarian dari < 200 ms menjadi < 500 ms (terlihat di PRD); perubahan itu **menunggu
-> persetujuan pemilik** dan belum boleh dianggap final. Ukur ulang setelah Fase B.
+> persetujuan pemilik** dan belum boleh dianggap final. Ukur ulang pada kode Profil Ringan (angka di atas dari rilis lama).
 
 ## Lingkungan pengukuran
 
@@ -91,17 +92,16 @@ tumbuh.
 # 1. Basis data terpisah (sekali)
 docker exec -e HOME=/tmp regulasi-php php artisan tinker --execute='DB::statement("CREATE DATABASE IF NOT EXISTS db_regulasi_perf CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");'
 
-# 2. Variabel lingkungan perf: DB, prefiks cache/redis/scout terpisah, antrean sinkron (tidak membebani Horizon dev)
-PE="-e HOME=/tmp -e DB_DATABASE=db_regulasi_perf -e CACHE_PREFIX=regulasi_perf: -e REDIS_PREFIX=regulasi_perf_ -e SCOUT_PREFIX=perf_regulasi_ -e QUEUE_CONNECTION=sync -e SESSION_DRIVER=array"
+# 2. Variabel lingkungan perf: DB terpisah, prefiks cache, antrean sinkron
+PE="-e HOME=/tmp -e DB_DATABASE=db_regulasi_perf -e CACHE_PREFIX=regulasi_perf: -e QUEUE_CONNECTION=sync -e SESSION_DRIVER=array"
 docker exec $PE regulasi-php php artisan migrate:fresh --force --seeder=PerfSeeder
-docker exec $PE regulasi-php php artisan regulasi:reindeks
+docker exec $PE regulasi-php php artisan regulasi:bangun-kamus
 
-# 3. Ukur (skrip memanggil Kernel::handle() untuk tiap URI; tambahkan -e SCOUT_DRIVER=null untuk cadangan DB)
+# 3. Ukur (skrip memanggil Kernel::handle() untuk tiap URI)
 docker exec -i $PE -w /var/www/html regulasi-php php < ukur-kinerja.php
 
 # 4. Bersihkan
 docker exec -e HOME=/tmp regulasi-php php artisan tinker --execute='DB::statement("DROP DATABASE db_regulasi_perf");'
-curl -X DELETE -H "Authorization: Bearer $MEILISEARCH_KEY" http://regulasi-meilisearch:7700/indexes/perf_regulasi_dokumen   # dari dalam jaringan docker
 ```
 
 Kerangka skrip `ukur-kinerja.php` (tidak di-commit; jalankan dari stdin):

@@ -4,6 +4,7 @@ use App\Enums\StatusBerlaku;
 use App\Enums\StatusEkstraksi;
 use App\Enums\StatusPublikasi;
 use App\Enums\Visibilitas;
+use App\Livewire\Publik\DaftarDokumen;
 use App\Models\BadanPenetap;
 use App\Models\Dokumen;
 use App\Models\EkstraksiTeks;
@@ -219,4 +220,19 @@ test('Scout driver database mencari dokumen terbit saja lewat Dokumen::cariTerbi
     expect(config('scout.driver'))->toBe('database')
         ->and(Dokumen::cariTerbit('Penatausahaan')->get()->modelKeys())->toBe([$pmk->getKey()])
         ->and(Dokumen::cariTerbit('181/PMK')->get()->modelKeys())->toBe([$pmk->getKey()]);
+});
+
+test('portal menampilkan "Menampilkan hasil untuk" dan tautan cari persis saat kueri dikoreksi', function () {
+    dokumenCari(['judul' => 'Penatausahaan Barang Milik Negara', 'sebutan_singkat' => 'PMK 181/2016']);
+    Artisan::call('regulasi:bangun-kamus');
+
+    Livewire\Livewire::test(DaftarDokumen::class)
+        ->set('q', 'penatausahan')
+        ->assertSee('Menampilkan hasil untuk')
+        ->assertSee('penatausahaan')
+        ->assertSee('Cari persis')
+        ->assertSee('PMK 181/2016')
+        ->set('persis', true)
+        ->assertDontSee('Menampilkan hasil untuk')
+        ->assertSee('0 dokumen');
 });

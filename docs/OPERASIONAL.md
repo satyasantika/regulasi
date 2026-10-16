@@ -2,9 +2,9 @@
 
 Daftar ini menghimpun hal-hal yang **tidak dapat diselesaikan dari kode** (fakta regulasi, keputusan kebijakan,
 infrastruktur kampus) yang tercatat sepanjang F0–F12. Centang setelah ditangani; cantumkan nama & tanggal.
-> **Profil Ringan berlaku setelah Fase B; kondisi saat ini:** butir yang menyebut Horizon, Redis, atau Meilisearch
-> (mis. G-10, pemindaian port, token FULLTEXT) mengacu pada kode berjalan dan akan disesuaikan setelah Fase B
-> (STANDAR-TEKNIS §1b; pada target, FULLTEXT MariaDB menjadi mesin utama sehingga butir token FULLTEXT berlaku penuh).
+> Kode memakai Profil Ringan (STANDAR-TEKNIS §1b, ADR 0004): tanpa Horizon, Redis, dan Meilisearch; FULLTEXT MariaDB
+> adalah mesin pencarian sehingga butir token FULLTEXT berlaku penuh. Server produksi yang masih menjalankan rilis lama
+> perlu peralihan: `docs/DEPLOY.md` bagian "Peralihan dari rilis lama".
 
 Rujukan langkah teknis: `docs/DEPLOY.md`; skenario uji: `docs/uat/hasil-uat.md`; go-live: 05-UJI-PENERIMAAN §4.
 
@@ -25,12 +25,12 @@ Rujukan langkah teknis: `docs/DEPLOY.md`; skenario uji: `docs/uat/hasil-uat.md`;
 
 | ✓ | Butir | Tindakan | Penanggung jawab |
 |---|---|---|---|
-| ☐ | **`innodb_ft_min_token_size`** | MariaDB lokal (host) memakai bawaan 3: "PP", "UU", "SE" tidak tercari di cadangan FULLTEXT (Meilisearch tidak terpengaruh). Produksi memakai `docker/mariadb/regulasi.cnf` (2, stopword mati) + `REGULASI_FT_MIN_TOKEN=2`. Pada target (keputusan 16 Oktober 2026) MariaDB produksi native di host, bukan container compose: pasang setelan yang sama di `my.cnf` host **sebelum** migrasi lalu bangun ulang indeks FULLTEXT (G-05). Perilaku FULLTEXT dibuktikan oleh gerbang uji `PencarianDatabaseTest` (Fase B), bukan diputuskan di dokumen ini | TI fakultas |
+| ☐ | **`innodb_ft_min_token_size` dan stopword** | MariaDB host memakai bawaan 3: "PP", "UU", "SE" tidak tercari oleh FULLTEXT (Meilisearch yang dulu menutupi hal ini sudah dicabut). Rilis lama memakai `innodb_ft_min_token_size=2` dan `innodb_ft_enable_stopword=0` lewat container; setelan itu **global server** dan repo ini tidak mengubah `my.cnf` host. **Keputusan pemilik server:** setel 2 (dan stopword mati) lalu bangun ulang indeks `ft_dokumen`/`ft_ekstraksi_isi` dan isi `REGULASI_FT_MIN_TOKEN=2`, atau terima 3 (default; singkatan dua huruf baru ditemukan lewat kamus/sinonim dan awalan nomor). Perilaku dibuktikan oleh `PencarianDatabaseTest`, bukan diputuskan di dokumen ini (G-05) | TI fakultas |
 | ☐ | **robots.txt gateway** | Salin isi `public/robots.txt` (Disallow `/regulasi/admin`, `/regulasi/akun`, `/regulasi/d/`, `/regulasi/livewire`; `Sitemap: …/regulasi/sitemap.xml`) ke robots.txt akar `supportfkip.unsil.ac.id` | TI fakultas |
 | ☐ | **Reverse proxy & HTTPS** | Blok `location /regulasi/` (docs/DEPLOY.md), `TRUSTED_PROXIES` = IP proxy, sertifikat valid | TI fakultas |
 | ☐ | **Kartu aplikasi di landing supportfkip** | Tambah tautan `regulasi/` dan `regulasi/panduan/` di `index.html` akar supportfkip (PG-01) | TI fakultas |
 | ☐ | **Cadangan di luar server** | Salin `./backup/mariadb` ke penyimpanan lain; uji pulih pertama dicatat (docs/DEPLOY.md §Uji pulih semester, G-11) | TI fakultas |
-| ☐ | **Pemindaian port** | Pastikan hanya `WEB_PORT` terbuka untuk proxy; MariaDB/Redis/Meilisearch tidak terjangkau dari luar (KM-13) | TI fakultas |
+| ☐ | **Pemindaian port** | Pastikan hanya `WEB_PORT` terbuka untuk proxy; MariaDB host tidak terjangkau dari luar server (KM-13) | TI fakultas |
 | ☐ | **Super-admin awal `fkip@unsil.ac.id`** | Isi `REGULASI_SUPERADMIN_PASSWORD` di `.env.production` (jangan di repo), `db:seed --force`, masuk pertama: pasang MFA lalu ganti kata sandi awal (akun ditandai wajib ganti sandi). Setelah itu kosongkan kembali nilai sandi di `.env.production` bila diinginkan — seeder tidak menimpa akun yang sudah ada | Super Admin / TI fakultas |
 | ☐ | **Flag `MFA_AKTIF`** | Bawaan `true` (wajib MFA bagi super-admin & admin-regulasi). Mematikan (`MFA_AKTIF=false`) adalah keputusan pemilik sistem; catat tanggal, alasan, dan tanggal dinyalakan kembali di tabel ini. Risiko & rekomendasi: `docs/keputusan/0002-flag-mfa-aktif.md` | Pemilik sistem |
 | ☐ | **SMTP kampus** | Isi `MAIL_*`, uji surel atur kata sandi, notifikasi tolak/terbit, ringkasan mingguan | TI fakultas |
@@ -53,12 +53,12 @@ Rujukan langkah teknis: `docs/DEPLOY.md`; skenario uji: `docs/uat/hasil-uat.md`;
 | G-02 | Checklist keamanan §3 | Sebagian — KM-08 (browser), KM-12, KM-13 perlu TI |
 | G-03 | CI hijau pada `main`; tag `v1.0.0` | Uji lokal hijau & tag lokal dibuat; CI menunggu remote |
 | G-04 | `.env` produksi | **Belum** (TI) — contoh: `.env.production.example`, `APP_VERSION=1.0.0` |
-| G-05 | FULLTEXT token 2 & tanpa stopword | Disiapkan di compose (`docker/mariadb/regulasi.cnf`); terverifikasi di uji asap lokal |
+| G-05 | FULLTEXT token 2 & tanpa stopword | **Menunggu keputusan pemilik server** (setelan global MariaDB host; lihat §2). Rilis lama memakainya lewat container |
 | G-06 | migrate, seeder peran & master, super-admin dari env | Otomatis lewat entrypoint + `db:seed --force` (terverifikasi di uji asap lokal); ganti kata sandi awal: manusia |
 | G-07 | PDF seed & `DokumenContohSeeder` | **Belum** — butir §1 baris pertama |
 | G-08 | Lengkapi metadata seed & terbitkan; "perlu verifikasi" | **Belum** — §1 |
-| G-09 | `scout:sync-index-settings` & `regulasi:reindeks`; salah ketik | Entrypoint menjalankan sync; reindeks manual setelah seed; salah ketik terverifikasi (P-02) |
-| G-10 | Horizon & scheduler berjalan; `schedule:list` | Terverifikasi di uji asap lokal |
+| G-09 | `regulasi:bangun-kamus`; salah ketik | Entrypoint menjalankan pembangunan kamus setelah migrasi; P-02 diuji otomatis (`PencarianDatabaseTest`); belum diukur pada data nyata |
+| G-10 | Scheduler menyalakan worker; `schedule:list`; `/api/health` memuat `detak_penjadwal` | Diuji otomatis; uji asap compose terhadap MariaDB host: **belum** |
 | G-11 | Backup harian & uji pulih pertama | Skrip & service siap, uji pulih lokal lulus; di server: **belum** |
 | G-11a | Shared Drive "Regulasi FKIP" | **Belum** (Admin Regulasi) |
 | G-11b | Daftar putih domain disetujui | **Belum** — §1 (banpt/lamdik) |
