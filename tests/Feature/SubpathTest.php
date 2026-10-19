@@ -1,7 +1,10 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $url = 'https://supportfkip.unsil.ac.id/regulasi';

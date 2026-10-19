@@ -1,5 +1,9 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
 test('halaman masuk kedua panel memakai tata letak kiri-kanan bertema landing', function (string $path, string $lencana) {
     $this->get($path)
         ->assertOk()

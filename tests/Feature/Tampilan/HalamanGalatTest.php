@@ -1,6 +1,9 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Route::middleware('web')->get('/uji-galat/{kode}', fn (int $kode) => abort($kode, 'RAHASIA-DETAIL-INTERNAL'))->whereNumber('kode');
