@@ -45,7 +45,7 @@ tunggu_sehat() {
   done
 
   echo "--- 50 baris terakhir log app ---" >&2
-  "${COMPOSE[@]}" logs --tail=50 app >&2 || true
+  "${COMPOSE[@]}" logs --tail=50 php >&2 || true
   gagal "/api/health tidak ok setelah $((PERCOBAAN_SEHAT * JEDA_SEHAT)) detik."
 }
 
@@ -78,7 +78,7 @@ bersihkan_image() {
 # Worker antrean dinyalakan penjadwal tiap menit (tanpa Horizon): queue:restart membuat worker yang sedang berjalan
 # berhenti setelah job berjalan selesai; worker berikutnya memuat kode baru.
 muat_ulang_pekerja() {
-  "${COMPOSE[@]}" exec -T app php artisan queue:restart || true
+  "${COMPOSE[@]}" exec -T php php artisan queue:restart || true
 }
 
 rollback() {
