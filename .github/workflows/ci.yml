@@ -58,7 +58,20 @@ jobs:
       - name: Siapkan .env
         run: |
           cp .env.example .env
+          sed -i 's/^REGULASI_SUPERADMIN_PASSWORD=.*/REGULASI_SUPERADMIN_PASSWORD=UjiSuperAdmin123/' .env
           php artisan key:generate
+
+      - name: Siapkan Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # Tampilan publik memakai @vite(); tanpa manifest, setiap tes yang merender halaman gagal.
+      - name: Bangun aset frontend
+        run: |
+          npm ci
+          npm run build
 
       - name: Shellcheck skrip rilis, docker & cadangan
         run: shellcheck --severity=warning scripts/*.sh docker/entrypoint.sh docker/backup/*.sh
@@ -70,19 +83,7 @@ jobs:
         run: ./vendor/bin/phpstan analyse --memory-limit=1G --no-progress
 
       - name: Pest
-        run: |
-          set -o pipefail
-          php artisan test --parallel 2>&1 | tee /tmp/pest.log
-
-      - name: Ringkasan gagal (debug sementara)
-        if: failure()
-        run: |
-          {
-            echo '## Pest gagal — 200 baris terakhir'
-            echo '```'
-            tail -n 200 /tmp/pest.log
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: php artisan test --parallel
 
       # Uji ekstraksi teks butuh pdftotext (poppler-utils): gagal bila ada yang di-skip.
       - name: Pest ekstraksi (tanpa skip)
