@@ -36,8 +36,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\ParallelTesting;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -119,6 +121,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->aturProxyTepercaya();
         $this->siapkanSubpath();
+        $this->siapkanBasisDataPararel();
     }
 
     private function aturProxyTepercaya(): void
@@ -128,6 +131,22 @@ class AppServiceProvider extends ServiceProvider
         if ($proxy !== '') {
             TrustProxies::at($proxy === '*' ? '*' : array_values(array_filter(array_map('trim', explode(',', $proxy)))));
         }
+    }
+
+    /**
+     * Setiap proses uji paralel (`php artisan test --parallel`) mendapat basis data tersendiri
+     * `{DB_DATABASE}_test_{token}` yang dibuat otomatis oleh Laravel, tetapi belum bermigrasi —
+     * tanpa gerbang ini tabel tidak ada dan uji gagal di proses selain yang pertama.
+     */
+    private function siapkanBasisDataPararel(): void
+    {
+        if (! $this->app->runningUnitTests()) {
+            return;
+        }
+
+        ParallelTesting::setUpTestDatabase(function (): void {
+            Artisan::call('migrate', ['--force' => true]);
+        });
     }
 
     /**
