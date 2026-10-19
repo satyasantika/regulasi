@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Publik;
 
 use App\Http\Controllers\Controller;
-use Carbon\CarbonInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -52,11 +51,11 @@ class KesehatanController extends Controller
             return 'gagal';
         }
 
-        if (! $detak instanceof CarbonInterface) {
+        if (! is_int($detak)) {
             return 'belum_ada';
         }
 
-        return $detak->diffInMinutes(now(), true) > self::DETAK_MAKS_MENIT ? 'terlambat' : 'ok';
+        return (now()->getTimestamp() - $detak) > self::DETAK_MAKS_MENIT * 60 ? 'terlambat' : 'ok';
     }
 
     private function hitung(callable $hitung): int|string

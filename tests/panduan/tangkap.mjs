@@ -10,7 +10,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright');
 const sharp = await import(process.env.SHARP_MODULE ?? 'sharp').then((m) => m.default).catch(() => null);
 
-const BASE = (process.env.PANDUAN_BASE_URL ?? 'http://localhost:8034/regulasi').replace(/\/$/, '');
+const BASE = (process.env.PANDUAN_BASE_URL ?? 'http://localhost:8024/regulasi').replace(/\/$/, '');
 const SANDI = process.env.PANDUAN_PASSWORD;
 const KELUARAN = new URL('../../public/panduan/img/', import.meta.url).pathname;
 

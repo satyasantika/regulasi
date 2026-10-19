@@ -189,7 +189,7 @@ git config core.hooksPath .githooks
 
 Gerbang kualitas: `rgp composer cek` (Pint `--test`, Larastan level 6, Pest).
 
-Aplikasi: http://localhost:8034/regulasi/ (juga http://localhost:8034 untuk pemeriksaan langsung) ·
+Aplikasi: http://localhost:8024/regulasi/ (juga http://localhost:8024 untuk pemeriksaan langsung) ·
 Mailpit: http://localhost:18018 · kesehatan: `GET /api/health`.
 
 ### Subpath `/regulasi`

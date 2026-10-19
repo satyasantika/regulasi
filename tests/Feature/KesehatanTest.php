@@ -39,7 +39,7 @@ it('melaporkan job tertunda, job gagal 24 jam, dan detak penjadwal tanpa menurun
     DB::table('jobs')->insert([...$job, 'available_at' => now()->getTimestamp()]);
     DB::table('failed_jobs')->insert(['uuid' => (string) Str::uuid(), 'connection' => 'database', 'queue' => 'default', 'payload' => '{}', 'exception' => 'x', 'failed_at' => now()]);
     DB::table('failed_jobs')->insert(['uuid' => (string) Str::uuid(), 'connection' => 'database', 'queue' => 'default', 'payload' => '{}', 'exception' => 'x', 'failed_at' => now()->subDays(2)]);
-    Cache::put(config('app.kode').':detak-penjadwal', now()->subMinutes(20), 600);
+    Cache::put(config('app.kode').':detak-penjadwal', now()->subMinutes(20)->getTimestamp(), 600);
 
     $this->getJson('/api/health')
         ->assertOk()
@@ -47,7 +47,7 @@ it('melaporkan job tertunda, job gagal 24 jam, dan detak penjadwal tanpa menurun
         ->assertJsonPath('layanan.job_gagal_24j', 1)
         ->assertJsonPath('layanan.detak_penjadwal', 'terlambat');
 
-    Cache::put(config('app.kode').':detak-penjadwal', now(), 600);
+    Cache::put(config('app.kode').':detak-penjadwal', now()->getTimestamp(), 600);
 
     $this->getJson('/api/health')->assertJsonPath('layanan.detak_penjadwal', 'ok');
 });
