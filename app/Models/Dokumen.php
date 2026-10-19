@@ -192,7 +192,7 @@ class Dokumen extends Model
     /**
      * Pencarian Scout terbatas pada dokumen terbit (driver database tidak memanggil shouldBeSearchable saat mencari).
      *
-     * @return ScoutBuilder<self>
+     * @return ScoutBuilder<static>
      */
     public static function cariTerbit(string $kueri): ScoutBuilder
     {

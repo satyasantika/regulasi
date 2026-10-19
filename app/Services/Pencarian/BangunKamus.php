@@ -88,12 +88,9 @@ class BangunKamus
             DB::table('istilah_pencarian')->upsert($baris, ['istilah'], ['sumber', 'frekuensi', 'updated_at']);
         }
 
-        $usang = IstilahPencarian::query()->pluck('istilah')->diff(array_map('strval', array_keys($hitung)))->values();
-        $dihapus = 0;
-
-        foreach ($usang->chunk(500) as $bagian) {
-            $dihapus += IstilahPencarian::query()->whereIn('istilah', $bagian->all())->delete();
-        }
+        $dihapus = IstilahPencarian::query()
+            ->whereNotIn('istilah', array_map('strval', array_keys($hitung)))
+            ->delete();
 
         $this->kamus->lupakan();
 
