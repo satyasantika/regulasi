@@ -38,7 +38,7 @@ test('compose produksi hanya memuat app, web, scheduler, dan backup tanpa contai
     $kompos = Yaml::parseFile($akar.'/docker-compose.prod.yml');
     $mentah = (string) file_get_contents($akar.'/docker-compose.prod.yml');
 
-    expect(array_keys($kompos['services']))->toEqualCanonicalizing(['app', 'web', 'scheduler', 'backup']);
+    expect(array_keys($kompos['services']))->toEqualCanonicalizing(['php', 'web', 'scheduler', 'backup']);
 
     foreach (['queue', 'redis', 'mariadb', 'mysql', 'db', 'meilisearch'] as $layanan) {
         expect($kompos['services'])->not->toHaveKey($layanan);
@@ -61,7 +61,7 @@ test('compose produksi hanya memuat app, web, scheduler, dan backup tanpa contai
 test('semua container terhubung ke basis data host lewat host-gateway, berbatas memori, dan lognya dirotasi', function () use ($akar) {
     $kompos = Yaml::parseFile($akar.'/docker-compose.prod.yml');
 
-    foreach (['app', 'scheduler', 'backup'] as $nama) {
+    foreach (['php', 'scheduler', 'backup'] as $nama) {
         expect($kompos['services'][$nama]['extra_hosts'])->toContain('host.docker.internal:host-gateway');
     }
 
@@ -100,7 +100,7 @@ test('nginx produksi memblokir dotfiles dan storage, gzip, dan batas 30M', funct
         ->toContain('gzip on')
         ->toContain('location ~ /\.(?!well-known)')
         ->toContain('location ^~ /storage/')
-        ->toContain('fastcgi_pass app:9000')
+        ->toContain('fastcgi_pass php:9000')
         ->toContain('server_tokens off');
 });
 
