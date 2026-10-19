@@ -21,7 +21,7 @@ use Livewire\WithPagination;
 /**
  * Daftar dokumen berfaset (US-CARI-01..03, 02-ARSITEKTUR §8) untuk tiga rute: /dokumen, /jenis/{slug} (jenis
  * terkunci), dan /kategori/{slug} (kategori terkunci). Semua filter tersinkron ke URL sehingga dapat dibagikan.
- * Mesin dari PencarianDokumen (Meilisearch atau cadangan FULLTEXT); internal hanya untuk pengguna login (BR-02).
+ * Mesin dari PencarianDokumen (MariaDB FULLTEXT + kamus istilah); internal hanya untuk pengguna login (BR-02).
  */
 class DaftarDokumen extends Component
 {
@@ -58,6 +58,10 @@ class DaftarDokumen extends Component
     #[Url(except: [])]
     public array $badan = [];
 
+    /** true = cari persis seperti diketik (tanpa koreksi salah ketik kamus istilah). */
+    #[Url(except: false)]
+    public bool $persis = false;
+
     #[Url(except: 'relevan')]
     public string $urut = 'relevan';
 
@@ -79,6 +83,10 @@ class DaftarDokumen extends Component
     public function updated(string $properti): void
     {
         if (in_array(explode('.', $properti)[0], self::PROPERTI_FILTER, true)) {
+            if ($properti === 'q') {
+                $this->persis = false;
+            }
+
             $this->rapikanFilter();
             $this->resetPage(self::HALAMAN);
         }
@@ -96,7 +104,7 @@ class DaftarDokumen extends Component
 
     public function hapusSemuaFilter(): void
     {
-        $this->reset('q', 'jenis', 'tahun', 'status', 'kategori', 'badan');
+        $this->reset('q', 'persis', 'jenis', 'tahun', 'status', 'kategori', 'badan');
         $this->resetPage(self::HALAMAN);
     }
 
@@ -146,6 +154,7 @@ class DaftarDokumen extends Component
             'badan' => $this->badan,
             'urut' => $this->urut,
             'halaman' => (int) $this->getPage(self::HALAMAN),
+            'persis' => $this->persis,
         ], sertakanInternal: auth()->check());
     }
 

@@ -52,10 +52,11 @@ test('jadwal memuat semua tugas dengan cron, zona Asia/Jakarta, tanpa tumpang ti
         'activitylog:clean' => '30 1 * * *',
         'berkas:periksa-tautan' => '30 6 * * 1',
         'regulasi:ringkasan-mingguan' => '30 7 * * 1',
-        'horizon:snapshot' => '*/5 * * * *',
+        'regulasi:bangun-kamus' => '0 2 * * 0',
     ];
 
-    expect($tugas)->toHaveCount(count($harapan));
+    // 8 tugas bisnis + 2 worker antrean + detak penjadwal + 2 pemangkasan (Profil Ringan)
+    expect($tugas)->toHaveCount(count($harapan) + 5);
 
     foreach ($harapan as $perintah => $cron) {
         $event = $tugas->first(fn (TugasTerjadwal $e): bool => str_contains((string) $e->command, $perintah));
@@ -69,6 +70,20 @@ test('jadwal memuat semua tugas dengan cron, zona Asia/Jakarta, tanpa tumpang ti
 
     expect((string) $tugas->first(fn (TugasTerjadwal $e): bool => str_contains((string) $e->command, 'model:prune'))->command)
         ->toContain('LogBukaTautan');
+});
+
+test('Profil Ringan: dua worker, detak penjadwal, pemangkasan antrean, dan tanpa horizon:snapshot', function () {
+    $jadwal = collect(app(Schedule::class)->events())
+        ->map(fn ($e) => (string) ($e->command ?? $e->description))
+        ->implode("\n");
+
+    expect($jadwal)
+        ->toContain('queue:work database --queue=default --stop-when-empty')
+        ->toContain('queue:work database-berat --queue=berat --stop-when-empty')
+        ->toContain('detak-penjadwal')
+        ->toContain('queue:prune-failed')
+        ->toContain('queue:prune-batches')
+        ->not->toContain('horizon');
 });
 
 test('berkas:periksa-tautan mengantrekan satu job per tautan dokumen terbit dan menjeda per host', function () {
@@ -89,7 +104,7 @@ test('berkas:periksa-tautan mengantrekan satu job per tautan dokumen terbit dan 
         ->expectsOutputToContain('4 tautan dari 2 host diantrekan')
         ->assertSuccessful();
 
-    Queue::assertPushedOn('tautan', PeriksaTautanBerkas::class);
+    Queue::assertPushedOn('default', PeriksaTautanBerkas::class);
     Queue::assertPushed(PeriksaTautanBerkas::class, 4);
     Queue::assertPushed(PeriksaTautanBerkas::class, fn (PeriksaTautanBerkas $job): bool => $job->tautan->is($driveA) && $job->delay === null);
     // Tautan Drive ke-3 melewati batas 2/menit → ditunda satu menit.

@@ -81,7 +81,7 @@ abstract class NotifikasiRegulasi extends Notification implements ShouldQueue
      */
     public function viaQueues(): array
     {
-        return ['database' => 'notifikasi', 'mail' => 'notifikasi'];
+        return ['database' => 'default', 'mail' => 'default'];
     }
 
     /**
@@ -122,11 +122,11 @@ abstract class NotifikasiRegulasi extends Notification implements ShouldQueue
     }
 
     /**
-     * Antrean `notifikasi` dan hanya dikirim setelah transaksi pemanggil di-commit.
+     * Antrean `default` dan hanya dikirim setelah transaksi pemanggil di-commit.
      */
     protected function siapkanAntrean(): void
     {
-        $this->onQueue('notifikasi');
+        $this->onQueue('default');
         $this->afterCommit();
     }
 }

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Ekspor Excel laporan kelengkapan metadata (F11.2, US-LAP-02) lewat Filament ExportAction: berbasis antrean
- * `ekspor`, berkas di disk `tmp` (dihapus ≤ 24 jam), header kolom berbahasa Indonesia.
+ * `berat` (koneksi `database-berat`), berkas di disk `tmp` (dihapus ≤ 24 jam), header kolom berbahasa Indonesia.
  */
 class KelengkapanDokumenExporter extends Exporter
 {
@@ -53,9 +53,14 @@ class KelengkapanDokumenExporter extends Exporter
             : KriteriaKelengkapan::pilihKolom($query);
     }
 
+    public function getJobConnection(): ?string
+    {
+        return 'database-berat';
+    }
+
     public function getJobQueue(): ?string
     {
-        return 'ekspor';
+        return 'berat';
     }
 
     public function getFileDisk(): string

@@ -49,7 +49,7 @@ tunggu_sehat() {
   gagal "/api/health tidak ok setelah $((PERCOBAAN_SEHAT * JEDA_SEHAT)) detik."
 }
 
-# Dump MariaDB sebelum container app baru menjalankan migrate --force.
+# Dump MariaDB (di host) sebelum container app baru menjalankan migrate --force; hasil di ./backup/mariadb pada host.
 cadangan_pra_rilis() {
   if [[ -z "$("${COMPOSE[@]}" ps -q backup 2>/dev/null)" ]]; then
     log "lewati cadangan: container backup belum berjalan (deploy pertama?)"
@@ -75,8 +75,10 @@ bersihkan_image() {
   docker image prune -f >/dev/null 2>&1 || true
 }
 
+# Worker antrean dinyalakan penjadwal tiap menit (tanpa Horizon): queue:restart membuat worker yang sedang berjalan
+# berhenti setelah job berjalan selesai; worker berikutnya memuat kode baru.
 muat_ulang_pekerja() {
-  "${COMPOSE[@]}" exec -T queue php artisan horizon:terminate || true
+  "${COMPOSE[@]}" exec -T app php artisan queue:restart || true
 }
 
 rollback() {

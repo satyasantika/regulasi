@@ -3,7 +3,7 @@
 namespace App\Support;
 
 /**
- * Sinonim Meilisearch dua arah dari config/regulasi.php → 'sinonim' (02-ARSITEKTUR §5.1):
+ * Sinonim pencarian dua arah dari config/regulasi.php → 'sinonim' (02-ARSITEKTUR §5.1):
  * ['uu' => ['undang-undang']] menjadi ['uu' => ['undang-undang'], 'undang-undang' => ['uu']].
  */
 class SinonimPencarian

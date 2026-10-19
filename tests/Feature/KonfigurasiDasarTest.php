@@ -36,7 +36,10 @@ test('uji berjalan di basis data db_regulasi_testing', function () {
         ->and(config('database.connections.mariadb.database'))->toBe('db_regulasi_testing');
 });
 
-test('antrean redis memakai koneksi queue tersendiri', function () {
-    expect(config('queue.connections.redis.connection'))->toBe('queue')
-        ->and(config('database.redis.queue.database'))->not->toBeNull();
+test('antrean bawaan memakai database (Profil Ringan)', function () {
+    expect(config('queue.connections'))->toHaveKeys(['database', 'database-berat'])
+        ->and(file_get_contents(config_path('queue.php')))->not->toContain("'redis' =>") // kerangka kerja tetap menggabungkan bawaannya
+        ->and(config('queue.default'))->not->toBe('redis')
+        ->and(config('scout.driver'))->toBe('database')
+        ->and(file_get_contents(config_path('scout.php')))->not->toContain("'meilisearch' =>");
 });

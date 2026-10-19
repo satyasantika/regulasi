@@ -1,7 +1,7 @@
 #!/bin/sh
 # Cadangan harian MariaDB Regulasi FKIP Unsil (docs/DEPLOY.md §Cadangan dan pemulihan).
 # Hanya basis data: berkas naskah berada di Shared Drive "Regulasi FKIP" dan sumber resmi, bukan di server;
-# indeks Meilisearch tidak dicadangkan (dibangun ulang dengan regulasi:reindeks).
+# kamus istilah pencarian ikut tercadangkan sebagai tabel (dapat dibangun ulang dengan regulasi:bangun-kamus).
 #
 # Hasil: $BACKUP_DIR/<YYYY-MM-DD>/regulasi-<YYYY-MM-DD-HHMMSS>.sql.gz (+ .sha256), log $BACKUP_DIR/cadangan.log.
 # Variabel: DB_HOST, DB_PORT (3306), DB_DATABASE, DB_USERNAME, DB_PASSWORD, BACKUP_DIR (/backup/mariadb),

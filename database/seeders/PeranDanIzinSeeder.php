@@ -40,7 +40,6 @@ class PeranDanIzinSeeder extends Seeder
         'laporan.ekspor',
         'klien-api.kelola',
         'audit.lihat',
-        'horizon.akses',
     ];
 
     /**

@@ -4,9 +4,9 @@ namespace App\Models;
 
 use App\Enums\JenisTautan;
 use App\Enums\StatusBerlaku;
-use App\Enums\StatusEkstraksi;
 use App\Enums\StatusPublikasi;
 use App\Enums\Visibilitas;
+use App\Jobs\BangunKamusIstilah;
 use Carbon\CarbonImmutable;
 use Database\Factories\DokumenFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -22,7 +22,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Collection as KoleksiDasar;
+use Laravel\Scout\Attributes\SearchUsingFullText;
+use Laravel\Scout\Attributes\SearchUsingPrefix;
+use Laravel\Scout\Builder as ScoutBuilder;
 use Laravel\Scout\Searchable;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -31,9 +33,9 @@ use Spatie\Activitylog\Support\LogOptions;
  * Dokumen hukum/pendukung (03-SKEMA §3.7). Status publikasi & berlaku hanya diubah lewat Action (F5/F6),
  * karena itu tidak termasuk $fillable.
  *
- * Indeks pencarian (F7.2, Scout `{prefix}dokumen`): hanya dokumen terbit & tidak dihapus (BR-01). Sinkronisasi
- * otomatis per simpan dimatikan (searchIndexShouldBeUpdated); indeks diperbarui eksplisit lewat
- * sinkronkanIndeks() dari Action/pendengar setelah commit, sehingga perubahan pivot & ekstraksi ikut terbawa.
+ * Pencarian (F7.2, Scout driver `database` + FULLTEXT MariaDB): hanya dokumen terbit & tidak dihapus (BR-01).
+ * Tidak ada indeks terpisah; sinkronkanIndeks() dipanggil Action/pendengar setelah commit untuk membangun ulang
+ * kamus istilah (koreksi salah ketik).
  *
  * @property string $id
  * @property string $slug
@@ -131,13 +133,6 @@ class Dokumen extends Model
             ->useLogName('dokumen');
     }
 
-    /**
-     * Relasi yang dimuat sebelum toSearchableArray (impor massal, job MakeSearchable).
-     *
-     * @var list<string>
-     */
-    public const array RELASI_INDEKS = ['jenisDokumen', 'badanPenetap', 'kategoriSistem', 'tag', 'tautanBerkas.ekstraksi'];
-
     public function searchableAs(): string
     {
         return config('scout.prefix').'dokumen';
@@ -149,29 +144,21 @@ class Dokumen extends Model
     }
 
     /**
-     * Simpan biasa tidak memicu indeks; Action memanggil sinkronkanIndeks() setelah commit.
+     * Simpan biasa tidak memicu Scout; Action memanggil sinkronkanIndeks() setelah commit.
      */
     public function searchIndexShouldBeUpdated(): bool
     {
         return false;
     }
 
-    public function wasSearchableBeforeUpdate(): bool
-    {
-        return $this->getOriginal('status_publikasi') === StatusPublikasi::Terbit;
-    }
-
-    public function wasSearchableBeforeDelete(): bool
-    {
-        return $this->getOriginal('status_publikasi') === StatusPublikasi::Terbit;
-    }
-
     /**
-     * Terbit → (ulang) indeks; selain itu → keluarkan dari indeks.
+     * Dengan Scout driver `database` indeks adalah tabel `dokumen` sendiri (FULLTEXT), sehingga tidak ada yang
+     * disinkronkan; yang perlu diperbarui adalah kamus istilah (koreksi salah ketik), dibangun ulang di antrean `berat`
+     * setelah commit. Pemicu beruntun digabung (BangunKamusIstilah unik).
      */
     public function sinkronkanIndeks(): void
     {
-        $this->shouldBeSearchable() ? $this->searchable() : $this->unsearchable();
+        BangunKamusIstilah::dispatch()->afterCommit();
     }
 
     /**
@@ -180,72 +167,36 @@ class Dokumen extends Model
      */
     protected function makeAllSearchableUsing(Builder $query): Builder
     {
-        return $query->where('status_publikasi', StatusPublikasi::Terbit->value)->with(self::RELASI_INDEKS);
+        return $query->where('status_publikasi', StatusPublikasi::Terbit->value);
     }
 
     /**
-     * @param  KoleksiDasar<int, self>  $models
-     * @return KoleksiDasar<int, self>
-     */
-    public function makeSearchableUsing(KoleksiDasar $models): KoleksiDasar
-    {
-        return $models->each(fn (self $dokumen) => $dokumen->loadMissing(self::RELASI_INDEKS));
-    }
-
-    /**
-     * Dokumen di indeks Meilisearch (02-ARSITEKTUR §5.1).
+     * Kolom yang dicari Scout driver `database` (02-ARSITEKTUR §5.1): FULLTEXT ft_dokumen pada judul, sebutan
+     * singkat, dan abstrak; awalan untuk id dan nomor. Teks hasil ekstraksi dicari lewat relasi di PencarianDatabase.
      *
      * @return array<string, mixed>
      */
+    #[SearchUsingFullText(['judul', 'sebutan_singkat', 'abstrak'])]
+    #[SearchUsingPrefix(['id', 'nomor'])]
     public function toSearchableArray(): array
     {
-        $this->loadMissing(self::RELASI_INDEKS);
-
         return [
             'id' => $this->getKey(),
             'sebutan_singkat' => $this->sebutan_singkat,
-            'sebutan' => $this->sebutan,
             'judul' => $this->judul,
             'nomor' => $this->nomor,
-            'tahun' => $this->tahun,
-            'jenis' => $this->jenisDokumen->kode,
-            'jenis_nama' => $this->jenisDokumen->nama,
-            'kelompok' => $this->jenisDokumen->kelompok->value,
-            'badan_penetap' => $this->badanPenetap->slug,
-            'badan_nama' => $this->badanPenetap->nama,
-            'status_berlaku' => $this->status_berlaku->value,
-            'visibilitas' => $this->visibilitas->value,
-            'tanpa_berkas' => $this->tanpa_berkas,
-            'kategori' => $this->kategoriSistem->pluck('kode')->values()->all(),
-            'tag' => $this->tag->pluck('nama')->values()->all(),
             'abstrak' => $this->abstrak,
-            'isi_teks' => $this->isiTeksIndeks(),
-            'tanggal_penetapan_ts' => $this->tanggal_penetapan?->getTimestamp(),
-            'dipublikasikan_pada_ts' => $this->dipublikasikan_pada?->getTimestamp(),
-            'jumlah_dibuka' => $this->jumlah_dibuka,
-            'url' => url("dokumen/{$this->getKey()}/{$this->slug}"),
         ];
     }
 
     /**
-     * Gabungan teks ekstraksi berhasil (naskah utama lebih dulu), dipotong ke N kata pertama
-     * (config regulasi.potong_isi_teks_kata, 02-ARSITEKTUR §5.1).
+     * Pencarian Scout terbatas pada dokumen terbit (driver database tidak memanggil shouldBeSearchable saat mencari).
+     *
+     * @return ScoutBuilder<self>
      */
-    public function isiTeksIndeks(): ?string
+    public static function cariTerbit(string $kueri): ScoutBuilder
     {
-        $teks = $this->tautanBerkas
-            ->map(fn (TautanBerkas $tautan): ?string => $tautan->ekstraksi?->status === StatusEkstraksi::Berhasil ? $tautan->ekstraksi->isi_teks : null)
-            ->filter(fn (?string $isi): bool => filled($isi))
-            ->implode("\n\n");
-
-        if ($teks === '') {
-            return null;
-        }
-
-        $batas = max(1, (int) config('regulasi.potong_isi_teks_kata', 60000));
-        $kata = preg_split('/\s+/u', trim($teks), $batas + 1) ?: [];
-
-        return count($kata) > $batas ? implode(' ', array_slice($kata, 0, $batas)) : $teks;
+        return static::search($kueri)->query(fn (Builder $q) => $q->where('dokumen.status_publikasi', StatusPublikasi::Terbit->value));
     }
 
     /** @return BelongsTo<JenisDokumen, $this> */

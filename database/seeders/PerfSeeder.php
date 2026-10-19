@@ -22,7 +22,7 @@ use RuntimeException;
  * Data uji kinerja F12.2 (docs/KINERJA.md): 5.000 dokumen + 8.000 tautan lampiran rekaan dengan sebaran jenis,
  * badan, kategori, tahun, status, dan visibilitas. HANYA lingkungan lokal; dipakai pada basis data terpisah
  * (mis. db_regulasi_perf) agar data pengembangan tidak tercampur. Disisipkan massal (tanpa event model/indeks Scout);
- * indeks Meilisearch dibangun terpisah dengan regulasi:reindeks bila diperlukan.
+ * kamus istilah pencarian dibangun terpisah dengan regulasi:bangun-kamus bila diperlukan.
  */
 class PerfSeeder extends Seeder
 {

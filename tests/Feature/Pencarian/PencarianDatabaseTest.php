@@ -4,6 +4,7 @@ use App\Enums\StatusBerlaku;
 use App\Enums\StatusEkstraksi;
 use App\Enums\StatusPublikasi;
 use App\Enums\Visibilitas;
+use App\Livewire\Publik\DaftarDokumen;
 use App\Models\BadanPenetap;
 use App\Models\Dokumen;
 use App\Models\EkstraksiTeks;
@@ -11,9 +12,11 @@ use App\Models\JenisDokumen;
 use App\Models\KategoriSistem;
 use App\Models\TautanBerkas;
 use App\Services\Pencarian\HasilPencarian;
+use App\Services\Pencarian\KoreksiIstilah;
 use App\Services\Pencarian\KriteriaPencarian;
 use App\Services\Pencarian\PencarianDatabase;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Support\Facades\Artisan;
 
 /*
  * FULLTEXT InnoDB hanya melihat baris yang sudah di-commit, sehingga berkas ini memakai DatabaseTruncation
@@ -156,4 +159,80 @@ test('ekspresi boolean mengikuti regulasi.ft_min_token (produksi 2: PP dan UU ik
 
     expect(PencarianDatabase::ekspresiBoolean('PP 28 tentang UU'))->toBe('+pp* +28* +tentang* +uu*')
         ->and(PencarianDatabase::ekspresiBoolean('a'))->toBeNull();
+});
+
+/*
+ * Kamus istilah, sinonim, dan Scout driver database (Profil Ringan, 02-ARSITEKTUR §5.1).
+ */
+test('P-02: permendikbudrstek 53 dikoreksi ke permendikbudristek dan Permendikbudristek 53/2023 teratas', function () {
+    $permen = JenisDokumen::factory()->create(['kode' => 'PERMEN', 'nama' => 'Peraturan Menteri']);
+    $target = dokumenCari([
+        'jenis_dokumen_id' => $permen->getKey(), 'nomor' => '53', 'tahun' => 2023,
+        'sebutan_singkat' => 'Permendikbudristek 53/2023', 'judul' => 'Penjaminan Mutu Pendidikan Tinggi',
+    ]);
+    dokumenCari(['nomor' => '3', 'tahun' => 2021, 'sebutan_singkat' => 'Permendikbud 3/2021', 'judul' => 'Statuta']);
+    Artisan::call('regulasi:bangun-kamus');
+
+    $hasil = cariDb(['q' => 'permendikbudrstek 53']);
+
+    expect(idHasil($hasil)[0] ?? null)->toBe($target->getKey())
+        ->and($hasil->dikoreksiDari)->toBe('permendikbudrstek 53')
+        ->and($hasil->kueriDipakai)->toBe('permendikbudristek 53');
+});
+
+test('kueri persis tidak dikoreksi dan token pendek memakai jarak 1', function () {
+    dokumenCari(['sebutan_singkat' => 'PMK 181/2016', 'judul' => 'Penatausahaan barang']);
+    Artisan::call('regulasi:bangun-kamus');
+    $koreksi = app(KoreksiIstilah::class);
+
+    expect(cariDb(['q' => 'penatausahan', 'persis' => true])->dikoreksiDari)->toBeNull()
+        ->and(cariDb(['q' => 'penatausahan'])->dikoreksiDari)->toBe('penatausahan')
+        ->and($koreksi->koreksi('pmk'))->toBeNull()          // sudah ada di kamus
+        ->and($koreksi->koreksi('pmj'))->toBe('pmk')         // token <= 5 huruf: jarak 1
+        ->and($koreksi->koreksi('pxx'))->toBeNull()          // jarak 2 untuk token pendek: tidak dikoreksi
+        ->and($koreksi->koreksi('181/2016'))->toBeNull();    // angka tidak dikoreksi
+});
+
+test('sinonim dua arah: bmn menemukan dokumen berjudul barang milik negara dan sebaliknya', function () {
+    config(['regulasi.ft_min_token' => 3]);
+    $bmn = dokumenCari(['judul' => 'Penatausahaan Barang Milik Negara', 'sebutan_singkat' => 'PMK 181/2016']);
+    $lain = dokumenCari(['judul' => 'Tata kelola kepegawaian', 'sebutan_singkat' => 'PERATURAN 1']);
+    $singkat = dokumenCari(['judul' => 'Pedoman BMN fakultas', 'sebutan_singkat' => 'PEDOMAN 2']);
+    Artisan::call('regulasi:bangun-kamus');
+
+    expect(idHasil(cariDb(['q' => 'bmn'])))->toEqualCanonicalizing([$bmn->getKey(), $singkat->getKey()])
+        ->and(idHasil(cariDb(['q' => 'barang milik negara'])))->toEqualCanonicalizing([$bmn->getKey(), $singkat->getKey()])
+        ->and(idHasil(cariDb(['q' => 'bmn'])))->not->toContain($lain->getKey());
+});
+
+test('ekspresi boolean menambahkan sinonim sebagai alternatif', function () {
+    $sinonim = ['bmn' => ['barang milik negara'], 'barang milik negara' => ['bmn'], 'tnd' => ['tata naskah dinas']];
+
+    expect(PencarianDatabase::ekspresiBoolean('bmn', $sinonim))->toBe('+(bmn* "barang milik negara")')
+        ->and(PencarianDatabase::ekspresiBoolean('barang milik negara', $sinonim))->toBe('+((+barang* +milik* +negara*) "bmn")')
+        ->and(PencarianDatabase::ekspresiBoolean('tnd 2020', $sinonim))->toBe('+(tnd* "tata naskah dinas") +2020*');
+});
+
+test('Scout driver database mencari dokumen terbit saja lewat Dokumen::cariTerbit', function () {
+    $pmk = dokumenCari(['nomor' => '181/PMK.06/2016', 'sebutan_singkat' => 'PMK 181/PMK.06/2016', 'judul' => 'Penatausahaan Barang Milik Negara']);
+    dokumenCari(['judul' => 'Penatausahaan rahasia', 'status_publikasi' => StatusPublikasi::Draf]);
+
+    expect(config('scout.driver'))->toBe('database')
+        ->and(Dokumen::cariTerbit('Penatausahaan')->get()->modelKeys())->toBe([$pmk->getKey()])
+        ->and(Dokumen::cariTerbit('181/PMK')->get()->modelKeys())->toBe([$pmk->getKey()]);
+});
+
+test('portal menampilkan "Menampilkan hasil untuk" dan tautan cari persis saat kueri dikoreksi', function () {
+    dokumenCari(['judul' => 'Penatausahaan Barang Milik Negara', 'sebutan_singkat' => 'PMK 181/2016']);
+    Artisan::call('regulasi:bangun-kamus');
+
+    Livewire\Livewire::test(DaftarDokumen::class)
+        ->set('q', 'penatausahan')
+        ->assertSee('Menampilkan hasil untuk')
+        ->assertSee('penatausahaan')
+        ->assertSee('Cari persis')
+        ->assertSee('PMK 181/2016')
+        ->set('persis', true)
+        ->assertDontSee('Menampilkan hasil untuk')
+        ->assertSee('0 dokumen');
 });

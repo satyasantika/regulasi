@@ -166,7 +166,7 @@ test('relasi tertunda tampil beserta tanggal efektifnya', function () {
     Livewire::test(LaporanRelasiStatus::class)
         ->filterTable('keadaan', 'tertunda')
         ->callAction('eksporExcel');
-    Queue::assertPushedOn('ekspor', BuatEksporLaporan::class, fn (BuatEksporLaporan $job): bool => $job->jenis === 'relasi-status' && $job->parameter === ['keadaan' => 'tertunda']);
+    Queue::assertPushedOn('berat', BuatEksporLaporan::class, fn (BuatEksporLaporan $job): bool => $job->jenis === 'relasi-status' && $job->parameter === ['keadaan' => 'tertunda']);
 
     (new BuatEksporLaporan('relasi-status', ['keadaan' => 'tertunda'], $admin->id))->handle();
     $baris = SimpleExcelReader::create(File::files(storage_path('app/tmp/'.BuatEksporLaporan::direktori()))[0]->getPathname())->getRows()->all();

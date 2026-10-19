@@ -14,7 +14,6 @@ RUN apk add --no-cache icu-libs libzip libpng libjpeg-turbo freetype fcgi popple
  && docker-php-ext-configure gd --with-freetype --with-jpeg \
  && docker-php-ext-install -j"$(nproc)" pdo_mysql intl bcmath gd zip pcntl exif \
  && (php -m | grep -qi '^Zend OPcache$' || docker-php-ext-install opcache) \
- && pecl install redis && docker-php-ext-enable redis \
  && apk del .build-deps \
  && rm -rf /tmp/pear \
  && cp /usr/share/zoneinfo/Asia/Jakarta /etc/localtime && echo "Asia/Jakarta" > /etc/timezone
@@ -44,7 +43,7 @@ COPY app/Livewire ./app/Livewire
 COPY --from=vendor /var/www/html/vendor/laravel/framework/src/Illuminate/Pagination/resources/views ./vendor/laravel/framework/src/Illuminate/Pagination/resources/views
 RUN npm run build
 
-# ---------- app: PHP-FPM (juga dipakai queue/Horizon & scheduler) ----------
+# ---------- app: PHP-FPM (juga dipakai scheduler dan worker antrean) ----------
 FROM base AS app
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY --chown=www-data:www-data . .

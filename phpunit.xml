@@ -14,9 +14,6 @@
         <testsuite name="Arch">
             <directory>tests/Arch</directory>
         </testsuite>
-        <testsuite name="Integrasi">
-            <directory>tests/Integrasi</directory>
-        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -38,8 +35,7 @@
         <env name="DB_DATABASE" value="db_regulasi_testing"/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
-        <env name="SCOUT_DRIVER" value="collection"/>
-        <env name="SCOUT_QUEUE_CONNECTION" value="sync"/>
+        <env name="SCOUT_DRIVER" value="database"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>

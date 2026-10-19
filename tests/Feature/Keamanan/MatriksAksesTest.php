@@ -191,8 +191,6 @@ test('matriks hak akses PRD §3.2 per peran', function (string $path, array $har
     // Log aktivitas: super-admin & admin-regulasi L.
     'log aktivitas: daftar' => ['/admin/log-aktivitas', [200, 200, 403, 403, 'masuk']],
     'log aktivitas: lihat' => ['/admin/log-aktivitas/{aktivitas}', [200, 200, 403, 403, 'masuk']],
-    // Horizon hanya super-admin (KM-13).
-    'horizon' => ['/horizon', [200, 403, 403, 403, 403]],
     // Portal publik: dokumen terbit publik untuk semua; internal hanya login; draf tidak pernah (BR-01, BR-02).
     'beranda' => ['/', [200, 200, 200, 200, 200]],
     'daftar dokumen' => ['/dokumen', [200, 200, 200, 200, 200]],

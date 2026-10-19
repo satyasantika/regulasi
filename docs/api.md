@@ -7,12 +7,12 @@ sistem FKIP lain (Aset/BMN, Akreditasi, SDM, Persuratan, LMS, dll.). API **hanya
 | Lingkungan | URL dasar |
 |---|---|
 | Produksi | `https://supportfkip.unsil.ac.id/regulasi/api/v1` |
-| Lokal (pengembang) | `http://localhost:8034/regulasi/api/v1` |
+| Lokal (pengembang) | `http://localhost:8024/regulasi/api/v1` |
 
 Contoh di bawah memakai variabel shell:
 
 ```bash
-export REGULASI=http://localhost:8034/regulasi/api/v1
+export REGULASI=http://localhost:8024/regulasi/api/v1
 export TOKEN='01a1...|xxxxxxxx'   # token polos dari super-admin
 ```
 
@@ -113,8 +113,8 @@ Respons (dipendekkan):
         "kategori": { "data": [ { "id": "01a1260b-59b2-…", "type": "kategori-sistem" } ] }
       },
       "links": {
-        "self": "http://localhost:8034/regulasi/api/v1/dokumen/01a1260b-5ed7-70d7-937f-5f1c2da36e51",
-        "html": "http://localhost:8034/regulasi/dokumen/01a1260b-5ed7-70d7-937f-5f1c2da36e51/pmk-181-2016-…"
+        "self": "http://localhost:8024/regulasi/api/v1/dokumen/01a1260b-5ed7-70d7-937f-5f1c2da36e51",
+        "html": "http://localhost:8024/regulasi/dokumen/01a1260b-5ed7-70d7-937f-5f1c2da36e51/pmk-181-2016-…"
       }
     }
   ],
@@ -123,7 +123,7 @@ Respons (dipendekkan):
       "id": "01a1260b-59b2-…",
       "type": "kategori-sistem",
       "attributes": { "kode": "aset", "nama": "Aset/BMN", "slug": "aset", "deskripsi": null, "ikon": "heroicon-o-building-office-2" },
-      "links": { "html": "http://localhost:8034/regulasi/kategori/aset" }
+      "links": { "html": "http://localhost:8024/regulasi/kategori/aset" }
     }
   ],
   "meta": {
@@ -179,7 +179,7 @@ curl -g -H "Authorization: Bearer $TOKEN" "$REGULASI/dokumen/01a1260b-5ef0-73f2-
       "id": "01a12633-a9eb-…",
       "type": "tautan",
       "attributes": { "label": "Naskah PDF", "jenis": "naskah_utama", "penyedia": "google_drive", "status_cek": "dapat_diakses", "jumlah_halaman": 24 },
-      "links": { "buka": "http://localhost:8034/regulasi/d/01a12633-a9eb-…/buka" }
+      "links": { "buka": "http://localhost:8024/regulasi/d/01a12633-a9eb-…/buka" }
     }
   ]
 }
@@ -217,7 +217,7 @@ curl -H "Authorization: Bearer $TOKEN" "$REGULASI/kategori-sistem"
       "id": "01a1260b-59a8-71d7-bad6-57df3e20d3e1",
       "type": "kategori-sistem",
       "attributes": { "kode": "akreditasi", "nama": "Akreditasi", "slug": "akreditasi", "deskripsi": null, "ikon": "heroicon-o-check-badge" },
-      "links": { "html": "http://localhost:8034/regulasi/kategori/akreditasi" },
+      "links": { "html": "http://localhost:8024/regulasi/kategori/akreditasi" },
       "meta": { "jumlah_dokumen": 20 }
     }
   ],

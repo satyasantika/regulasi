@@ -71,8 +71,8 @@ test('aksi periksa ulang, ekstrak ulang, massal, dan tandai ditinjau', function 
         ->callAction(TestAction::make('periksaUlang')->table($gagal))
         ->callAction(TestAction::make('ekstrakUlang')->table($gagal));
 
-    Queue::assertPushedOn('tautan', PeriksaTautanBerkas::class);
-    Queue::assertPushedOn('ekstraksi', EkstrakTeksTautan::class, fn (EkstrakTeksTautan $job): bool => $job->tautanId === $gagal->getKey());
+    Queue::assertPushedOn('default', PeriksaTautanBerkas::class);
+    Queue::assertPushedOn('berat', EkstrakTeksTautan::class, fn (EkstrakTeksTautan $job): bool => $job->tautanId === $gagal->getKey());
 
     $halaman->selectTableRecords([$gagal, $berubah])
         ->callAction(TestAction::make('ekstrakUlangMassal')->table()->bulk())
