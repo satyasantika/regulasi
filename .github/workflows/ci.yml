@@ -70,7 +70,19 @@ jobs:
         run: ./vendor/bin/phpstan analyse --memory-limit=1G --no-progress
 
       - name: Pest
-        run: php artisan test --parallel
+        run: |
+          set -o pipefail
+          php artisan test --parallel 2>&1 | tee /tmp/pest.log
+
+      - name: Ringkasan gagal (debug sementara)
+        if: failure()
+        run: |
+          {
+            echo '## Pest gagal — 200 baris terakhir'
+            echo '```'
+            tail -n 200 /tmp/pest.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # Uji ekstraksi teks butuh pdftotext (poppler-utils): gagal bila ada yang di-skip.
       - name: Pest ekstraksi (tanpa skip)
