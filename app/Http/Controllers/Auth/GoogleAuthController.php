@@ -28,7 +28,8 @@ class GoogleAuthController extends Controller
             return redirect()->to($this->tujuan($user) ?? route('filament.admin.auth.login'));
         }
 
-        session(['google_asal' => $request->query('asal')]);
+        $asal = $request->query('asal');
+        session(['google_asal' => is_string($asal) ? $asal : null]);
 
         /** @var AbstractProvider $driver */
         $driver = Socialite::driver('google');
@@ -41,6 +42,7 @@ class GoogleAuthController extends Controller
         abort_unless(config('services.google.aktif'), 404);
 
         $asal = $request->session()->pull('google_asal');
+        $asal = is_string($asal) ? $asal : null;
 
         if ($request->query('error')) {
             return $this->gagal('Masuk dengan Google dibatalkan.', $asal);
@@ -89,7 +91,7 @@ class GoogleAuthController extends Controller
 
     private function gagal(string $pesan, ?string $asal): RedirectResponse
     {
-        $ke = ($asal !== null && str_starts_with($asal, url('/'))) ? $asal : route('filament.admin.auth.login');
+        $ke = ($asal !== null && str_starts_with($asal, rtrim(url('/'), '/').'/')) ? $asal : route('filament.admin.auth.login');
 
         return redirect()->to($ke)->with('galat_google', $pesan);
     }
