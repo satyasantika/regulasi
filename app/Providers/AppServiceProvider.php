@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Contracts\PenyimpananBerkas;
 use App\Enums\Peran;
+use App\Http\Livewire\HandleRequestsSubpath;
 use App\Http\Responses\GalatJsonApi;
 use App\Http\Responses\MasukResponse;
 use App\Models\Aktivitas;
@@ -47,6 +48,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
 use Laravel\Sanctum\Sanctum;
+use Livewire\Mechanisms\HandleRequests\HandleRequests;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -68,6 +70,15 @@ class AppServiceProvider extends ServiceProvider
 
         // Mesin pencarian Profil Ringan: MariaDB FULLTEXT + kamus istilah (02-ARSITEKTUR §5.1).
         $this->app->bind(PencarianDokumen::class, PencarianDatabase::class);
+
+        // Pada APP_URL bersubpath, toRoute(absolute: false) milik Livewire menghasilkan path
+        // relatif yang SUDAH memuat subpath; FrontendAssets membungkusnya lagi dengan url(),
+        // menambahkan subpath sekali lagi -> dobel. Override agar endpoint update memakai URL
+        // absolut (dikenali isValidUrl() dan dikembalikan tanpa diubah). Dibatasi ke app yang
+        // berjalan di subpath agar tidak berefek pada deployment tanpa subpath.
+        if (($p = parse_url((string) config('app.url'), PHP_URL_PATH)) !== null && $p !== '' && $p !== '/') {
+            $this->app->bind(HandleRequests::class, HandleRequestsSubpath::class);
+        }
     }
 
     /**
