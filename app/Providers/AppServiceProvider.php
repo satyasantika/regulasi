@@ -121,8 +121,8 @@ class AppServiceProvider extends ServiceProvider
         // Rate limit pencarian portal 60/menit per IP (02-ARSITEKTUR §3.4), diperiksa di Livewire DaftarDokumen.
         RateLimiter::for('pencarian', fn (Request $request): Limit => Limit::perMinute(60)->by((string) $request->ip()));
 
-        // Masuk dengan Google: 10 permintaan/menit per IP.
-        RateLimiter::for('google-login', fn (Request $request): Limit => Limit::perMinute(10)->by((string) $request->ip()));
+        // Masuk dengan Google: 60 permintaan/menit per IP.
+        RateLimiter::for('google-login', fn (Request $request): Limit => Limit::perMinute(60)->by((string) $request->ip()));
 
         // Tombol "Masuk dengan Google" di halaman masuk kedua panel.
         FilamentView::registerRenderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn () => view('auth.tombol-google'));

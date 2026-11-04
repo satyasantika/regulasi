@@ -44,6 +44,26 @@ it('halaman masuk memuat tombol dan tautannya', function (string $rute) {
         ->assertSee(route('auth.google.redirect', ['asal' => route($rute)]), false);
 })->with(['filament.admin.auth.login', 'filament.akun.auth.login']);
 
+it('redirect_uri kosong di konfigurasi memakai bawaan', function () {
+    // GOOGLE_REDIRECT_URI= kosong di .env: env() mengembalikan '' dan konfigurasi harus tetap memakai bawaan.
+    putenv('GOOGLE_REDIRECT_URI=');
+    $_ENV['GOOGLE_REDIRECT_URI'] = $_SERVER['GOOGLE_REDIRECT_URI'] = '';
+
+    try {
+        $layanan = require config_path('services.php');
+    } finally {
+        putenv('GOOGLE_REDIRECT_URI');
+        unset($_ENV['GOOGLE_REDIRECT_URI'], $_SERVER['GOOGLE_REDIRECT_URI']);
+    }
+
+    config(['services.google.redirect' => $layanan['google']['redirect']]);
+
+    $lokasi = $this->get(route('auth.google.redirect'))->assertRedirect()->headers->get('Location');
+    parse_str(parse_url($lokasi, PHP_URL_QUERY), $q);
+
+    expect($q['redirect_uri'])->toBe(route('auth.google.callback'));
+});
+
 it('mengarahkan ke Google dengan redirect_uri bawaan', function () {
     $lokasi = $this->get(route('auth.google.redirect'))->assertRedirect()->headers->get('Location');
 
@@ -164,10 +184,10 @@ it('pengguna yang sudah masuk langsung diarahkan', function () {
         ->assertRedirect(Filament::getPanel('akun')->getUrl());
 });
 
-it('membatasi 10 permintaan per menit per IP', function () {
+it('membatasi 60 permintaan per menit per IP', function () {
     googleSebagai('x@gmail.com', ['email_verified' => false]);
 
-    foreach (range(1, 10) as $_) {
+    foreach (range(1, 60) as $_) {
         $this->get(route('auth.google.callback'))->assertRedirect();
     }
 
