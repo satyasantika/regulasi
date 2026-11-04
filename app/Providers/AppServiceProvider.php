@@ -31,6 +31,8 @@ use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Filament\Actions\Exports\Models\Export;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -118,6 +120,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Rate limit pencarian portal 60/menit per IP (02-ARSITEKTUR §3.4), diperiksa di Livewire DaftarDokumen.
         RateLimiter::for('pencarian', fn (Request $request): Limit => Limit::perMinute(60)->by((string) $request->ip()));
+
+        // Masuk dengan Google: 60 permintaan/menit per IP.
+        RateLimiter::for('google-login', fn (Request $request): Limit => Limit::perMinute(60)->by((string) $request->ip()));
+
+        // Tombol "Masuk dengan Google" di halaman masuk kedua panel.
+        FilamentView::registerRenderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn () => view('auth.tombol-google'));
 
         $this->aturProxyTepercaya();
         $this->siapkanSubpath();

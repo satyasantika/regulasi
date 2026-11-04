@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\ImpersonasiController;
 use App\Http\Controllers\Laporan\UnduhEksporController;
 use App\Http\Controllers\Laporan\UnduhLaporanEvaluasiController;
@@ -47,3 +48,9 @@ Route::get('/laporan-evaluasi/{laporanEvaluasi}/pdf', UnduhLaporanEvaluasiContro
 Route::post('/impersonasi/berhenti', [ImpersonasiController::class, 'berhenti'])
     ->middleware('auth')
     ->name('impersonasi.berhenti');
+
+// Masuk dengan Google (aktif bila GOOGLE_LOGIN_ENABLED=true; selain itu 404).
+Route::prefix('auth/google')->middleware('throttle:google-login')->group(function () {
+    Route::get('redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+    Route::get('callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+});
