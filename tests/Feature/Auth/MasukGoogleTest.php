@@ -46,14 +46,21 @@ it('halaman masuk memuat tombol dan tautannya', function (string $rute) {
 
 it('redirect_uri kosong di konfigurasi memakai bawaan', function () {
     // GOOGLE_REDIRECT_URI= kosong di .env: env() mengembalikan '' dan konfigurasi harus tetap memakai bawaan.
+    $semula = getenv('GOOGLE_REDIRECT_URI');
     putenv('GOOGLE_REDIRECT_URI=');
     $_ENV['GOOGLE_REDIRECT_URI'] = $_SERVER['GOOGLE_REDIRECT_URI'] = '';
 
     try {
         $layanan = require config_path('services.php');
     } finally {
-        putenv('GOOGLE_REDIRECT_URI');
-        unset($_ENV['GOOGLE_REDIRECT_URI'], $_SERVER['GOOGLE_REDIRECT_URI']);
+        // Pulihkan nilai semula; bila dihapus, test berikutnya memuat nilai dari .env lokal.
+        if ($semula === false) {
+            putenv('GOOGLE_REDIRECT_URI');
+            unset($_ENV['GOOGLE_REDIRECT_URI'], $_SERVER['GOOGLE_REDIRECT_URI']);
+        } else {
+            putenv('GOOGLE_REDIRECT_URI='.$semula);
+            $_ENV['GOOGLE_REDIRECT_URI'] = $_SERVER['GOOGLE_REDIRECT_URI'] = $semula;
+        }
     }
 
     config(['services.google.redirect' => $layanan['google']['redirect']]);
