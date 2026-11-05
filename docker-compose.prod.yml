@@ -78,6 +78,7 @@ services:
     command: ["php", "artisan", "schedule:work"]
     mem_limit: 768m
     stop_grace_period: 60s
+    init: true
 
   # Cadangan harian 02:00 WIB ke ./backup/mariadb/<tanggal>/ (retensi RETENSI_HARI, bawaan 30 hari).
   # Hanya KLIEN (mariadb-dump) ke basis data host, bukan server basis data. Simpan salinan di luar disk server.
